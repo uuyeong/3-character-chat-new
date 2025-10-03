@@ -1,0 +1,9 @@
+.env
+*.env
+__pycache__/
+*.py[cod]
+*$py.class
+# 크로마DB 관련 캐시/폴더 전부 무시
+*chroma_db*
+*__chroma_db__*
+*.ipynb
