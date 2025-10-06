@@ -1,0 +1,4150 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+.cursor/
+  rules/
+    global.mdc
+config/
+  chatbot_config.json
+services/
+  __init__.py
+  chatbot_service.py
+static/
+  css/
+    style.css
+  images/
+    chatbot/
+      README.md
+  js/
+    chatbot.js
+templates/
+  chat.html
+  detail.html
+  index.html
+.dockerignore
+.env.example
+.gitattributes
+.gitignore
+ADVANCED_TOPICS.md
+app.py
+ARCHITECTURE.md
+DOCKER_GUIDE.md
+DOCKER_HOT_RELOAD.md
+docker-compose.yml
+Dockerfile
+README.md
+requirements.txt
+vercel.json
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path="config/chatbot_config.json">
+{
+  "name": "챗봇 이름",
+  "description": "여기에 챗봇에 대한 설명을 4-5줄로 작성하세요.<br>캐릭터의 특징을 잘 드러내고,<br>어떤 대화를 할 수 있는지 소개해주세요.<br>HTML 태그를 사용할 수 있습니다.",
+  "tags": ["#태그1", "#태그2", "#태그3", "#태그4"],
+  "thumbnail": "images/chatbot/thumbnail.png",
+  "character": {
+    "age": 20,
+    "university": "대학교명",
+    "major": "전공",
+    "personality": "성격 설명",
+    "background": "배경 스토리"
+  },
+  "system_prompt": {
+    "base": "당신의 챗봇 역할과 페르소나를 정의하세요.",
+    "rules": [
+      "반말을 사용하세요",
+      "이모티콘을 사용하지 마세요",
+      "자연스럽게 대화하세요"
+    ]
+  }
+}
+</file>
+
+<file path="services/__init__.py">
+"""
+Services 패키지
+
+이 패키지는 챗봇의 비즈니스 로직을 담당합니다.
+"""
+
+from .chatbot_service import get_chatbot_service
+
+__all__ = ['get_chatbot_service']
+</file>
+
+<file path="static/css/style.css">
+/* Global Styles */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: #f7f7f7;
+  font-family: 'Roboto', sans-serif;
+}
+
+/* Index Page Styles */
+h1 {
+  text-align: center;
+  margin-top: 40px;
+  font-weight: 700;
+  color: #333;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  max-width: 1200px;
+  margin: 40px auto;
+  padding: 0 20px;
+}
+
+.card {
+  background: #fff;
+  text-align: center;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 20px;
+  text-decoration: none;
+  color: #333;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
+  display: flex;
+  flex-direction: column;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.card img {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+.card h2 {
+  margin-top: auto;
+  font-size: 1.5rem;
+  font-weight: 500;
+}
+
+/* Chat Page Styles */
+.chat-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  background: #fff;
+  padding: 20px;
+  box-sizing: border-box;
+  position: relative;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.header-left,
+.header-right {
+  display: flex;
+  gap: 10px;
+}
+
+.header-title h1 {
+  margin: 0;
+  font-weight: 700;
+  color: #333;
+  font-size: 1.5rem;
+  text-align: center;
+}
+
+.icon-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+}
+
+.icon-btn img {
+  width: 24px;
+  height: 24px;
+}
+
+#chat-log {
+  flex: 1;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  overflow-y: auto;
+  padding: 15px;
+  background: #fafafa;
+  margin-bottom: 10px;
+}
+
+.message {
+  margin-bottom: 10px;
+  padding: 10px;
+  border-radius: 8px;
+  word-break: break-all;
+}
+
+.message.user {
+  background: #e6f7ff;
+  text-align: right;
+  color: #0056b3;
+}
+
+.message.bot {
+  background: #f0f0f0;
+  color: #333;
+  padding: 10px;
+  border-radius: 8px;
+  word-break: break-all;
+}
+
+.bot-big-img {
+  display: block;
+  width: 100%;
+  max-width: 300px;
+  height: auto;
+  margin: 0 auto 8px;
+  border-radius: 8px;
+}
+
+.bot-text {
+  text-align: left;
+}
+
+form {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+input[type="text"] {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+button {
+  padding: 10px 20px;
+  border: none;
+  background: #007bff;
+  color: #fff;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+button:hover {
+  background: #0056b3;
+}
+
+/* Modal Styles */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+  background-color: #fff;
+  margin: 10% auto;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 80%;
+  max-width: 600px;
+  border-radius: 12px;
+  position: relative;
+}
+
+.modal-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+.tags {
+  margin-top: 10px;
+  text-align: center;
+}
+
+.tag {
+  display: inline-block;
+  background-color: #000000; /* 원하는 배경색 */
+  color: #555; /* 글자 색상 */
+  padding: 4px 8px;
+  border-radius: 12px;
+  margin: 2px;
+  font-size: 0.9rem;
+}
+</file>
+
+<file path="static/js/chatbot.js">
+console.log("챗봇 JS 로드 완료");
+
+// DOM 요소
+const chatArea = document.querySelector(".chat-area");
+const username = chatArea ? chatArea.dataset.username : "사용자";
+const chatLog = document.getElementById("chat-log");
+const userMessageInput = document.getElementById("user-message");
+const sendBtn = document.getElementById("send-btn");
+const videoBtn = document.getElementById("videoBtn");
+const imageBtn = document.getElementById("imageBtn");
+
+// 메시지 전송 함수
+async function sendMessage(isInitial = false) {
+  let message;
+
+  if (isInitial) {
+    message = "init";
+  } else {
+    message = userMessageInput.value.trim();
+    if (!message) return;
+
+    appendMessage("user", message);
+    userMessageInput.value = "";
+  }
+
+  // 로딩 표시
+  const loadingId = appendMessage("bot", "생각 중...");
+
+  try {
+    const response = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        message: message,
+        username: username,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    // 로딩 메시지 제거
+    removeMessage(loadingId);
+
+    // 응답 파싱
+    let replyText, imagePath;
+    if (typeof data.reply === "object" && data.reply !== null) {
+      replyText = data.reply.reply || data.reply;
+      imagePath = data.reply.image || null;
+    } else {
+      replyText = data.reply;
+      imagePath = null;
+    }
+
+    appendMessage("bot", replyText, imagePath);
+  } catch (err) {
+    console.error("메시지 전송 에러:", err);
+    removeMessage(loadingId);
+    appendMessage("bot", "죄송합니다. 오류가 발생했습니다. 다시 시도해주세요.");
+  }
+}
+
+// 메시지 DOM에 추가
+let messageIdCounter = 0;
+function appendMessage(sender, text, imageSrc = null) {
+  const messageId = `msg-${messageIdCounter++}`;
+  const messageElem = document.createElement("div");
+  messageElem.classList.add("message", sender);
+  messageElem.id = messageId;
+
+  if (sender === "user") {
+    messageElem.textContent = text;
+  } else {
+    // 이미지가 있으면 먼저 표시
+    if (imageSrc) {
+      const botImg = document.createElement("img");
+      botImg.classList.add("bot-big-img");
+      botImg.src = imageSrc;
+      botImg.alt = "챗봇 이미지";
+      messageElem.appendChild(botImg);
+    }
+
+    // 텍스트 추가
+    const textContainer = document.createElement("div");
+    textContainer.classList.add("bot-text-container");
+    textContainer.textContent = text;
+    messageElem.appendChild(textContainer);
+  }
+
+  if (chatLog) {
+    chatLog.appendChild(messageElem);
+    chatLog.scrollTop = chatLog.scrollHeight;
+  }
+
+  return messageId;
+}
+
+// 메시지 제거
+function removeMessage(messageId) {
+  const elem = document.getElementById(messageId);
+  if (elem) {
+    elem.remove();
+  }
+}
+
+// 엔터키로 전송
+if (userMessageInput) {
+  userMessageInput.addEventListener("keypress", (event) => {
+    if (event.key === "Enter") {
+      sendMessage();
+    }
+  });
+}
+
+// 전송 버튼
+if (sendBtn) {
+  sendBtn.addEventListener("click", () => sendMessage());
+}
+
+// 모달 열기/닫기
+function openModal(modalId) {
+  const modal = document.getElementById(modalId);
+  if (modal) {
+    modal.style.display = "block";
+  }
+}
+
+function closeModal(modalId) {
+  const modal = document.getElementById(modalId);
+  if (modal) {
+    modal.style.display = "none";
+  }
+}
+
+// 미디어 버튼 이벤트
+if (videoBtn) {
+  videoBtn.addEventListener("click", () => openModal("videoModal"));
+}
+
+if (imageBtn) {
+  imageBtn.addEventListener("click", () => openModal("imageModal"));
+}
+
+// 모달 닫기 버튼
+document.querySelectorAll(".modal-close").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const modalId = btn.dataset.closeModal;
+    closeModal(modalId);
+  });
+});
+
+// 모달 배경 클릭 시 닫기
+document.querySelectorAll(".modal").forEach((modal) => {
+  modal.addEventListener("click", (event) => {
+    if (event.target === modal) {
+      modal.style.display = "none";
+    }
+  });
+});
+
+// 페이지 로드 시 초기 메시지 요청
+window.addEventListener("load", () => {
+  console.log("페이지 로드 완료");
+
+  setTimeout(() => {
+    if (chatLog && chatLog.childElementCount === 0) {
+      console.log("초기 메시지 요청");
+      sendMessage(true);
+    }
+  }, 500);
+});
+</file>
+
+<file path=".dockerignore">
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+*.egg-info/
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.cursor/
+
+# 환경변수 (보안)
+.env
+*.env
+!.env.example
+
+# 로그
+*.log
+
+# ChromaDB (Docker volume으로 관리)
+*chardb_embedding/
+*imagedb_embedding/
+
+# Jupyter
+*.ipynb
+.ipynb_checkpoints
+
+# macOS
+.DS_Store
+
+# 문서 (선택사항)
+README*.md
+
+# 테스트
+tests/
+*.test.py
+
+# 임시 파일
+*.tmp
+*.bak
+</file>
+
+<file path="ADVANCED_TOPICS.md">
+# 🚀 고급 주제 및 성능 개선 가이드
+
+> 프로젝트 완성도를 높이고 성능을 향상시키는 방법 (2025년 10월 기준)
+
+---
+
+## 📚 목차
+
+1. [핵심 기술 스택](#-핵심-기술-스택)
+2. [관련 논문 및 연구](#-관련-논문-및-연구)
+3. [권위있는 학습 자료](#-권위있는-학습-자료)
+4. [성능 개선 방법](#-성능-개선-방법)
+5. [완성도 향상 전략](#-완성도-향상-전략)
+6. [2025년 최신 트렌드](#-2025년-최신-트렌드)
+
+---
+
+## 🔧 핵심 기술 스택
+
+### 1. RAG (Retrieval-Augmented Generation)
+
+**개념**: 검색과 생성을 결합한 AI 시스템
+
+```
+질문 입력
+  ↓
+벡터 검색 (ChromaDB)
+  ↓
+관련 문서 검색
+  ↓
+LLM에 문서 + 질문 전달
+  ↓
+정확한 답변 생성
+```
+
+**핵심 논문**:
+
+- **"Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks"** (Lewis et al., 2020)
+  - https://arxiv.org/abs/2005.11401
+  - RAG의 기초를 제시한 논문
+
+**최신 발전**:
+
+- **Self-RAG** (2024): 검색이 필요한지 스스로 판단
+- **Corrective RAG** (C-RAG, 2024): 검색 결과의 품질 평가
+- **Adaptive RAG** (2024): 쿼리 복잡도에 따라 전략 변경
+
+### 2. Vector Embeddings
+
+**개념**: 텍스트를 고차원 벡터로 변환
+
+**OpenAI Embeddings API**:
+
+- **text-embedding-3-large**: 3072차원, 가장 정확
+- **text-embedding-3-small**: 1536차원, 빠르고 저렴
+- **비용**: $0.13 / 1M tokens (3-large 기준)
+
+**핵심 논문**:
+
+- **"Attention Is All You Need"** (Vaswani et al., 2017)
+
+  - https://arxiv.org/abs/1706.03762
+  - Transformer 아키텍처의 기초
+
+- **"BERT: Pre-training of Deep Bidirectional Transformers"** (Devlin et al., 2018)
+  - https://arxiv.org/abs/1810.04805
+  - 문맥 기반 embedding의 혁신
+
+### 3. Vector Database (ChromaDB)
+
+**개념**: 벡터 유사도 기반 빠른 검색
+
+**알고리즘**: HNSW (Hierarchical Navigable Small World)
+
+- **시간 복잡도**: O(log N)
+- **정확도**: 99%+
+- **확장성**: 수백만 벡터 지원
+
+**대안 기술**:
+
+- **Pinecone**: 클라우드 기반, 관리형
+- **Weaviate**: GraphQL 지원, 하이브리드 검색
+- **Milvus**: 대규모 프로덕션용
+- **Qdrant**: Rust 기반, 고성능
+
+### 4. LLM (Large Language Model)
+
+**사용 모델**: GPT-4o-mini
+
+- **비용 효율적**: $0.15 / 1M 입력 토큰
+- **빠른 응답**: ~500ms
+- **컨텍스트**: 128K 토큰
+
+**최신 대안** (2025년 10월):
+
+- **GPT-4.5**: 더 정확하지만 비쌈
+- **Claude 3.5 Sonnet**: 코딩/분석에 강함
+- **Llama 3.1 (70B)**: 오픈소스, 로컬 실행 가능
+- **Gemini 1.5 Pro**: Google, 긴 컨텍스트 지원
+
+---
+
+## 📖 관련 논문 및 연구
+
+### RAG 관련 필독 논문
+
+1. **"Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks"**
+
+   - Authors: Lewis et al. (Meta AI)
+   - Year: 2020
+   - Link: https://arxiv.org/abs/2005.11401
+   - **핵심**: RAG의 기본 개념과 구조
+
+2. **"Self-RAG: Learning to Retrieve, Generate, and Critique through Self-Reflection"**
+
+   - Authors: Asai et al.
+   - Year: 2024
+   - Link: https://arxiv.org/abs/2310.11511
+   - **핵심**: 검색 필요성을 LLM이 스스로 판단
+
+3. **"Corrective Retrieval Augmented Generation"**
+
+   - Authors: Yan et al.
+   - Year: 2024
+   - Link: https://arxiv.org/abs/2401.15884
+   - **핵심**: 검색 결과 품질 평가 및 보정
+
+4. **"RAPTOR: Recursive Abstractive Processing for Tree-Organized Retrieval"**
+   - Authors: Sarthi et al.
+   - Year: 2024
+   - Link: https://arxiv.org/abs/2401.18059
+   - **핵심**: 계층적 문서 구조로 검색 개선
+
+### Embedding 관련
+
+5. **"Text Embeddings by Weakly-Supervised Contrastive Pre-training"**
+
+   - Authors: Wang et al. (OpenAI)
+   - Year: 2022
+   - Link: https://arxiv.org/abs/2212.03533
+   - **핵심**: OpenAI embedding 모델의 기술적 배경
+
+6. **"Matryoshka Representation Learning"**
+   - Authors: Kusupati et al.
+   - Year: 2022
+   - Link: https://arxiv.org/abs/2205.13147
+   - **핵심**: 가변 차원 embedding (효율성 향상)
+
+### 챗봇 및 대화 시스템
+
+7. **"Constitutional AI: Harmlessness from AI Feedback"**
+
+   - Authors: Bai et al. (Anthropic)
+   - Year: 2022
+   - Link: https://arxiv.org/abs/2212.08073
+   - **핵심**: 안전하고 유용한 챗봇 설계
+
+8. **"LLM-as-a-Judge: Evaluating Chat Assistants with Large Language Models"**
+   - Authors: Zheng et al.
+   - Year: 2023
+   - Link: https://arxiv.org/abs/2306.05685
+   - **핵심**: 챗봇 성능 평가 방법론
+
+---
+
+## 📚 권위있는 학습 자료
+
+### 공식 문서
+
+1. **OpenAI Documentation**
+
+   - https://platform.openai.com/docs
+   - Embeddings, Chat API, Best Practices
+
+2. **LangChain Documentation**
+
+   - https://python.langchain.com/docs
+   - RAG 구현 패턴, 메모리 관리
+
+3. **ChromaDB Documentation**
+   - https://docs.trychroma.com/
+   - 벡터 DB 최적화 가이드
+
+### 온라인 강의
+
+4. **DeepLearning.AI - LangChain for LLM Application Development**
+
+   - https://www.deeplearning.ai/short-courses/
+   - Andrew Ng 교수 강의
+   - 무료, 공인 수료증
+
+5. **OpenAI Cookbook**
+   - https://cookbook.openai.com/
+   - 실전 예제 코드 모음
+
+### 서적
+
+6. **"Building LLM Apps" by Joao Moura (2024)**
+
+   - RAG 시스템 구축 실전 가이드
+
+7. **"Generative AI on AWS" by Chris Fregly (2024)**
+   - 프로덕션 배포 가이드
+
+### 블로그 & 아티클
+
+8. **Pinecone Learning Center**
+
+   - https://www.pinecone.io/learn/
+   - Vector DB 개념 설명
+
+9. **LlamaIndex Blog**
+
+   - https://www.llamaindex.ai/blog
+   - RAG 최신 기법
+
+10. **Anthropic Research**
+    - https://www.anthropic.com/research
+    - LLM 안전성 연구
+
+---
+
+## 🚀 성능 개선 방법
+
+### 1. RAG 성능 최적화
+
+#### A. Embedding 전략 개선
+
+**현재**:
+
+```python
+embedding = openai.embeddings.create(
+    input=query,
+    model="text-embedding-3-large"
+)
+```
+
+**개선 1: 쿼리 확장 (Query Expansion)**
+
+```python
+def expand_query(original_query):
+    """LLM으로 쿼리를 여러 관점으로 확장"""
+    prompt = f"""
+    다음 질문을 3가지 다른 방식으로 다시 작성하세요:
+    질문: {original_query}
+    """
+    expanded = llm.generate(prompt)
+    return [original_query] + expanded
+
+# 여러 쿼리로 검색 후 결과 결합
+results = []
+for query in expand_query(user_query):
+    results.extend(search_similar(query))
+```
+
+**개선 2: Hypothetical Document Embeddings (HyDE)**
+
+```python
+def hyde_search(query):
+    """가상 답변을 먼저 생성 후 검색"""
+    # 1. LLM으로 가상 답변 생성
+    hypothetical_answer = llm.generate(
+        f"질문에 대한 상세한 답변을 작성하세요: {query}"
+    )
+
+    # 2. 가상 답변의 embedding으로 검색
+    embedding = create_embedding(hypothetical_answer)
+    return vector_db.search(embedding)
+```
+
+#### B. 리랭킹 (Re-ranking)
+
+**문제**: 벡터 검색만으로는 최적이 아닐 수 있음
+
+**해결**:
+
+```python
+from sentence_transformers import CrossEncoder
+
+# 1차: 벡터 검색 (빠름)
+candidates = vector_db.search(query, top_k=20)
+
+# 2차: CrossEncoder로 정확도 재평가 (느림)
+reranker = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')
+scores = reranker.predict([(query, doc) for doc in candidates])
+
+# 상위 5개만 사용
+top_docs = sorted(zip(candidates, scores),
+                  key=lambda x: x[1], reverse=True)[:5]
+```
+
+#### C. 하이브리드 검색
+
+**벡터 + 키워드 검색 결합**:
+
+```python
+def hybrid_search(query):
+    # 벡터 검색 (의미론적)
+    vector_results = vector_db.search(query, top_k=10)
+
+    # BM25 키워드 검색 (정확한 매칭)
+    from rank_bm25 import BM25Okapi
+    bm25_results = bm25.get_top_n(query.split(), documents, n=10)
+
+    # 결과 결합 (RRF - Reciprocal Rank Fusion)
+    combined = reciprocal_rank_fusion([vector_results, bm25_results])
+    return combined
+```
+
+### 2. 응답 생성 최적화
+
+#### A. 스트리밍 응답
+
+**현재**: 전체 응답 생성 후 반환 (느림)
+
+**개선**:
+
+```python
+def generate_response_stream(user_message):
+    """실시간 스트리밍 응답"""
+    for chunk in openai.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[...],
+        stream=True  # ← 스트리밍 활성화
+    ):
+        if chunk.choices[0].delta.content:
+            yield chunk.choices[0].delta.content
+
+# Flask에서
+@app.route('/api/chat/stream')
+def chat_stream():
+    def generate():
+        for text in generate_response_stream(message):
+            yield f"data: {json.dumps({'text': text})}\n\n"
+    return Response(generate(), mimetype='text/event-stream')
+```
+
+#### B. 프롬프트 최적화
+
+**현재**:
+
+```
+당신은 서강대 선배입니다.
+질문에 답변하세요.
+```
+
+**개선** (Few-Shot 예시 추가):
+
+```
+당신은 서강대 선배입니다.
+
+[좋은 답변 예시]
+질문: 학식 어디가 맛있어?
+답변: 학식은 곤자가 2층이 제일 맛있어. 특히 수요일 돈까스는 줄 서서 먹을 가치가 있지.
+      가격도 5,000원으로 저렴하고, 양도 푸짐해서 인기가 많아. 점심시간(12-1시)에는
+      사람이 많으니 11시 30분에 가는 걸 추천해!
+
+이제 질문에 답변하세요:
+```
+
+#### C. 캐싱
+
+**동일한 질문 반복 시 캐싱**:
+
+```python
+from functools import lru_cache
+
+@lru_cache(maxsize=100)
+def cached_search(query_hash):
+    """자주 묻는 질문은 캐싱"""
+    return vector_db.search(query)
+
+# 사용
+query_hash = hash(user_message.lower().strip())
+results = cached_search(query_hash)
+```
+
+### 3. 데이터 품질 향상
+
+#### A. 청킹 전략 개선
+
+**현재**: 고정 크기 (400자)
+
+**개선** (의미 단위 분할):
+
+```python
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+
+splitter = RecursiveCharacterTextSplitter(
+    chunk_size=500,
+    chunk_overlap=50,
+    separators=["\n\n", "\n", ". ", " ", ""],  # 우선순위
+    length_function=len
+)
+```
+
+#### B. 메타데이터 추가
+
+```python
+# 더 풍부한 메타데이터
+collection.add(
+    documents=[text],
+    embeddings=[embedding],
+    metadatas=[{
+        "type": "qa",
+        "source": "학사공지",
+        "date": "2025-10-01",
+        "category": "학사일정",
+        "importance": "high",
+        "keywords": ["수강신청", "일정"]  # 키워드 태깅
+    }]
+)
+
+# 필터링 검색
+results = collection.query(
+    query_embeddings=[embedding],
+    n_results=5,
+    where={"category": "학사일정"}  # 필터
+)
+```
+
+### 4. 멀티모달 지원
+
+#### A. 이미지 검색 추가
+
+```python
+from PIL import Image
+import clip  # OpenAI CLIP 모델
+
+def search_similar_image(query_text):
+    """텍스트로 이미지 검색"""
+    # 텍스트 → 이미지 embedding
+    text_embedding = clip.encode_text(query_text)
+
+    # 이미지 DB에서 검색
+    results = image_db.query(text_embedding)
+    return results
+```
+
+#### B. 음성 지원
+
+```python
+from openai import OpenAI
+
+# 음성 → 텍스트
+def speech_to_text(audio_file):
+    transcript = openai.audio.transcriptions.create(
+        model="whisper-1",
+        file=audio_file
+    )
+    return transcript.text
+
+# 텍스트 → 음성
+def text_to_speech(text):
+    response = openai.audio.speech.create(
+        model="tts-1",
+        voice="alloy",
+        input=text
+    )
+    return response.content
+```
+
+---
+
+## 💎 완성도 향상 전략
+
+### 1. 평가 시스템 구축
+
+#### A. 자동 평가
+
+```python
+def evaluate_response(question, answer, ground_truth):
+    """LLM으로 답변 품질 평가"""
+    eval_prompt = f"""
+    질문: {question}
+    답변: {answer}
+    정답: {ground_truth}
+
+    답변을 1-5점으로 평가하고 이유를 설명하세요.
+    """
+    score = llm.generate(eval_prompt)
+    return score
+```
+
+#### B. 사용자 피드백
+
+```python
+# 피드백 수집
+@app.route('/api/feedback', methods=['POST'])
+def collect_feedback():
+    data = request.json
+    # {message_id, rating (1-5), comment}
+    save_feedback(data)
+
+    # 낮은 평가 → 자동으로 데이터 추가
+    if data['rating'] <= 2:
+        add_to_training_data(data)
+```
+
+### 2. 안전성 강화
+
+#### A. 콘텐츠 필터링
+
+```python
+from openai import OpenAI
+
+def moderate_content(text):
+    """유해 콘텐츠 감지"""
+    response = openai.moderations.create(input=text)
+    if response.results[0].flagged:
+        return None, "부적절한 내용이 감지되었습니다."
+    return text, None
+```
+
+#### B. PII (개인정보) 보호
+
+```python
+import re
+
+def redact_pii(text):
+    """개인정보 마스킹"""
+    # 전화번호
+    text = re.sub(r'\d{3}-\d{4}-\d{4}', '[전화번호]', text)
+    # 이메일
+    text = re.sub(r'\S+@\S+\.\S+', '[이메일]', text)
+    # 주민등록번호
+    text = re.sub(r'\d{6}-\d{7}', '[주민번호]', text)
+    return text
+```
+
+### 3. 성능 모니터링
+
+```python
+import time
+from functools import wraps
+
+def monitor_performance(func):
+    """응답 시간 모니터링"""
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        start = time.time()
+        result = func(*args, **kwargs)
+        elapsed = time.time() - start
+
+        # 로깅 또는 메트릭 전송
+        log_metric('response_time', elapsed)
+
+        if elapsed > 3.0:
+            alert('Slow response detected', elapsed)
+
+        return result
+    return wrapper
+```
+
+### 4. A/B 테스팅
+
+```python
+def ab_test_strategy(user_id):
+    """다양한 RAG 전략 테스트"""
+    strategy = hash(user_id) % 3
+
+    if strategy == 0:
+        # 기본 RAG
+        return basic_rag
+    elif strategy == 1:
+        # HyDE 전략
+        return hyde_rag
+    else:
+        # 하이브리드 검색
+        return hybrid_rag
+```
+
+---
+
+## 🌟 2025년 최신 트렌드
+
+### 1. Agentic RAG
+
+**개념**: LLM이 스스로 도구를 선택하고 실행
+
+```python
+from langchain.agents import create_react_agent
+
+tools = [
+    VectorSearchTool(),
+    WebSearchTool(),
+    CalculatorTool(),
+    WikipediaTool()
+]
+
+agent = create_react_agent(
+    llm=ChatOpenAI(model="gpt-4o"),
+    tools=tools,
+    prompt=agent_prompt
+)
+
+# LLM이 필요에 따라 도구 선택
+result = agent.run("2024년 노벨물리학상 수상자는?")
+```
+
+### 2. Graph RAG
+
+**개념**: 지식을 그래프 구조로 저장
+
+```python
+from neo4j import GraphDatabase
+
+# 지식 그래프 구축
+CREATE (학식:Entity {name: "학식"})
+CREATE (곤자가:Entity {name: "곤자가"})
+CREATE (학식)-[:LOCATED_AT]->(곤자가)
+CREATE (학식)-[:HAS_MENU {price: 5000}]->(돈까스)
+
+# 그래프 기반 검색
+def graph_rag(query):
+    # 1. 엔티티 추출
+    entities = extract_entities(query)
+
+    # 2. 그래프 탐색
+    subgraph = neo4j.query(f"MATCH path=({entities[0]})-[*1..3]-()")
+
+    # 3. 서브그래프를 컨텍스트로 제공
+    return generate_with_graph_context(query, subgraph)
+```
+
+### 3. 멀티에이전트 시스템
+
+```python
+# 전문화된 에이전트들
+researcher_agent = Agent(role="정보 수집", tools=[search])
+writer_agent = Agent(role="답변 작성", tools=[llm])
+critic_agent = Agent(role="품질 검증", tools=[evaluator])
+
+def multi_agent_response(query):
+    # 1. 정보 수집
+    info = researcher_agent.run(query)
+
+    # 2. 답변 작성
+    draft = writer_agent.run(info)
+
+    # 3. 검증 및 개선
+    final = critic_agent.review_and_improve(draft)
+
+    return final
+```
+
+### 4. 지속적 학습 (Continual Learning)
+
+```python
+def continual_learning():
+    """사용자 피드백으로 지속 개선"""
+
+    # 1. 피드백 수집
+    feedbacks = get_new_feedbacks()
+
+    # 2. 파인튜닝 데이터셋 구축
+    training_data = []
+    for fb in feedbacks:
+        if fb.rating >= 4:  # 좋은 답변
+            training_data.append({
+                "question": fb.question,
+                "answer": fb.answer
+            })
+
+    # 3. Embedding 재학습 또는 프롬프트 개선
+    update_system_prompt(training_data)
+
+    # 4. 새로운 데이터 추가
+    add_to_vector_db(training_data)
+```
+
+---
+
+## 📊 성능 벤치마크
+
+### 목표 지표 (프로덕션)
+
+| 메트릭        | 목표         | 측정 방법   |
+| ------------- | ------------ | ----------- |
+| **응답 시간** | < 2초        | 평균        |
+| **정확도**    | > 85%        | 사용자 평가 |
+| **만족도**    | > 4.0/5.0    | 피드백      |
+| **가용성**    | > 99%        | Uptime      |
+| **비용**      | < $0.05/대화 | API 비용    |
+
+### 측정 도구
+
+```python
+import prometheus_client as prom
+
+# 메트릭 정의
+response_time = prom.Histogram('response_time_seconds', 'Response time')
+accuracy_score = prom.Gauge('accuracy_score', 'Answer accuracy')
+
+# 측정
+with response_time.time():
+    answer = generate_response(query)
+
+accuracy_score.set(evaluate_accuracy(answer))
+```
+
+---
+
+## 🎯 프로젝트 완성 체크리스트
+
+### 기본 (필수)
+
+- [ ] RAG 시스템 동작
+- [ ] 5개 이상 Q&A 데이터
+- [ ] 기본 UI 완성
+- [ ] Vercel 배포
+
+### 중급 (권장)
+
+- [ ] 20개 이상 Q&A 데이터
+- [ ] 리랭킹 구현
+- [ ] 스트리밍 응답
+- [ ] 에러 처리
+- [ ] 사용자 피드백 수집
+
+### 고급 (차별화)
+
+- [ ] 하이브리드 검색
+- [ ] 멀티모달 (이미지)
+- [ ] A/B 테스팅
+- [ ] 성능 모니터링
+- [ ] 지속적 학습
+
+---
+
+## 📖 더 읽어볼 자료
+
+### 최신 블로그 포스트 (2025)
+
+1. **"State of RAG 2025"** - LangChain Blog
+   - https://blog.langchain.com/
+2. **"Production RAG at Scale"** - Pinecone
+
+   - https://www.pinecone.io/blog/
+
+3. **"Advanced RAG Techniques"** - LlamaIndex
+   - https://www.llamaindex.ai/blog/
+
+### 커뮤니티
+
+4. **r/LangChain** (Reddit)
+
+   - 실전 사례 공유
+
+5. **LangChain Discord**
+   - https://discord.gg/langchain
+   - 실시간 질문/답변
+
+---
+
+**프로젝트를 한 단계 더 발전시켜 보세요!** 🚀
+</file>
+
+<file path="DOCKER_HOT_RELOAD.md">
+# 🔥 Docker Hot Reloading 가이드
+
+> 코드 수정 시 즉시 반영하기
+
+---
+
+## 🎯 Hot Reloading이란?
+
+코드를 수정하면 **Docker 컨테이너를 재시작하지 않고도** 변경사항이 자동으로 반영되는 기능입니다.
+
+---
+
+## ⚡ 빠른 사용법
+
+### 상황별 명령어
+
+| 수정한 파일                             | 명령어                      | 적용 시간 |
+| --------------------------------------- | --------------------------- | --------- |
+| **Python 코드** (`app.py`, `services/`) | 자동 (개발 모드)            | 즉시      |
+| **HTML** (`templates/`)                 | 새로고침만                  | 즉시      |
+| **CSS/JS** (`static/`)                  | 새로고침만                  | 즉시      |
+| **Config** (`config/`)                  | 자동 (개발 모드)            | 즉시      |
+| **requirements.txt**                    | `docker compose up --build` | 2-3분     |
+| **Dockerfile**                          | `docker compose up --build` | 2-3분     |
+| **.env**                                | `docker compose restart`    | 5초       |
+
+---
+
+## 🔧 설정 확인
+
+### docker compose.yml 확인
+
+```yaml
+services:
+  chatbot:
+    environment:
+      - FLASK_ENV=development # ✅ 개발 모드
+      - FLASK_DEBUG=True # ✅ 디버그 모드
+    volumes:
+      - ./app.py:/app/app.py # ✅ 마운트
+      - ./services:/app/services # ✅ 마운트
+      - ./templates:/app/templates # ✅ 마운트
+      - ./static:/app/static # ✅ 마운트
+```
+
+**모두 ✅면 Hot Reloading 활성화!**
+
+---
+
+## 📝 실전 예시
+
+### 예시 1: Python 코드 수정
+
+```bash
+# 1. Docker 실행 (한 번만)
+docker compose up
+
+# 2. services/chatbot_service.py 수정
+# (에디터에서 코드 수정)
+
+# 3. 터미널 확인
+# * Detected change in '/app/services/chatbot_service.py', reloading
+# * Restarting with stat
+
+# 4. 브라우저 새로고침
+# ✅ 변경사항 반영됨!
+```
+
+### 예시 2: HTML/CSS 수정
+
+```bash
+# 1. templates/chat.html 또는 static/css/style.css 수정
+
+# 2. 브라우저 새로고침 (Ctrl+Shift+R 또는 Cmd+Shift+R)
+# ✅ 즉시 반영됨!
+```
+
+### 예시 3: 패키지 추가
+
+```bash
+# 1. requirements.txt에 새 패키지 추가
+echo "requests==2.31.0" >> requirements.txt
+
+# 2. 재빌드 필요
+docker compose down
+docker compose up --build
+
+# ⏱️ 2-3분 소요
+```
+
+### 예시 4: 환경변수 변경
+
+```bash
+# 1. .env 파일 수정
+nano .env
+
+# 2. 컨테이너만 재시작
+docker compose restart chatbot
+
+# ⏱️ 5초 소요
+```
+
+---
+
+## 🐛 Hot Reloading이 안 될 때
+
+### 1. Flask가 재시작 안 됨
+
+**증상**: 코드 수정해도 반영 안 됨
+
+**해결**:
+
+```bash
+# docker compose.yml 확인
+environment:
+  - FLASK_ENV=development  # ← 이게 development인지 확인
+  - FLASK_DEBUG=True       # ← 이게 True인지 확인
+
+# 변경 후 재시작
+docker compose restart chatbot
+```
+
+### 2. 파일이 마운트 안 됨
+
+**증상**: 파일 수정해도 컨테이너에 반영 안 됨
+
+**해결**:
+
+```bash
+# docker compose.yml의 volumes 확인
+volumes:
+  - ./services:/app/services  # ← 경로가 맞는지 확인
+
+# 확인 방법
+docker compose exec chatbot ls -la /app/services
+```
+
+### 3. 캐시 문제
+
+**증상**: 브라우저에서 변경사항 안 보임
+
+**해결**:
+
+```bash
+# 강력 새로고침
+# Chrome/Edge: Ctrl+Shift+R (Windows/Linux) / Cmd+Shift+R (Mac)
+# Firefox: Ctrl+F5 (Windows/Linux) / Cmd+Shift+R (Mac)
+```
+
+### 4. Syntax Error로 Flask 중단
+
+**증상**: 코드 수정 후 서버가 완전히 멈춤
+
+**해결**:
+
+```bash
+# 1. 로그 확인
+docker compose logs -f chatbot
+
+# 2. 에러 확인 후 코드 수정
+
+# 3. 저장하면 자동으로 재시작 시도
+```
+
+---
+
+## 💡 유용한 명령어 모음
+
+```bash
+# 로그 실시간 확인 (Hot Reload 메시지 보기)
+docker compose logs -f chatbot
+
+# 컨테이너 재시작 (빠름)
+docker compose restart chatbot
+
+# 완전 재시작 (중간 속도)
+docker compose down && docker compose up
+
+# 재빌드 (느림, 패키지 변경 시)
+docker compose up --build
+
+# 컨테이너 내부 접속 (디버깅)
+docker compose exec chatbot bash
+
+# 특정 파일이 마운트되었는지 확인
+docker compose exec chatbot cat /app/services/chatbot_service.py
+```
+
+---
+
+## 🎯 베스트 프랙티스
+
+### ✅ DO
+
+```bash
+# 1. 개발 중에는 개발 모드 유지
+FLASK_ENV=development
+FLASK_DEBUG=True
+
+# 2. 로그를 항상 켜두기
+docker compose logs -f chatbot
+
+# 3. 변경 후 터미널에서 재시작 메시지 확인
+# * Restarting with stat
+
+# 4. Python 파일 수정 → 터미널 확인 → 브라우저 새로고침
+```
+
+### ❌ DON'T
+
+```bash
+# 1. 매번 docker compose up --build 하지 마세요
+# (시간 낭비, Python/HTML/CSS는 자동 반영)
+
+# 2. production 모드로 개발하지 마세요
+FLASK_ENV=production  # ← Hot Reload 안 됨!
+
+# 3. 변경 후 컨테이너 재시작하지 마세요
+# (불필요, 자동으로 reload됨)
+```
+
+---
+
+## 🚀 성능 최적화 팁
+
+### 1. Docker Volume 성능 향상 (macOS)
+
+macOS에서 volumes가 느릴 수 있습니다.
+
+**해결책**:
+
+```yaml
+# docker compose.yml
+volumes:
+  - ./services:/app/services:delegated # ← delegated 추가
+```
+
+### 2. .dockerignore 최적화
+
+불필요한 파일 제외:
+
+```
+__pycache__
+*.pyc
+.git
+.vscode
+venv/
+```
+
+### 3. 선택적 재시작
+
+전체 재시작 대신:
+
+```bash
+# 특정 서비스만 재시작
+docker compose restart chatbot
+
+# 전체 재시작 (느림)
+docker compose restart  # ← 피하기
+```
+
+---
+
+## 📊 개발 vs Production
+
+| 항목            | 개발          | Production   |
+| --------------- | ------------- | ------------ |
+| **FLASK_ENV**   | `development` | `production` |
+| **FLASK_DEBUG** | `True`        | `False`      |
+| **Hot Reload**  | ✅ 활성화     | ❌ 비활성화  |
+| **에러 표시**   | 상세          | 간단         |
+| **성능**        | 느림          | 빠름         |
+
+**배포 전 확인**:
+
+```yaml
+# docker compose.yml (production)
+environment:
+  - FLASK_ENV=production
+  - FLASK_DEBUG=False
+```
+
+---
+
+## 🆘 문제 해결 체크리스트
+
+Hot Reload가 안 될 때 순서대로 확인:
+
+- [ ] `FLASK_ENV=development` 확인
+- [ ] `FLASK_DEBUG=True` 확인
+- [ ] `volumes` 경로 확인
+- [ ] 컨테이너 재시작: `docker compose restart chatbot`
+- [ ] 로그 확인: `docker compose logs -f chatbot`
+- [ ] 브라우저 캐시 삭제 (Ctrl+Shift+R)
+- [ ] 코드 Syntax Error 확인
+- [ ] 재빌드: `docker compose up --build`
+
+**여전히 안 되면**:
+
+```bash
+# 완전히 초기화
+docker compose down -v
+docker compose up --build
+```
+
+---
+
+## 💡 요약
+
+```bash
+# 일반 개발 워크플로우
+1. docker compose up         # 한 번만
+2. 코드 수정                  # 에디터
+3. 터미널 확인               # Restarting 메시지
+4. 브라우저 새로고침          # 변경사항 확인
+
+# 패키지 추가 시에만
+docker compose up --build
+
+# 환경변수 변경 시에만
+docker compose restart chatbot
+```
+
+**개발 모드 = 자동 반영! 🎉**
+</file>
+
+<file path="vercel.json">
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "app.py",
+      "use": "@vercel/python"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/static/(.*)",
+      "dest": "/static/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "app.py"
+    }
+  ],
+  "env": {
+    "FLASK_ENV": "production"
+  }
+}
+</file>
+
+<file path=".cursor/rules/global.mdc">
+---
+description:
+globs:
+alwaysApply: true
+---
+
+- 해당 프로젝트는 과제 프로젝트 파일이다.
+- 사용자는 교수자이고 학생들에게 과제를 내기전에 과제를 직접 수행 후 배포까지 한 사이클을 돌려보길 원한다.
+- README.md 와 ARCHITECTURE.md 기반으로 docker 환경에서 과제를 수행하고 vercel을 이용해 배포하는 것을 목표로 한다.
+- vercel cli를 활용하라.
+</file>
+
+<file path="services/chatbot_service.py">
+"""
+🎯 챗봇 서비스 - 구현 파일
+
+이 파일은 챗봇의 핵심 AI 로직을 담당합니다.
+아래 아키텍처를 참고하여 직접 설계하고 구현하세요.
+
+📐 시스템 아키텍처:
+
+┌─────────────────────────────────────────────────────────┐
+│ 1. 초기화 단계 (ChatbotService.__init__)                  │
+├─────────────────────────────────────────────────────────┤
+│  - OpenAI Client 생성                                    │
+│  - ChromaDB 연결 (벡터 데이터베이스)                       │
+│  - LangChain Memory 초기화 (대화 기록 관리)               │
+│  - Config 파일 로드                                       │
+└─────────────────────────────────────────────────────────┘
+                            ↓
+┌─────────────────────────────────────────────────────────┐
+│ 2. RAG 파이프라인 (generate_response 내부)               │
+├─────────────────────────────────────────────────────────┤
+│                                                          │
+│  사용자 질문 "학식 추천해줘"                              │
+│       ↓                                                  │
+│  [_create_embedding()]                                   │
+│       ↓                                                  │
+│  질문 벡터: [0.12, -0.34, ..., 0.78]  (3072차원)        │
+│       ↓                                                  │
+│  [_search_similar()]  ← ChromaDB 검색                    │
+│       ↓                                                  │
+│  검색 결과: "학식은 곤자가가 맛있어" (유사도: 0.87)        │
+│       ↓                                                  │
+│  [_build_prompt()]                                       │
+│       ↓                                                  │
+│  최종 프롬프트 = 시스템 설정 + RAG 컨텍스트 + 질문        │
+└─────────────────────────────────────────────────────────┘
+                            ↓
+┌─────────────────────────────────────────────────────────┐
+│ 3. LLM 응답 생성                                         │
+├─────────────────────────────────────────────────────────┤
+│  OpenAI GPT-4 API 호출                                   │
+│       ↓                                                  │
+│  "학식은 곤자가에서 먹는 게 제일 좋아! 돈까스가 인기야"    │
+│       ↓                                                  │
+│  [선택: 이미지 검색]                                      │
+│       ↓                                                  │
+│  응답 반환: {reply: "...", image: "..."}                 │
+└─────────────────────────────────────────────────────────┘
+                            ↓
+┌─────────────────────────────────────────────────────────┐
+│ 4. 메모리 저장 (LangChain Memory)                        │
+├─────────────────────────────────────────────────────────┤
+│  대화 기록에 질문-응답 저장                               │
+│  다음 대화에서 컨텍스트로 활용                            │
+└─────────────────────────────────────────────────────────┘
+
+
+💡 핵심 구현 과제:
+
+1. **Embedding 생성**
+   - OpenAI API를 사용하여 텍스트를 벡터로 변환
+   - 모델: text-embedding-3-large (3072차원)
+
+2. **RAG 검색 알고리즘** ⭐ 가장 중요!
+   - ChromaDB에서 유사 벡터 검색
+   - 유사도 계산: similarity = 1 / (1 + distance)
+   - threshold 이상인 문서만 선택
+
+3. **LLM 프롬프트 설계**
+   - 시스템 프롬프트 (캐릭터 설정)
+   - RAG 컨텍스트 통합
+   - 대화 기록 포함
+
+4. **대화 메모리 관리**
+   - LangChain의 ConversationSummaryBufferMemory 사용
+   - 대화가 길어지면 자동으로 요약
+
+
+📚 참고 문서:
+- ARCHITECTURE.md: 시스템 아키텍처 상세 설명
+- IMPLEMENTATION_GUIDE.md: 단계별 구현 가이드
+- README.md: 프로젝트 개요
+
+
+⚠️ 주의사항:
+- 이 파일의 구조는 가이드일 뿐입니다
+- 자유롭게 재설계하고 확장할 수 있습니다
+- 단, generate_response() 함수 시그니처는 유지해야 합니다
+  (app.py에서 호출하기 때문)
+"""
+
+import os
+from pathlib import Path
+from dotenv import load_dotenv
+import json
+
+# 환경변수 로드
+load_dotenv()
+
+# 프로젝트 루트 경로
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+
+class ChatbotService:
+    """
+    챗봇 서비스 클래스
+    
+    이 클래스는 챗봇의 모든 AI 로직을 캡슐화합니다.
+    
+    주요 책임:
+    1. OpenAI API 관리
+    2. ChromaDB 벡터 검색
+    3. LangChain 메모리 관리
+    4. 응답 생성 파이프라인
+    
+    학생이 구현해야 할 메서드:
+    - __init__: 모든 구성 요소 초기화
+    - _load_config: 설정 파일 로드
+    - _init_chromadb: 벡터 데이터베이스 초기화
+    - _create_embedding: 텍스트 → 벡터 변환
+    - _search_similar: RAG 검색 수행 (핵심!)
+    - _build_prompt: 프롬프트 구성
+    - generate_response: 최종 응답 생성 (모든 로직 통합)
+    """
+    
+    def __init__(self):
+        """
+        챗봇 서비스 초기화
+        
+        TODO: 다음 구성 요소들을 초기화하세요
+        
+        1. Config 로드
+           - config/chatbot_config.json 파일 읽기
+           - 챗봇 이름, 설명, 시스템 프롬프트 등
+        
+        2. OpenAI Client
+           - API 키: os.getenv("OPENAI_API_KEY")
+           - from openai import OpenAI
+           - self.client = OpenAI(api_key=...)
+        
+        3. ChromaDB
+           - 텍스트 임베딩 컬렉션 연결
+           - 경로: static/data/chatbot/chardb_embedding
+           - self.collection = ...
+        
+        4. LangChain Memory (선택)
+           - ConversationSummaryBufferMemory
+           - 대화 기록 관리
+           - self.memory = ...
+        
+        힌트:
+        - ChromaDB: import chromadb
+        - LangChain: from langchain.memory import ConversationSummaryBufferMemory
+        """
+        print("[ChatbotService] 초기화 중...")
+        
+        # 여기에 초기화 코드 작성
+        self.config = {}
+        self.client = None
+        self.collection = None
+        self.memory = None
+        
+        print("[ChatbotService] 초기화 완료")
+    
+    
+    def _load_config(self):
+        """
+        설정 파일 로드
+        
+        TODO: config/chatbot_config.json 읽어서 반환
+        
+        반환값 예시:
+        {
+            "name": "김서강",
+            "character": {...},
+            "system_prompt": {...}
+        }
+        """
+        pass
+    
+    
+    def _init_chromadb(self):
+        """
+        ChromaDB 초기화 및 컬렉션 반환
+        
+        TODO: 
+        1. PersistentClient 생성
+        2. 컬렉션 가져오기 (이름: "rag_collection")
+        3. 컬렉션 반환
+        
+        힌트:
+        - import chromadb
+        - db_path = BASE_DIR / "static/data/chatbot/chardb_embedding"
+        - client = chromadb.PersistentClient(path=str(db_path))
+        - collection = client.get_collection(name="rag_collection")
+        """
+        pass
+    
+    
+    def _create_embedding(self, text: str) -> list:
+        """
+        텍스트를 임베딩 벡터로 변환
+        
+        Args:
+            text (str): 임베딩할 텍스트
+        
+        Returns:
+            list: 3072차원 벡터 (text-embedding-3-large 모델)
+        
+        TODO:
+        1. OpenAI API 호출
+        2. embeddings.create() 사용
+        3. 벡터 반환
+        
+        힌트:
+        - response = self.client.embeddings.create(
+        -     input=[text],
+        -     model="text-embedding-3-large"
+        - )
+        - return response.data[0].embedding
+        """
+        pass
+    
+    
+    def _search_similar(self, query: str, threshold: float = 0.45, top_k: int = 5):
+        """
+        RAG 검색: 유사한 문서 찾기 (핵심 메서드!)
+        
+        Args:
+            query (str): 검색 질의
+            threshold (float): 유사도 임계값 (0.3-0.5 권장)
+            top_k (int): 검색할 문서 개수
+        
+        Returns:
+            tuple: (document, similarity, metadata) 또는 (None, None, None)
+        
+        TODO: RAG 검색 알고리즘 구현
+        
+        1. 쿼리 임베딩 생성
+           query_embedding = self._create_embedding(query)
+        
+        2. ChromaDB 검색
+           results = self.collection.query(
+               query_embeddings=[query_embedding],
+               n_results=top_k,
+               include=["documents", "distances", "metadatas"]
+           )
+        
+        3. 유사도 계산 및 필터링
+           for doc, dist, meta in zip(...):
+               similarity = 1 / (1 + dist)  ← 유사도 공식!
+               if similarity >= threshold:
+                   ...
+        
+        4. 가장 유사한 문서 반환
+           return (best_document, best_similarity, metadata)
+        
+        
+        💡 핵심 개념:
+        
+        - Distance vs Similarity
+          · ChromaDB는 "거리(distance)"를 반환 (작을수록 유사)
+          · 우리는 "유사도(similarity)"로 변환 (클수록 유사)
+          · 변환 공식: similarity = 1 / (1 + distance)
+        
+        - Threshold
+          · 0.3: 매우 느슨한 매칭 (관련성 낮아도 OK)
+          · 0.45: 적당한 매칭 (추천!)
+          · 0.7: 매우 엄격한 매칭 (정확한 답만)
+        
+        - Top K
+          · 5-10개 정도 검색
+          · 그 중 threshold 넘는 것만 사용
+        
+        
+        🐛 디버깅 팁:
+        - print()로 검색 결과 확인
+        - 유사도 값 확인 (너무 낮으면 threshold 조정)
+        - 검색된 문서 내용 확인
+        """
+        pass
+    
+    
+    def _build_prompt(self, user_message: str, context: str = None, username: str = "사용자"):
+        """
+        LLM 프롬프트 구성
+        
+        Args:
+            user_message (str): 사용자 메시지
+            context (str): RAG 검색 결과 (선택)
+            username (str): 사용자 이름
+        
+        Returns:
+            str: 최종 프롬프트
+        
+        TODO:
+        1. 시스템 프롬프트 가져오기 (config에서)
+        2. RAG 컨텍스트 포함 여부 결정
+        3. 대화 기록 포함 (선택)
+        4. 최종 프롬프트 문자열 반환
+        
+        프롬프트 예시:
+        ```
+        당신은 서강대학교 선배 김서강입니다.
+        신입생들에게 학교 생활을 알려주는 역할을 합니다.
+        
+        [참고 정보]  ← RAG 컨텍스트가 있을 때만
+        학식은 곤자가가 맛있어. 돈까스가 인기야.
+        
+        사용자: 학식 추천해줘
+        ```
+        """
+        pass
+    
+    
+    def generate_response(self, user_message: str, username: str = "사용자") -> dict:
+        """
+        사용자 메시지에 대한 챗봇 응답 생성
+        
+        Args:
+            user_message (str): 사용자 입력
+            username (str): 사용자 이름
+        
+        Returns:
+            dict: {
+                'reply': str,       # 챗봇 응답 텍스트
+                'image': str|None   # 이미지 경로 (선택)
+            }
+        
+        
+        TODO: 전체 응답 생성 파이프라인 구현
+        
+        
+        ═══════════════════════════════════════════════════
+        📋 구현 단계
+        ═══════════════════════════════════════════════════
+        
+        [1단계] 초기 메시지 처리
+        
+            if user_message.strip().lower() == "init":
+                # 첫 인사말 반환
+                bot_name = self.config.get('name', '챗봇')
+                return {
+                    'reply': f"안녕! 나는 {bot_name}이야.",
+                    'image': None
+                }
+        
+        
+        [2단계] RAG 검색 수행
+        
+            context, similarity, metadata = self._search_similar(
+                query=user_message,
+                threshold=0.45,
+                top_k=5
+            )
+            
+            has_context = (context is not None)
+        
+        
+        [3단계] 프롬프트 구성
+        
+            prompt = self._build_prompt(
+                user_message=user_message,
+                context=context,
+                username=username
+            )
+        
+        
+        [4단계] LLM API 호출
+        
+            response = self.client.chat.completions.create(
+                model="gpt-4o-mini",  # 또는 gpt-4
+                messages=[
+                    {"role": "system", "content": "시스템 프롬프트"},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.7,
+                max_tokens=500
+            )
+            
+            reply = response.choices[0].message.content
+        
+        
+        [5단계] 메모리 저장 (선택)
+        
+            if self.memory:
+                self.memory.save_context(
+                    {"input": user_message},
+                    {"output": reply}
+                )
+        
+        
+        [6단계] 응답 반환
+        
+            return {
+                'reply': reply,
+                'image': None  # 이미지 검색 로직 추가 가능
+            }
+        
+        
+        ═══════════════════════════════════════════════════
+        💡 핵심 포인트
+        ═══════════════════════════════════════════════════
+        
+        1. RAG 활용
+           - 검색 결과가 있으면 프롬프트에 포함
+           - 없으면 일반 대화 모드
+        
+        2. 에러 처리
+           - try-except로 API 오류 처리
+           - 실패 시 기본 응답 반환
+        
+        3. 로깅
+           - 각 단계마다 print()로 상태 출력
+           - 디버깅에 매우 유용!
+        
+        4. 확장성
+           - 이미지 검색 로직 추가 가능
+           - 감정 분석 추가 가능
+           - 다중 언어 지원 가능
+        
+        
+        ═══════════════════════════════════════════════════
+        🐛 디버깅 예시
+        ═══════════════════════════════════════════════════
+        
+        print(f"\n{'='*50}")
+        print(f"[USER] {username}: {user_message}")
+        print(f"[RAG] Context found: {has_context}")
+        if has_context:
+            print(f"[RAG] Similarity: {similarity:.4f}")
+            print(f"[RAG] Context: {context[:100]}...")
+        print(f"[LLM] Calling API...")
+        print(f"[BOT] {reply}")
+        print(f"{'='*50}\n")
+        """
+        
+        # 여기에 전체 파이프라인 구현
+        # 위의 단계를 참고하여 자유롭게 설계하세요
+        
+        try:
+            # 구현 시작
+            pass
+            
+        except Exception as e:
+            print(f"[ERROR] 응답 생성 실패: {e}")
+            return {
+                'reply': "죄송해요, 일시적인 오류가 발생했어요. 다시 시도해주세요.",
+                'image': None
+            }
+
+
+# ============================================================================
+# 싱글톤 패턴
+# ============================================================================
+# ChatbotService 인스턴스를 앱 전체에서 재사용
+# (매번 새로 초기화하면 비효율적)
+
+_chatbot_service = None
+
+def get_chatbot_service():
+    """
+    챗봇 서비스 인스턴스 반환 (싱글톤)
+    
+    첫 호출 시 인스턴스 생성, 이후 재사용
+    """
+    global _chatbot_service
+    if _chatbot_service is None:
+        _chatbot_service = ChatbotService()
+    return _chatbot_service
+
+
+# ============================================================================
+# 테스트용 메인 함수
+# ============================================================================
+
+if __name__ == "__main__":
+    """
+    로컬 테스트용
+    
+    실행 방법:
+    python services/chatbot_service.py
+    """
+    print("챗봇 서비스 테스트")
+    print("=" * 50)
+    
+    service = get_chatbot_service()
+    
+    # 초기화 테스트
+    response = service.generate_response("init", "테스터")
+    print(f"초기 응답: {response}")
+    
+    # 일반 대화 테스트
+    response = service.generate_response("안녕하세요!", "테스터")
+    print(f"응답: {response}")
+</file>
+
+<file path="static/images/chatbot/README.md">
+# 🖼️ 이미지 폴더
+
+이 폴더에 챗봇에 사용할 이미지 파일을 추가하세요.
+</file>
+
+<file path=".env.example">
+# .env.example
+
+# OpenAI API Key (필수)
+OPENAI_API_KEY=your_openai_api_key_here
+
+# Flask Configuration
+FLASK_ENV=development
+FLASK_DEBUG=True
+
+# Application Settings
+SECRET_KEY=your_secret_key_here
+PORT=5000
+</file>
+
+<file path=".gitattributes">
+# --- 기본 텍스트 파일 설정 ---
+# 텍스트 파일은 자동으로 개행 문자 정규화 (LF로 통일)
+* text=auto eol=lf
+
+# --- 코드 파일 (언어별) ---
+*.js     text
+*.jsx    text
+*.ts     text
+*.tsx    text
+*.py     text
+*.sh     text
+*.json   text
+*.yml    text
+*.yaml   text
+*.md     text
+
+# --- OS 별 스크립트 호환성 ---
+*.bat    text eol=crlf
+*.ps1    text eol=crlf
+
+# --- 이미지 및 미디어 파일 (Git LFS 사용) ---
+*.png filter=lfs diff=lfs merge=lfs -text
+*.jpg filter=lfs diff=lfs merge=lfs -text
+*.jpeg filter=lfs diff=lfs merge=lfs -text
+*.gif filter=lfs diff=lfs merge=lfs -text
+*.mp4 filter=lfs diff=lfs merge=lfs -text
+*.mov filter=lfs diff=lfs merge=lfs -text
+*.webp filter=lfs diff=lfs merge=lfs -text
+
+# --- 모델 및 데이터 파일 (Git LFS 사용) ---
+*.pt filter=lfs diff=lfs merge=lfs -text     # PyTorch 모델
+*.pth filter=lfs diff=lfs merge=lfs -text
+*.ckpt filter=lfs diff=lfs merge=lfs -text   # Checkpoint
+*.h5 filter=lfs diff=lfs merge=lfs -text     # Keras 모델
+*.onnx filter=lfs diff=lfs merge=lfs -text
+*.pkl filter=lfs diff=lfs merge=lfs -text    # Pickle 데이터
+*.npz filter=lfs diff=lfs merge=lfs -text    # Numpy 압축
+*.npy filter=lfs diff=lfs merge=lfs -text
+*.csv filter=lfs diff=lfs merge=lfs -text
+*.parquet filter=lfs diff=lfs merge=lfs -text
+*.zip filter=lfs diff=lfs merge=lfs -text
+*.tar filter=lfs diff=lfs merge=lfs -text
+
+# --- 기타 (폰트, 디자인 리소스 등) ---
+*.ttf filter=lfs diff=lfs merge=lfs -text
+*.otf filter=lfs diff=lfs merge=lfs -text
+*.psd filter=lfs diff=lfs merge=lfs -text
+*.ai  filter=lfs diff=lfs merge=lfs -text
+</file>
+
+<file path=".gitignore">
+# 환경변수
+.env
+*.env
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+venv/
+env/
+
+# 크로마DB 관련 캐시/폴더
+*chroma_db*
+*__chroma_db__*
+*chardb_embedding/
+*imagedb_embedding/
+
+# Jupyter Notebook
+*.ipynb
+.ipynb_checkpoints
+
+# 에디터
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# macOS
+.DS_Store
+
+# Vercel
+.vercel
+
+# 로그
+*.log
+
+# 임시 파일
+*.tmp
+*.bak
+</file>
+
+<file path="ARCHITECTURE.md">
+# 🏗️ 시스템 아키텍처
+
+> 챗봇 프로젝트의 전체 구조와 데이터 흐름
+
+---
+
+## 📊 전체 아키텍처
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                           사용자                                 │
+└──────────────────────────┬──────────────────────────────────────┘
+                           │ HTTP Request/Response
+                           ↓
+┌─────────────────────────────────────────────────────────────────┐
+│                      Frontend Layer                              │
+│  (Vanilla JavaScript + HTML/CSS)                                 │
+├─────────────────────────────────────────────────────────────────┤
+│  📄 templates/                                                   │
+│    ├── index.html         - 메인 페이지                          │
+│    ├── detail.html        - 상세 페이지                          │
+│    └── chat.html          - 채팅 인터페이스                       │
+│                                                                  │
+│  📜 static/js/                                                   │
+│    └── chatbot.js         - 채팅 UI 로직                         │
+│                            (메시지 전송, 렌더링)                  │
+└──────────────────────────┬──────────────────────────────────────┘
+                           │ POST /api/chat
+                           ↓
+┌─────────────────────────────────────────────────────────────────┐
+│                      Backend Layer                               │
+│  (Flask Web Framework)                                           │
+├─────────────────────────────────────────────────────────────────┤
+│  🎯 app.py                                                       │
+│    ├── @app.route('/')              - 메인 페이지               │
+│    ├── @app.route('/detail')        - 상세 페이지               │
+│    ├── @app.route('/chat')          - 채팅 페이지               │
+│    ├── @app.route('/api/chat')      - 챗봇 API ⭐               │
+│    └── @app.route('/health')        - 헬스체크                  │
+└──────────────────────────┬──────────────────────────────────────┘
+                           │ get_chatbot_service()
+                           ↓
+┌─────────────────────────────────────────────────────────────────┐
+│                      Service Layer                               │
+│  (Business Logic - 팀별 구현 영역)                                │
+├─────────────────────────────────────────────────────────────────┤
+│  🧠 services/chatbot_service.py                                  │
+│                                                                  │
+│  class ChatbotService:                                           │
+│    │                                                             │
+│    ├── __init__()                                               │
+│    │    ├── OpenAI Client 초기화                                │
+│    │    ├── ChromaDB 연결                                       │
+│    │    └── LangChain Memory 설정                               │
+│    │                                                             │
+│    ├── _create_embedding(text)                                  │
+│    │    └── OpenAI API → 벡터 변환                              │
+│    │                                                             │
+│    ├── _search_similar(query)         ⭐ RAG 핵심!             │
+│    │    ├── 1. 쿼리 임베딩 생성                                  │
+│    │    ├── 2. ChromaDB 검색                                    │
+│    │    ├── 3. 유사도 계산                                       │
+│    │    └── 4. 최적 문서 반환                                    │
+│    │                                                             │
+│    ├── _build_prompt(message, context)                          │
+│    │    └── 시스템 프롬프트 + RAG 컨텍스트                       │
+│    │                                                             │
+│    └── generate_response(user_message)                          │
+│         ├── 1. RAG 검색                                          │
+│         ├── 2. 프롬프트 구성                                      │
+│         ├── 3. LLM API 호출                                      │
+│         ├── 4. 메모리 저장                                        │
+│         └── 5. 응답 반환                                          │
+└──────────────┬────────────┬─────────────────────────────────────┘
+               │            │
+               ↓            ↓
+    ┌──────────────┐  ┌──────────────┐
+    │   OpenAI     │  │   ChromaDB   │
+    │   API        │  │   (Vector    │
+    │              │  │   Database)  │
+    │ - Embedding  │  │              │
+    │ - GPT-4      │  │ - Text DB    │
+    │ - Memory     │  │ - Image DB   │
+    └──────────────┘  └──────────────┘
+```
+
+---
+
+## 🔄 데이터 흐름 (Request → Response)
+
+### 1️⃣ 사용자 메시지 입력
+
+```
+사용자: "학식 추천해줘"
+  ↓
+Frontend (chatbot.js)
+  ↓
+fetch('/api/chat', {
+  method: 'POST',
+  body: JSON.stringify({
+    message: "학식 추천해줘",
+    username: "홍길동"
+  })
+})
+```
+
+### 2️⃣ Backend 라우팅
+
+```
+Flask (app.py)
+  ↓
+@app.route('/api/chat', methods=['POST'])
+def api_chat():
+    # 요청 파싱
+    user_message = request.json['message']
+
+    # 서비스 호출
+    chatbot = get_chatbot_service()
+    response = chatbot.generate_response(user_message)
+
+    return jsonify(response)
+```
+
+### 3️⃣ AI 로직 처리 (핵심)
+
+```
+ChatbotService (chatbot_service.py)
+  ↓
+[1단계] Embedding 생성
+  "학식 추천해줘"
+    → OpenAI API
+    → [0.12, -0.34, ..., 0.78]  (3072차원 벡터)
+
+[2단계] RAG 검색
+  query_embedding = [0.12, -0.34, ..., 0.78]
+    ↓
+  ChromaDB.query(query_embedding)
+    ↓
+  검색 결과:
+    - "학식은 곤자가가 맛있어" (거리: 0.15)
+    - "도서관은 10시까지" (거리: 0.98)
+    ↓
+  유사도 계산:
+    - similarity₁ = 1/(1+0.15) = 0.87 ✅ (선택!)
+    - similarity₂ = 1/(1+0.98) = 0.50 ❌ (제외)
+
+[3단계] 프롬프트 구성
+  system_prompt = """
+  당신은 서강대 선배입니다.
+  신입생들에게 학교 생활을 알려주세요.
+  """
+
+  rag_context = """
+  [참고 정보]
+  학식은 곤자가가 맛있어.
+  """
+
+  final_prompt = system_prompt + rag_context + user_message
+
+[4단계] LLM API 호출
+  OpenAI.chat.completions.create(
+    model="gpt-4o-mini",
+    messages=[
+      {"role": "system", "content": system_prompt},
+      {"role": "user", "content": final_prompt}
+    ]
+  )
+    ↓
+  "학식은 곤자가에서 먹는 게 제일 좋아! 돈까스가 특히 인기야 😋"
+
+[5단계] 응답 반환
+  {
+    "reply": "학식은 곤자가에서...",
+    "image": null
+  }
+```
+
+### 4️⃣ Frontend 렌더링
+
+```
+chatbot.js
+  ↓
+response = await fetch('/api/chat', ...)
+  ↓
+봇 메시지 DOM 생성
+  ↓
+채팅 UI에 표시
+```
+
+---
+
+## 📂 프로젝트 구조 (MVC 패턴 기반)
+
+수정 금지 파일 수정을 원한다면, 의존성이 있는 파일도 모두 함께 수정하셔야 제대로 동작합니다!
+
+```
+chatbot-project/
+│
+├── 🚫 [템플릿 - 수정 금지]
+│   │
+│   ├── app.py                          # Controller (Flask 라우팅)
+│   ├── templates/                      # View (HTML)
+│   │   ├── index.html
+│   │   ├── detail.html
+│   │   └── chat.html
+│   ├── static/                         # View Assets
+│   │   ├── css/style.css
+│   │   └── js/chatbot.js
+│   │
+│   ├── Dockerfile                      # Docker 설정
+│   ├── docker-compose.yml
+│   ├── requirements.txt                # Python 패키지
+│   └── vercel.json                     # Vercel 배포 설정
+│
+├── ✏️ [팀별 구현 영역]
+│   │
+│   ├── services/                       # Service Layer (비즈니스 로직)
+│   │   ├── __init__.py
+│   │   └── chatbot_service.py         # ⭐ 핵심 AI 로직
+│   │
+│   ├── config/                         # Configuration
+│   │   └── chatbot_config.json        # 챗봇 설정
+│   │
+│   └── static/data/chatbot/            # Data
+│       ├── chardb_text/               # 텍스트 데이터
+│       ├── chardb_embedding/          # 임베딩 벡터
+│       ├── images/                    # 이미지 파일
+│       └── videos/                    # 비디오 파일 (선택)
+│
+└── 📚 [문서]
+    ├── README.md
+    ├── ARCHITECTURE.md                 # 이 문서
+    ├── ASSIGNMENT_GUIDE.md
+    ├── DOCKER_HOT_RELOADING.md
+    └── DOCKER_GUIDE.md
+```
+
+---
+
+## 🧩 핵심 컴포넌트
+
+### 1. ChatbotService (services/chatbot_service.py)
+
+**역할**: 챗봇의 모든 AI 로직 담당
+
+**책임**:
+
+- OpenAI API 관리
+- ChromaDB 벡터 검색 (RAG)
+- LangChain 메모리 관리
+- 응답 생성 파이프라인
+
+**주요 메서드**:
+
+```python
+class ChatbotService:
+    def __init__(self):
+        """초기화"""
+
+    def _create_embedding(self, text: str) -> list:
+        """텍스트 → 벡터 변환"""
+
+    def _search_similar(self, query: str):
+        """RAG 검색 (핵심!)"""
+
+    def _build_prompt(self, message: str, context: str):
+        """프롬프트 구성"""
+
+    def generate_response(self, user_message: str) -> dict:
+        """최종 응답 생성 (통합)"""
+```
+
+### 2. Flask App (app.py)
+
+**역할**: HTTP 라우팅 및 템플릿 렌더링
+
+**책임**:
+
+- URL 라우팅
+- 요청/응답 처리
+- 템플릿 렌더링
+- 에러 핸들링
+
+**주요 라우트**:
+
+```python
+@app.route('/')                    # 메인 페이지
+@app.route('/detail')              # 상세 페이지
+@app.route('/chat')                # 채팅 페이지
+@app.route('/api/chat')            # 챗봇 API
+@app.route('/health')              # 헬스체크
+```
+
+### 3. ChromaDB (Vector Database)
+
+**역할**: 임베딩 벡터 저장 및 검색
+
+**구조**:
+
+```
+static/data/chatbot/chardb_embedding/
+├── chroma.sqlite3           # 메타데이터
+└── [UUID]/                  # 벡터 인덱스
+    ├── data_level0.bin      # HNSW 알고리즘
+    ├── header.bin
+    └── link_lists.bin
+```
+
+**데이터 스키마**:
+
+```python
+{
+    "id": "1",
+    "embedding": [0.12, -0.34, ..., 0.78],  # 3072차원
+    "document": "학식은 곤자가가 맛있어",
+    "metadata": {
+        "type": "qa",
+        "keywords": "학식, 추천",
+        "filename": "qa.txt"
+    }
+}
+```
+
+---
+
+## 🔧 기술 스택
+
+### Backend
+
+- **Flask 3.0**: Python 웹 프레임워크
+- **OpenAI API**: LLM 및 Embedding
+- **ChromaDB**: 벡터 데이터베이스
+- **LangChain**: LLM 통합 프레임워크
+
+### Frontend
+
+- **Vanilla JavaScript**: 프레임워크 없이 순수 JS
+- **HTML5/CSS3**: 기본 웹 API
+
+### Infrastructure
+
+- **Docker**: 컨테이너화
+- **Vercel**: 배포 플랫폼
+- **Python 3.11**: 런타임
+
+---
+
+## 🎯 팀별 구현 범위
+
+### ✅ 제공되는 것 (템플릿)
+
+- Flask 앱 구조 (app.py)
+- HTML/CSS/JS (프론트엔드)
+- Docker 설정
+- 가이드 문서
+
+### ✏️ 구현해야 하는 것 (핵심)
+
+1. **ChatbotService 클래스**
+
+   - OpenAI Client 초기화
+   - ChromaDB 연결
+   - Embedding 생성 함수
+   - RAG 검색 알고리즘 ⭐
+   - LLM 프롬프트 설계
+   - 응답 생성 파이프라인
+
+2. **데이터 준비**
+   프로듀서와 협업하여 데이터를 준비합니다.
+
+   - 텍스트 데이터 작성
+   - 이미지 수집
+   - DB 빌드 스크립트
+
+3. **설정 파일**
+   - chatbot_config.json
+   - .env (API 키)
+
+---
+
+## 🚀 확장 가능성
+
+### 추가 가능한 기능
+
+1. **멀티모달 응답**
+
+   - 이미지 검색 추가
+   - 이미지 임베딩 DB 활용
+
+2. **고급 RAG**
+
+   - 재순위(Re-ranking)
+   - 하이브리드 검색 (키워드 + 벡터)
+   - 문서 청킹 전략
+
+3. **대화 관리**
+
+   - 세션별 메모리
+   - 장기 기억 (벡터 DB에 저장)
+
+4. **감정 분석**
+
+   - 사용자 감정 파악
+   - 감정에 맞는 응답
+
+5. **다국어 지원**
+   - 언어 감지
+   - 다국어 임베딩
+
+---
+
+## 📚 추가 학습 자료
+
+- [OpenAI API 공식 문서](https://platform.openai.com/docs)
+- [ChromaDB 공식 문서](https://docs.trychroma.com/)
+- [LangChain 공식 문서](https://python.langchain.com/)
+- [Flask 공식 문서](https://flask.palletsprojects.com/)
+</file>
+
+<file path="requirements.txt">
+beautifulsoup4==4.13.5
+chromadb==1.1.0
+Flask==3.1.2
+langchain==0.3.27
+langchain_chroma==0.2.6
+langchain_community==0.3.29
+langchain_openai==0.3.33
+numpy==2.3.3
+openai==1.108.2
+python-dotenv==1.1.1
+scikit_learn==1.7.2
+selenium==4.35.0
+</file>
+
+<file path="templates/detail.html">
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ bot.name }} - 상세 정보</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: "IBM Plex Sans KR", sans-serif;
+        background: rgba(0, 0, 0, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+      }
+      .modal-container {
+        max-width: 500px;
+        width: 90%;
+        margin: 20px auto;
+        background: #fff;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+      }
+      .modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        padding: 15px 20px;
+      }
+      .modal-header h2 {
+        margin: 0;
+        flex: 1;
+        text-align: center;
+        font-size: 1.5rem;
+        color: #333;
+      }
+      .close-btn {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: #666;
+      }
+      .modal-content {
+        padding: 30px;
+      }
+      .bot-image {
+        width: 100%;
+        max-width: 300px;
+        height: auto;
+        border-radius: 12px;
+        display: block;
+        margin: 0 auto 20px;
+      }
+      .bot-info {
+        text-align: center;
+      }
+      .bot-info h1 {
+        margin: 0 0 15px 0;
+        font-size: 2rem;
+        color: #333;
+      }
+      .bot-info p {
+        margin: 15px 0;
+        font-size: 1rem;
+        color: #666;
+        line-height: 1.6;
+      }
+      .tags {
+        margin: 15px 0;
+      }
+      .tag {
+        display: inline-block;
+        background: #e0e0e0;
+        color: #555;
+        padding: 6px 12px;
+        border-radius: 15px;
+        margin: 4px;
+        font-size: 0.9rem;
+      }
+      .username-area {
+        margin: 20px 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+      }
+      .username-area label {
+        font-size: 1rem;
+        color: #333;
+      }
+      .username-area input {
+        padding: 8px 12px;
+        font-size: 1rem;
+        border: 2px solid #ddd;
+        border-radius: 8px;
+        width: 50%;
+        transition: border 0.2s;
+      }
+      .username-area input:focus {
+        outline: none;
+        border-color: #764ba2;
+      }
+      .start-chat {
+        display: block;
+        margin: 20px 0;
+        padding: 12px 20px;
+        background: #764ba2;
+        color: #fff;
+        text-decoration: none;
+        border-radius: 8px;
+        font-size: 1.1rem;
+        text-align: center;
+        cursor: pointer;
+        transition: transform 0.2s;
+      }
+      .start-chat:hover {
+        transform: translateY(-2px);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="modal-container">
+      <div class="modal-header">
+        <h2>{{ bot.name }}</h2>
+        <button
+          class="close-btn"
+          onclick="window.location.href='{{ url_for('index') }}'"
+        >
+          &times;
+        </button>
+      </div>
+
+      <div class="modal-content">
+        <img
+          src="./static/images/hateslop/logo_black_genai.png"
+          alt="{{ bot.name }}"
+          class="bot-image"
+        />
+
+        <div class="bot-info">
+          <h1>{{ bot.name }}</h1>
+
+          <div class="tags">
+            {% for tag in bot.tags %}
+            <span class="tag">{{ tag }}</span>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="username-area">
+          <label for="username">이름:</label>
+          <input type="text" id="username" placeholder="이름을 입력하세요" />
+        </div>
+
+        <a href="#" class="start-chat" id="start-chat-btn">채팅 시작하기</a>
+      </div>
+    </div>
+
+    <script>
+      const startChatBtn = document.getElementById("start-chat-btn");
+      const usernameInput = document.getElementById("username");
+
+      startChatBtn.addEventListener("click", function (event) {
+        event.preventDefault();
+        const username = usernameInput.value.trim() || "사용자";
+        window.location.href = `/chat?username=${encodeURIComponent(username)}`;
+      });
+
+      usernameInput.addEventListener("keypress", function (event) {
+        if (event.key === "Enter") {
+          startChatBtn.click();
+        }
+      });
+    </script>
+  </body>
+</html>
+</file>
+
+<file path="DOCKER_GUIDE.md">
+# 🐳 Docker 활용 가이드
+
+## Docker를 사용하는 이유
+
+### 1. **환경 일관성 보장**
+
+- 개발자의 로컬 환경(macOS, Windows, Linux)과 관계없이 동일한 환경 제공
+- Python 버전, 시스템 패키지, Java 등 모든 의존성 통일
+- "내 컴퓨터에서는 되는데..." 문제 완전 해결
+
+### 2. **간편한 설정**
+
+- 복잡한 환경 설정을 `docker compose up` 한 번으로 해결
+- KoNLPy를 위한 Java 설치, Python 가상환경 등 자동 처리
+- 팀원 간 설정 불일치 없음
+
+### 3. **격리된 환경**
+
+- 프로젝트가 시스템에 영향을 주지 않음
+- 여러 프로젝트 동시 작업 가능
+- 깨끗한 제거 가능 (`docker compose down`)
+
+---
+
+## 📋 기술 검토 결과
+
+### ✅ Docker 도입의 장점
+
+| 항목           | 기존 방식       | Docker 방식      |
+| -------------- | --------------- | ---------------- |
+| 환경 설정 시간 | 30분~1시간      | 5분 (처음 1회만) |
+| 환경 일관성    | ❌ OS별 차이    | ✅ 완벽히 동일   |
+| Java 설치      | 수동 (KoNLPy용) | 자동             |
+| 의존성 충돌    | 가능            | 없음 (격리)      |
+| 배포           | 복잡            | 간단             |
+| 팀 협업        | 환경 문제 빈번  | 문제 없음        |
+
+### ⚠️ Docker 도입의 단점 및 해결책
+
+| 단점           | 영향도 | 해결책                     |
+| -------------- | ------ | -------------------------- |
+| 학습 곡선      | 중간   | 간단한 명령어만 사용 (3개) |
+| 초기 빌드 시간 | 낮음   | 첫 빌드만 5분, 이후 즉시   |
+| 디스크 용량    | 낮음   | 약 2GB (Python + Java)     |
+| Windows 성능   | 낮음   | WSL2 사용 시 해결          |
+
+### 🎯 결론: **Docker 도입 강력 권장**
+
+특히 다음 경우 Docker가 필수적입니다:
+
+- ✅ 2인 이상 팀 프로젝트
+- ✅ Fork한 레포를 여러 사람이 사용
+- ✅ Windows, macOS, Linux가 혼재된 팀
+- ✅ KoNLPy(Java 의존성)를 사용하는 프로젝트
+- ✅ ChromaDB 같은 로컬 DB를 사용하는 경우
+
+---
+
+## 🚀 빠른 시작
+
+### 사전 준비
+
+1. **Docker Desktop 설치**
+
+   - macOS/Windows: [Docker Desktop 다운로드](https://www.docker.com/products/docker-desktop)
+   - Linux: Docker Engine 설치
+
+   ```bash
+   # Ubuntu
+   sudo apt-get update
+   sudo apt-get install docker.io docker compose
+   ```
+
+2. **환경변수 설정**
+
+   ```bash
+   # .env 파일 생성
+   cp .env.example .env
+
+   # 편집기로 OPENAI_API_KEY 입력
+   nano .env
+   ```
+
+### Docker로 실행하기
+
+#### 방법 1: Docker Compose (권장)
+
+```bash
+# 1. 빌드 및 실행
+docker compose up --build
+
+# 2. 백그라운드 실행
+docker compose up -d
+
+# 3. 로그 확인
+docker compose logs -f
+
+# 4. 종료
+docker compose down
+```
+
+#### 방법 2: Docker만 사용
+
+```bash
+# 1. 이미지 빌드
+docker build -t chatbot-app .
+
+# 2. 컨테이너 실행
+docker run -p 5000:5000 \
+  -e OPENAI_API_KEY=your_key_here \
+  -v $(pwd)/static/data:/app/static/data \
+  chatbot-app
+
+# 3. 종료
+docker stop chatbot-app
+```
+
+---
+
+## 📝 주요 명령어
+
+### 개발 중
+
+```bash
+# 앱 시작
+docker compose up
+
+# 변경사항 반영 (재빌드)
+docker compose up --build
+
+# 로그 보기
+docker compose logs -f chatbot
+
+# 컨테이너 상태 확인
+docker compose ps
+
+# 컨테이너 내부 접속 (디버깅)
+docker compose exec chatbot bash
+```
+
+### 유지보수
+
+```bash
+# 컨테이너 정지
+docker compose stop
+
+# 컨테이너 시작 (재생성 없이)
+docker compose start
+
+# 컨테이너 재시작
+docker compose restart
+
+# 완전 삭제 (볼륨 포함)
+docker compose down -v
+
+# 이미지 삭제
+docker rmi chatbot-app
+```
+
+### 디버깅
+
+```bash
+# 컨테이너 내부에서 Python 실행
+docker compose exec chatbot python
+
+# 챗봇 모듈 직접 테스트
+docker compose exec chatbot python generation/chatbot/chatbot.py
+
+# 환경변수 확인
+docker compose exec chatbot env
+
+# 설치된 패키지 확인
+docker compose exec chatbot pip list
+```
+
+---
+
+## 🔧 설정 커스터마이징
+
+### 포트 변경
+
+`docker compose.yml`:
+
+```yaml
+ports:
+  - "8080:5000" # 로컬:8080 → 컨테이너:5000
+```
+
+### 환경변수 추가
+
+`docker compose.yml`:
+
+```yaml
+environment:
+  - OPENAI_API_KEY=${OPENAI_API_KEY}
+  - CUSTOM_VAR=value
+```
+
+### 볼륨 추가
+
+`docker compose.yml`:
+
+```yaml
+volumes:
+  - ./my-folder:/app/my-folder
+```
+
+---
+
+## 🔍 트러블슈팅
+
+### Q: 포트가 이미 사용 중이라는 오류
+
+```bash
+# 실행 중인 컨테이너 확인
+docker ps
+
+# 특정 포트 사용 프로세스 찾기 (macOS/Linux)
+lsof -i :5000
+
+# 포트 변경 (docker compose.yml 수정)
+ports:
+  - "8080:5000"
+```
+
+### Q: 빌드가 너무 느림
+
+```bash
+# 빌드 캐시 사용
+docker compose build --no-cache
+
+# 빌드 중간 출력 확인
+docker compose build --progress=plain
+```
+
+### Q: ChromaDB 데이터가 사라짐
+
+```bash
+# 볼륨 확인
+docker volume ls
+
+# 볼륨을 삭제하지 않고 컨테이너만 종료
+docker compose down  # (대신 docker compose down -v 사용하지 말것)
+
+# 볼륨 백업
+docker run --rm -v chatbot-data:/data -v $(pwd):/backup \
+  alpine tar czf /backup/chatbot-data-backup.tar.gz /data
+```
+
+### Q: KoNLPy 오류
+
+```bash
+# Java 설치 확인
+docker compose exec chatbot java -version
+
+# Java 경로 확인
+docker compose exec chatbot echo $JAVA_HOME
+
+# 수동 설치 (필요시)
+docker compose exec chatbot apt-get update && apt-get install -y default-jdk
+```
+
+### Q: 코드 변경이 반영 안 됨
+
+```bash
+# 볼륨 마운트 확인
+docker compose exec chatbot ls -la /app
+
+# 재빌드
+docker compose up --build
+
+# 캐시 없이 재빌드
+docker compose build --no-cache
+```
+
+---
+
+## 🌐 Vercel vs Docker 비교
+
+| 항목         | Vercel        | Docker (로컬/클라우드) |
+| ------------ | ------------- | ---------------------- |
+| 배포 속도    | 매우 빠름     | 보통                   |
+| 무료 티어    | 제한적        | 무제한 (로컬)          |
+| ChromaDB     | ❌ 저장 안 됨 | ✅ 영속성 보장         |
+| 커스터마이징 | 제한적        | 자유로움               |
+| 디버깅       | 어려움        | 쉬움                   |
+| 추천 용도    | 프로덕션 배포 | 개발/테스트            |
+
+### 권장 워크플로우
+
+```
+개발: Docker (로컬)
+  ↓
+테스트: Docker (Docker Hub)
+  ↓
+배포: Vercel 또는 AWS/GCP (Docker)
+```
+
+---
+
+## 📦 프로덕션 배포
+
+### Docker Hub에 푸시
+
+```bash
+# 1. Docker Hub 로그인
+docker login
+
+# 2. 이미지 태그
+docker tag chatbot-app username/chatbot-app:latest
+
+# 3. 푸시
+docker push username/chatbot-app:latest
+```
+
+### AWS/GCP에서 실행
+
+```bash
+# Docker 이미지 pull
+docker pull username/chatbot-app:latest
+
+# 실행
+docker run -d -p 80:5000 \
+  -e OPENAI_API_KEY=your_key \
+  --restart always \
+  username/chatbot-app:latest
+```
+
+---
+
+## ✅ 체크리스트
+
+Docker 환경 설정 시 확인사항:
+
+- [ ] Docker Desktop 설치 및 실행 확인
+- [ ] `.env` 파일 생성 및 API 키 입력
+- [ ] `docker compose up --build` 성공 확인
+- [ ] `http://localhost:5001` 접속 확인
+- [ ] `/health` 엔드포인트 응답 확인
+- [ ] 채팅 기능 정상 작동 확인
+- [ ] 데이터 영속성 확인 (재시작 후)
+
+---
+
+## 📚 추가 자료
+
+- [Docker 공식 문서](https://docs.docker.com/)
+- [Docker Compose 문서](https://docs.docker.com/compose/)
+- [Flask Docker 배포 가이드](https://flask.palletsprojects.com/en/2.3.x/deploying/docker/)
+
+---
+
+**Made with 🐳 Docker**
+</file>
+
+<file path="Dockerfile">
+# Python 3.11 slim 이미지 사용 (경량화)
+FROM python:3.11-slim
+
+# 작업 디렉토리 설정
+WORKDIR /app
+
+# 시스템 패키지 업데이트 및 필수 패키지 설치
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Python 의존성 파일 복사
+COPY requirements.txt .
+
+# Python 패키지 설치
+RUN pip install --no-cache-dir -r requirements.txt
+
+# 애플리케이션 코드 복사
+COPY . .
+
+# ChromaDB 데이터 디렉토리 생성
+RUN mkdir -p static/data/chatbot/chardb_embedding \
+    static/data/chatbot/imagedb_embedding
+
+# 환경변수 기본값 설정
+ENV FLASK_ENV=production
+ENV FLASK_DEBUG=False
+ENV PORT=5000
+
+# 포트 노출
+EXPOSE 5000
+
+# 헬스체크 설정
+HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:5000/health')" || exit 1
+
+# 애플리케이션 실행
+CMD ["python", "app.py"]
+</file>
+
+<file path="templates/chat.html">
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ bot_name }}와 대화하기</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="{{ url_for('static', filename='css/style.css') }}"
+      rel="stylesheet"
+    />
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+      }
+      body {
+        font-family: "IBM Plex Sans KR", sans-serif;
+        background: #f7f7f7;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .header {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        padding: 15px 20px;
+        box-sizing: border-box;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      .header-center {
+        flex: 1;
+        text-align: center;
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #333;
+      }
+      .close-btn {
+        font-size: 1.2rem;
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: #666;
+        padding: 5px 10px;
+      }
+      .chat-area {
+        width: 100%;
+        max-width: 900px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        padding: 20px;
+        box-sizing: border-box;
+        position: relative;
+      }
+      #chat-log {
+        flex: 1;
+        border: 1px solid #e0e0e0;
+        border-radius: 12px;
+        padding: 20px;
+        background: white;
+        overflow-y: auto;
+        margin-bottom: 15px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      }
+      .message {
+        margin-bottom: 15px;
+        padding: 12px;
+        border-radius: 12px;
+        word-wrap: break-word;
+        animation: fadeIn 0.3s;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .message.user {
+        text-align: right;
+        color: #0056b3;
+        margin-left: 20%;
+      }
+      .message.bot {
+        background: #f5f5f5;
+        color: #333;
+        margin-right: 20%;
+      }
+      .bot-big-img {
+        display: block;
+        width: 100%;
+        max-width: 300px;
+        height: auto;
+        margin: 10px auto;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+      .chat-input-area {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+      .chat-input-area input[type="text"] {
+        flex: 1;
+        padding: 12px 16px;
+        border: 2px solid #ddd;
+        border-radius: 25px;
+        font-size: 1rem;
+        transition: border 0.2s;
+      }
+      .chat-input-area input[type="text"]:focus {
+        outline: none;
+        border-color: #764ba2;
+      }
+      .chat-input-area button.send-btn {
+        padding: 12px 24px;
+        border: none;
+
+        color: #fff;
+        border-radius: 25px;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: transform 0.2s;
+      }
+      .chat-input-area button.send-btn:hover {
+        transform: translateY(-2px);
+      }
+      .media-buttons {
+        position: absolute;
+        left: -60px;
+        bottom: 80px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .media-buttons button {
+        width: 45px;
+        height: 45px;
+        background: white;
+        border: 2px solid #ddd;
+        border-radius: 50%;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+      }
+      .media-buttons button:hover {
+        background: #764ba2;
+        border-color: #764ba2;
+        color: white;
+        transform: scale(1.1);
+      }
+      .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.7);
+      }
+      .modal-content {
+        background-color: #fff;
+        margin: 2% auto;
+        padding: 30px;
+        border-radius: 12px;
+        width: 90%;
+        max-width: 1000px;
+        position: relative;
+        animation: slideIn 0.3s;
+      }
+      @keyframes slideIn {
+        from {
+          transform: translateY(-50px);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+      .modal-close {
+        position: absolute;
+        top: 15px;
+        right: 20px;
+        background: none;
+        border: none;
+        font-size: 2rem;
+        cursor: pointer;
+        color: #999;
+      }
+      .modal-close:hover {
+        color: #333;
+      }
+      .image-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 15px;
+        margin-top: 20px;
+      }
+      .image-grid img {
+        width: 100%;
+        height: auto;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: transform 0.2s;
+      }
+      .image-grid img:hover {
+        transform: scale(1.05);
+      }
+    </style>
+  </head>
+  <body>
+    <header class="header">
+      <div class="header-center">{{ bot_name }}</div>
+      <button
+        class="close-btn"
+        onclick="window.location.href='{{ url_for('index') }}'"
+      >
+        &times;
+      </button>
+    </header>
+
+    <div class="chat-area" data-username="{{ username }}">
+      <div id="chat-log"></div>
+
+      <div class="chat-input-area">
+        <input
+          type="text"
+          id="user-message"
+          placeholder="메시지를 입력하세요..."
+        />
+        <button class="send-btn" id="send-btn">전송</button>
+      </div>
+    </div>
+
+    <!-- Image Gallery Modal -->
+    <div id="imageModal" class="modal">
+      <div class="modal-content">
+        <button class="modal-close" data-close-modal="imageModal">
+          &times;
+        </button>
+        <h2>📷 이미지 갤러리</h2>
+        <div class="image-grid">
+          {% if image_files %} {% for filename in image_files %}
+          <img
+            src="./static/images/hateslop/logo_black_genai.png"
+            alt="{{ filename }}"
+          />
+          {% endfor %} {% else %}
+          <p>이미지가 없습니다.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Video Modal -->
+    <div id="videoModal" class="modal">
+      <div class="modal-content">
+        <button class="modal-close" data-close-modal="videoModal">
+          &times;
+        </button>
+        <h2>🎬 영상 보기</h2>
+        <video
+          controls
+          style="width: 100%; border-radius: 12px; margin-top: 20px"
+        >
+          <source
+            src="{{ url_for('static', filename='videos/chatbot/video.mp4') }}"
+            type="video/mp4"
+          />
+          브라우저가 비디오를 지원하지 않습니다.
+        </video>
+      </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/chatbot_single.js') }}"></script>
+  </body>
+</html>
+</file>
+
+<file path="templates/index.html">
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ bot.name }} - 캐릭터 챗봇</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="{{ url_for('static', filename='css/style.css') }}"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: "IBM Plex Sans KR", sans-serif;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .container {
+        max-width: 600px;
+        width: 90%;
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+      }
+      .header {
+        padding: 30px;
+        text-align: center;
+      }
+      .header h1 {
+        margin: 0 0 10px 0;
+        font-size: 2rem;
+        color: #333;
+      }
+      .header p {
+        margin: 0;
+        color: #666;
+        font-size: 0.9rem;
+      }
+      .card {
+        padding: 40px;
+        text-align: center;
+      }
+      .card img {
+        width: 200px;
+        height: 200px;
+        object-fit: cover;
+        border-radius: 50%;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+      }
+      .card h2 {
+        margin: 10px 0;
+        font-size: 1.8rem;
+        color: #333;
+      }
+      .tags {
+        margin: 15px 0;
+      }
+      .tag {
+        display: inline-block;
+        background: #e0e0e0;
+        color: #555;
+        padding: 6px 12px;
+        border-radius: 15px;
+        margin: 4px;
+        font-size: 0.9rem;
+      }
+      .description {
+        margin: 20px 0;
+        color: #666;
+        line-height: 1.6;
+      }
+      .start-btn {
+        display: inline-block;
+        margin-top: 20px;
+        padding: 15px 40px;
+        color: white;
+        background: #764ba2;
+        text-decoration: none;
+        border-radius: 25px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        transition: transform 0.2s, box-shadow 0.2s;
+      }
+      .start-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+      }
+      .footer {
+        padding: 20px;
+        text-align: center;
+        background: #f7f7f7;
+        color: #999;
+        font-size: 0.85rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>모든 스타일 자유롭게 바꾸시면 됩니다.</h1>
+      </div>
+      <div class="card" style="flex-direction: column; align-items: center">
+        <img
+          src="./static/images/hateslop/logo_black_genai.png"
+          alt="{{ bot.name }}"
+        />
+        <a href="{{ url_for('detail') }}" class="start-btn">시작하기</a>
+      </div>
+    </div>
+  </body>
+</html>
+</file>
+
+<file path="docker-compose.yml">
+version: "3.8"
+
+services:
+  chatbot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: chatbot-app
+    ports:
+      - "5001:5000"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - FLASK_ENV=development
+      - FLASK_DEBUG=True
+      - SECRET_KEY=${SECRET_KEY:-dev-secret-key-please-change}
+    volumes:
+      # 개발 시 코드 변경사항 실시간 반영
+      - ./app.py:/app/app.py
+      - ./services:/app/services
+      - ./templates:/app/templates
+      - ./static:/app/static
+      - ./config:/app/config
+      # ChromaDB 데이터 영속성 보장
+      - chatbot-data:/app/static/data/chatbot
+    restart: unless-stopped
+    networks:
+      - chatbot-network
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:5000/health')",
+        ]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  chatbot-data:
+    driver: local
+
+networks:
+  chatbot-network:
+    driver: bridge
+</file>
+
+<file path="app.py">
+"""
+🚫 이 파일은 수정하지 마세요! (템플릿 파일)
+
+이 파일은 Flask 애플리케이션의 핵심 로직을 포함하고 있습니다.
+학회원은 다음 파일만 수정/작성하면 됩니다:
+
+✏️ 수정/작성해야 하는 파일:
+  - config/chatbot_config.json        (챗봇 설정)
+  - services/chatbot_service.py       (AI 로직: RAG, Embedding, LLM)
+  - static/data/chatbot/chardb_text/  (텍스트 데이터)
+  - static/images/chatbot/            (이미지 파일)
+  - static/videos/chatbot/            (비디오 파일, 선택)
+
+이 파일을 수정하면 전체 시스템이 작동하지 않을 수 있습니다.
+"""
+
+import os
+import json
+from pathlib import Path
+from flask import Flask, request, render_template, jsonify, url_for
+from dotenv import load_dotenv
+
+# 환경변수 로드
+load_dotenv()
+
+app = Flask(__name__)
+app.secret_key = os.getenv('SECRET_KEY', 'dev-secret-key-change-this')
+
+# 개발 환경 설정
+app.config['TEMPLATES_AUTO_RELOAD'] = True
+app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
+
+# 프로젝트 루트 경로
+BASE_DIR = Path(__file__).resolve().parent
+
+# 설정 파일 로드
+CONFIG_PATH = BASE_DIR / 'config' / 'chatbot_config.json'
+
+def load_config():
+    """챗봇 설정 파일 로드"""
+    try:
+        with open(CONFIG_PATH, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        # 기본 설정 반환
+        return {
+            'name': '챗봇',
+            'description': '챗봇 설명',
+            'tags': ['#챗봇'],
+            'thumbnail': 'images/hateslop/club_logo.png'
+        }
+
+config = load_config()
+
+# 이미지 파일 스캔 함수
+def get_image_files():
+    """챗봇 이미지 디렉토리에서 이미지 파일 목록 반환"""
+    folder_path = BASE_DIR / "static" / "images" / "chatbot"
+    image_files = []
+    
+    if folder_path.exists():
+        for root, dirs, files in os.walk(folder_path):
+            for file in files:
+                if file.lower().endswith((".png", ".jpg", ".jpeg", ".gif")):
+                    rel_path = os.path.relpath(os.path.join(root, file), folder_path)
+                    image_files.append(rel_path.replace("\\", "/"))
+    
+    return image_files
+
+# 메인 페이지
+@app.route('/')
+def index():
+    bot_info = {
+        'name': config.get('name', '챗봇'),
+        'image': url_for('static', filename=config.get('thumbnail', 'images/hateslop/club_logo.png')),
+        'tags': config.get('tags', ['#챗봇']),
+        'description': config.get('description', '')
+    }
+    return render_template('index.html', bot=bot_info)
+
+# 챗봇 상세정보 페이지
+@app.route('/detail')
+def detail():
+    bot_info = {
+        'name': config.get('name', '챗봇'),
+        'image': url_for('static', filename=config.get('thumbnail', 'images/hateslop/club_logo.png')),
+        'description': config.get('description', ''),
+        'tags': config.get('tags', ['#챗봇'])
+    }
+    return render_template('detail.html', bot=bot_info)
+
+# 채팅 화면
+@app.route('/chat')
+def chat():
+    username = request.args.get('username', '사용자')
+    bot_name = config.get('name', '챗봇')
+    image_files = get_image_files()
+    
+    return render_template('chat.html', 
+                         bot_name=bot_name, 
+                         username=username,
+                         image_files=image_files)
+
+# API 엔드포인트: 챗봇 응답 생성
+@app.route('/api/chat', methods=['POST'])
+def api_chat():
+    try:
+        data = request.get_json()
+        user_message = data.get('message', '')
+        username = data.get('username', '사용자')
+        
+        if not user_message:
+            return jsonify({'error': 'Message is required'}), 400
+        
+        # 챗봇 서비스 임포트 (지연 로딩)
+        from services import get_chatbot_service
+        
+        # 응답 생성
+        chatbot = get_chatbot_service()
+        response = chatbot.generate_response(user_message, username)
+        
+        return jsonify(response)
+        
+    except ImportError as e:
+        print(f"[ERROR] 챗봇 서비스 임포트 실패: {e}")
+        return jsonify({'reply': '챗봇 서비스를 불러올 수 없습니다. services/chatbot_service.py를 구현해주세요.'}), 500
+    except Exception as e:
+        print(f"[ERROR] 응답 생성 실패: {e}")
+        return jsonify({'reply': '죄송해요, 일시적인 오류가 발생했어요. 다시 시도해주세요.'}), 500
+
+# 헬스체크 엔드포인트 (Vercel용)
+@app.route('/health')
+def health():
+    return jsonify({'status': 'ok', 'chatbot': config.get('name', 'unknown')})
+
+if __name__ == '__main__':
+    port = int(os.getenv('PORT', 5000))
+    debug = os.getenv('FLASK_ENV') == 'development'
+    app.run(host='0.0.0.0', port=port, debug=debug)
+</file>
+
+<file path="README.md">
+# HateSlop 3기 엔지니어x프로듀서 합동 캐릭터 챗봇 프로젝트
+
+GOAL)
+
+- AI를 이용해 빠르게 개념에 대해 학습하고 실습을 진행합니다.
+- AI를 적극적으로 활용하여 코드를 작성하세요.
+- AI가 코드를 짜는 것을 보며 AI가 할 수 있는 것과 내가 할 수 있는 것에 대한 성찰을 얻으세요.
+- 앞으로 코드는 사람이 짜지 않을 것입니다. 그 시간에 AI가 할 수 없는 것과 본인 내실에 집중하여 몸값을 기르세요.
+- 바이브코딩 등 현재 유행하는 모든 AI 기법을 체화하는 것까지가 프로젝트의 목적입니다.
+
+> 운영진이 최신 Claude 4.5 모델과 함께 구성한 모범답안은 `answer-sheet` 브랜치에 있습니다.  
+> 답안을 공개하고 AI 활용을 장려하는 이유는 다음과 같습니다.
+>
+> 첫째, Hateslop 학회원은 스스로 배우고자 하는 의지가 검증된 사람들로, 자기주도적 학습이 전제되어 있습니다.  
+> 우리는 여러분이 단순히 제출을 위한 과제를 작성하지 않을 것이라는 믿음을 가지고 있습니다.
+>
+> 둘째, 오늘날 AI로 정답을 찾는 것은 어렵지 않습니다.  
+> 중요한 것은 그 정답에 이르기까지의 사고 과정과 추론 능력, 그리고 더 나은 답을 도출하려는 문제 해결력을 기르는 일입니다.
+>
+> 그렇기 때문에 단순히 결과를 복제하는 데 그치지 말고, AI를 도구로 삼아 스스로 사고하고 탐구하며 성장하길 바랍니다.
+
+> \*바이브코딩 교육은 학회 커리큘럼에 맞춰 추후 진행될 예정입니다.
+
+TIPS)
+
+- 유료) 바이브코딩 툴을 이용한다면 그를 활용하세요.
+- 무료) repomix 를 이용해 코드베이스 전체를 google ai studio 에 넣어서 정확한 내용 기반으로 LLM 과 분석하세요. (Google AI Studio 를 쓰는 이유는 처리할 수 있는 Token 수가 1M으로 타 서비스 대비 압도적으로 많고 무료이기 때문)
+
+  [repomix 활용방법](https://pickle-snail-efe.notion.site/AgentOps-241e1458c63781dba0b1d451eddb3b48)
+
+  [gitingest : GitHub 저장소를 LLM 친화적인 텍스트로 변환하는 도구](https://discuss.pytorch.kr/t/gitingest-github-llm/6896)
+
+  [deepwiki : Github 기반 프로젝트 분석방법](https://deepwiki.org/)
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python](https://img.shields.io/badge/Python-3.11-blue.svg)](https://www.python.org/)
+[![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)](https://www.docker.com/)
+
+## ⚡ 빠른 시작
+
+- hateslop organization에서 fork 한 것이라 가정
+- docker desktop 설치 및 실행한 상태라 가정
+
+```bash
+# 1. Fork & Clone
+git clone https://github.com/YOUR_USERNAME/chatbot-project.git
+cd chatbot-project
+
+# 2. .env 파일 생성 및 API 키 입력
+cp .env.example .env
+nano .env  # OPENAI_API_KEY 입력
+
+# 3. Docker 실행
+docker compose up --build
+
+# 4. 브라우저에서 http://localhost:5001 접속
+```
+
+**정상 작동 화면**
+
+메인 페이지
+
+![메인 페이지](static/images/hateslop/example1.png)
+
+상세 페이지
+
+![상세 페이지](static/images/hateslop/example2.png)
+
+채팅 페이지
+
+![채팅 페이지](static/images/hateslop/example3.png)
+
+---
+
+## 📚 문서 가이드
+
+| 문서                                                | 내용                         | 비고     |
+| --------------------------------------------------- | ---------------------------- | -------- |
+| **[README.md](README.md)** ⭐⭐                     | 프로젝트 개요 (필독)         | 현재문서 |
+| **[ARCHITECTURE.md](ARCHITECTURE.md)** ⭐⭐         | 시스템 아키텍처 (필독)       | 필독     |
+| **[DOCKER_HOT_RELOAD.md](DOCKER_HOT_RELOAD.md)** 🔥 | Docker 개발 환경 실전 가이드 | (참고)   |
+| **[DOCKER_GUIDE.md](DOCKER_GUIDE.md)**              | Docker 사용 완전 가이드      | (참고)   |
+| **[ADVANCED_TOPICS.md](ADVANCED_TOPICS.md)** 🚀     | 성능 개선 & 최신 기술 트렌드 | (심화)   |
+
+---
+
+## 🎯 프로젝트 개요
+
+헤이트슬롭 프로듀서 엔지니어 합동 프로젝트입니다.
+
+- 📖 **학습 목표**: RAG, Embedding, LLM, Vector Database
+- 👥 **협업 방식**: 프로듀서가 기획한 내용을 바탕으로 캐릭터 챗봇을 완성
+- 🚀 **배포**: Vercel CLI를 통한 프로덕션 배포
+- 🐳 **환경**: Docker로 일관된 개발 환경 보장
+
+### 핵심 기능
+
+- 🤖 **OpenAI GPT** 기반 대화 생성
+- 📚 **RAG** (Retrieval-Augmented Generation)를 통한 지식 기반 답변
+- 💾 **ChromaDB**를 활용한 임베딩 벡터 저장
+- 🧠 **LangChain** 기반 대화 메모리 관리
+- 🎨 **Vanilla JavaScript** 기반 웹 인터페이스
+- 🐳 **Docker**를 통한 환경 일관성 보장
+
+### 기술 스택
+
+- **Backend**: Flask (Python 3.11)
+- **AI**: OpenAI API, LangChain, ChromaDB
+- **Frontend**: Vanilla JavaScript, HTML, CSS
+- **Deployment**: Docker, Vercel CLI
+- **Version Control**: Git, GitHub
+
+## 🏗️ 프로젝트 구조
+
+```
+chatbot-project/
+├── app.py                     # 🚫 템플릿 (수정 금지, 수정 원한다면 의존성 있는 파일)
+├── services/
+│   ├── __init__.py
+│   └── chatbot_service.py     # ✏️ 학회원 구현 파일 (AI 로직)
+├── config/
+│   └── chatbot_config.json    # ✏️ 챗봇 설정 (예시)
+├── static/
+│   ├── data/
+│   │   └── chatbot/
+│   │       └── chardb_text/   # ✏️ 텍스트 데이터 (예시)
+│   ├── images/
+│   │   └── chatbot/           # ✏️ 이미지 파일
+│   ├── videos/
+│   │   └── chatbot/           # ✏️ 비디오 파일 (선택)
+│   ├── css/
+│   │   └── style.css          # 🚫 템플릿 (수정 금지, 스타일 변경 원하면 수정 가능)
+│   └── js/
+│       └── chatbot.js         # 🚫 템플릿 (수정 금지, 수정 원한다면 의존성 있는 파일 함께 수정)
+├── templates/
+│   ├── index.html             # 🚫 템플릿 (수정 금지, 수정 원한다면 의존성 있는 파일 함께 수정)
+│   ├── detail.html            # 🚫 템플릿 (수정 금지, 수정 원한다면 의존성 있는 파일 함께 수정)
+│   └── chat.html              # 🚫 템플릿 (수정 금지, 수정 원한다면 의존성 있는 파일 함께 수정)
+├── Dockerfile                 # 🚫 템플릿
+├── docker-compose.yml         # 🚫 템플릿
+├── requirements.txt           # 🚫 템플릿
+├── vercel.json                # 🚫 템플릿
+├── .env.example               # 참고용
+└── README.md                  # 현재 파일
+```
+
+### 📁 파일별 역할
+
+#### 🚫 템플릿 파일 (수정하지 마세요!)
+
+- `app.py`: Flask 애플리케이션 핵심 로직
+- `templates/*.html`: 웹 UI 템플릿
+- `static/css/`, `static/js/`: 프론트엔드 리소스
+- `Dockerfile`, `docker-compose.yml`: Docker 설정
+- `requirements.txt`: Python 의존성
+
+> _커스텀 원하시면 수정하셔도 되지만, 의존성을 가진 파일을 같이 수정하셔야 합니다._
+
+#### ✏️ 작성/수정할 파일
+
+- `services/chatbot_service.py`: **AI 로직 구현** (RAG, Embedding, LLM)
+- `config/chatbot_config.json`: 챗봇 설정 (이름, 성격, 시스템 프롬프트)
+- `static/data/chatbot/chardb_text/`: 텍스트 데이터 (json, markdown, txt 자유롭게 사용하시면 됩니다.)
+- `static/images/chatbot/`: 챗봇 관련 이미지
+
+## 📚 학습 자료
+
+### 공식 문서
+
+1. **OpenAI API Documentation**
+   - https://platform.openai.com/docs
+2. **LangChain Documentation**
+   - https://python.langchain.com/docs
+3. **ChromaDB Documentation**
+   - https://docs.trychroma.com/
+
+### 추천 논문
+
+1. **RAG 기초**: "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks" (Lewis et al., 2020)
+
+   - https://arxiv.org/abs/2005.11401
+
+2. **Self-RAG**: "Self-RAG: Learning to Retrieve, Generate, and Critique" (Asai et al., 2024)
+   - https://arxiv.org/abs/2310.11511
+
+**더 많은 자료**: [ADVANCED_TOPICS.md](ADVANCED_TOPICS.md#-관련-논문-및-연구)
+</file>
+
+</files>

@@ -74,13 +74,11 @@ docker compose up --build
 
 ## 📚 문서 가이드
 
-| 문서                                                | 내용                         | 비고     |
-| --------------------------------------------------- | ---------------------------- | -------- |
-| **[README.md](README.md)** ⭐⭐                     | 프로젝트 개요 (필독)         | 현재문서 |
-| **[ARCHITECTURE.md](ARCHITECTURE.md)** ⭐⭐         | 시스템 아키텍처 (필독)       | 필독     |
-| **[DOCKER_HOT_RELOAD.md](DOCKER_HOT_RELOAD.md)** 🔥 | Docker 개발 환경 실전 가이드 | (참고)   |
-| **[DOCKER_GUIDE.md](DOCKER_GUIDE.md)**              | Docker 사용 완전 가이드      | (참고)   |
-| **[ADVANCED_TOPICS.md](ADVANCED_TOPICS.md)** 🚀     | 성능 개선 & 최신 기술 트렌드 | (심화)   |
+| 문서                                            | 내용                         | 비고     |
+| ----------------------------------------------- | ---------------------------- | -------- |
+| **[README.md](README.md)** ⭐⭐                 | 프로젝트 개요 (필독)         | 현재문서 |
+| **[ARCHITECTURE.md](ARCHITECTURE.md)** ⭐⭐     | 시스템 아키텍처 (필독)       | 필독     |
+| **[ADVANCED_TOPICS.md](ADVANCED_TOPICS.md)** 🚀 | 성능 개선 & 최신 기술 트렌드 | (심화)   |
 
 ---
 

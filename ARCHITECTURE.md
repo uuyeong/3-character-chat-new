@@ -230,9 +230,7 @@ chatbot-project/
 └── 📚 [문서]
     ├── README.md
     ├── ARCHITECTURE.md                 # 이 문서
-    ├── ASSIGNMENT_GUIDE.md
-    ├── DOCKER_HOT_RELOADING.md
-    └── DOCKER_GUIDE.md
+    └── ADVANCED_TOPICS.md
 ```
 
 ---
