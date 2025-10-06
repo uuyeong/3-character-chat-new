@@ -1,113 +1,500 @@
-# 3-charchat-project
+# 🤖 캐릭터 챗봇 프로젝트 템플릿
 
-3기 OpenAI API와 RAG를 활용한 캐릭터 챗봇 프로젝트
-------
-## 팀별 수정사항
+> OpenAI API와 RAG(Retrieval-Augmented Generation)를 활용한 대화형 AI 챗봇 프로젝트 템플릿
 
-**주의: 아래에 해당하는 파일과 각 팀 번호에 해당하는 부분이나 폴더만 수정 (불가피한 전체 코드 수정 시 문의)**
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python](https://img.shields.io/badge/Python-3.11-blue.svg)](https://www.python.org/)
+[![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)](https://www.docker.com/)
 
-## 1. 팀별폴더/chatbot.py - 각 팀별 개인화면 설정
+---
 
-팀 번호에 맞게 chatbot_data(또는 비슷한 딕셔너리) 내에 이름, ID, 라우트 등을 정확히 수정합니다.
+## 📚 문서 가이드
 
-### 썸네일 이미지 추가(1:1 비율)
+이 프로젝트는 여러 가이드 문서를 제공합니다. 목적에 맞게 선택하세요:
 
-- static/images/ 아래에 본인의 챗봇 썸네일 이미지를 준비하고, app.py에서 url_for('static', filename='images/...') 부분을 팀 이름/번호에 맞게 변경해 주세요.
+| 문서                                                     | 대상       | 내용                              |
+| -------------------------------------------------------- | ---------- | --------------------------------- |
+| **[ASSIGNMENT_GUIDE.md](ASSIGNMENT_GUIDE.md)**           | 👨‍🎓 학생    | 과제 수행 완전 가이드 (필독!)     |
+| **[IMPLEMENTATION_GUIDE.md](IMPLEMENTATION_GUIDE.md)** ⭐ | 👨‍🎓 학생    | AI 로직 구현 상세 가이드 (핵심!)  |
+| **[WORKFLOW_TEST.md](WORKFLOW_TEST.md)**                 | 👨‍🏫 교수/TA | 워크플로우 테스트 가이드          |
+| **[DOCKER_GUIDE.md](DOCKER_GUIDE.md)**                   | 🐳 모두    | Docker 사용 완전 가이드           |
+| **[REFACTORING_SUMMARY.md](REFACTORING_SUMMARY.md)**     | 📊 참고    | 리팩토링 상세 보고서              |
 
-### 챗봇 설명 작성:
+---
 
-- 약 4~5줄 정도의 문장으로 구성하여, 캐릭터 특징을 잘 드러내고, 어떤 대화를 할 수 있는 챗봇인지 요약합니다.
+## 🎯 프로젝트 개요
 
-### 태그 작성(3~4개 권장):
+### 핵심 기능
 
-- 예: ['#코미디', '#액션', '#반전', '#일상'] 같은 식으로 챗봇 성격을 간단하게 표현할 태그들을 작성합니다.
+- 🤖 OpenAI GPT 기반 대화 생성
+- 📚 RAG (Retrieval-Augmented Generation)를 통한 지식 기반 답변
+- 💾 ChromaDB를 활용한 임베딩 벡터 저장
+- 🧠 LangChain 기반 대화 메모리 관리
+- 🔍 KoNLPy를 이용한 한국어 키워드 추출
+- 🎨 Vanilla JavaScript 기반 웹 인터페이스
+- 🐳 Docker를 통한 환경 일관성 보장
 
+### 기술 스택
 
-## 2. templates/chat.html
+- **Backend**: Flask (Python 3.11)
+- **AI/ML**: OpenAI API, LangChain, ChromaDB
+- **Frontend**: Vanilla JavaScript, HTML, CSS
+- **NLP**: KoNLPy (한국어 처리)
+- **Deployment**: Docker, Vercel
+- **Version Control**: Git, GitHub
 
-### 비디오 경로 확인 및 추가:
+---
 
-- chat.html에서 video 태그의 src 경로를 본인의 팀 챗봇 영상으로 교체합니다.
+## 🚀 빠른 시작
 
-- 예: <source src="{{ url_for('static', filename='videos/chatbotX/...') }}" ...>
+### 필수 준비물
 
-### 이미지 경로 확인 및 추가:
+- ✅ Docker Desktop (권장) 또는 Python 3.11+
+- ✅ OpenAI API 키
+- ✅ Git
 
-- 백엔드 연동 없이, 정적으로 img src="..." 부분을 하나씩 수정해야 합니다.
+### 1. 레포지토리 Fork & Clone
 
-- 갤러리에 보여줄 이미지를 static/images/chatbotX/ 폴더에 넣고, chat.html의 <img> 경로를 적절히 바꿔주세요.
+```bash
+# GitHub에서 Fork 후 Clone
+git clone https://github.com/YOUR_USERNAME/3-chatbot-project.git
+cd 3-chatbot-project
+```
 
+### 2. 환경변수 설정
 
-## 3. generation/chatbot@/chatbot@.py
+```bash
+# .env 파일 생성
+cp .env.example .env
 
-### 응답 및 임베딩 비교 코드:
+# 편집기로 열어서 API 키 입력
+nano .env
+```
 
-- OpenAI API를 활용한 답변 생성과, 임베딩을 통한 유사도 계산(또는 RAG 등) 로직을 모두 이 파일에 작성합니다.
+`.env` 파일:
 
-- 예: generate_response(user_message) 함수 안에서 임베딩 -> 유사도 검색 -> ChatCompletion 호출 과정을 구현.
+```bash
+OPENAI_API_KEY=sk-proj-xxxxxxxxxxxxxxxxxx
+FLASK_ENV=development
+FLASK_DEBUG=True
+SECRET_KEY=your-secret-key-here
+```
 
-### OpenAI API Key 사용:
+### 3-A. Docker로 실행 (강력 권장 ⭐)
 
-- 공용으로 쓰는 API 키(또는 팀별 키)를 이곳에서 불러와 설정합니다.
+```bash
+# 빌드 및 실행
+docker-compose up --build
 
-- .env 파일이나 환경변수를 통해 안전하게 관리하세요.
+# 브라우저에서 접속
+open http://localhost:5000
+```
 
+**Docker 사용의 장점:**
 
-## 4. static/js/chatbot@.js
+- ✅ 환경 일관성 100% 보장
+- ✅ Java, Python 등 모든 의존성 자동 설치
+- ✅ 3개 명령어로 즉시 실행 가능
+- 📖 자세한 내용: [DOCKER_GUIDE.md](DOCKER_GUIDE.md)
 
-### JS-파이썬 매핑:
+### 3-B. 로컬 Python으로 실행
 
-- 이 JS 파일은 chat.html에서 동적으로 로드되어, **사용자 메시지를 /api/chat**으로 보내고, 서버(파이썬) 응답을 화면에 표시하는 역할을 합니다.
+<details>
+<summary>펼쳐보기 (권장하지 않음)</summary>
 
-- chatbot1.js 참고:
+```bash
+# 1. 가상환경 생성
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
 
-    - 기본 메시지 전송 로직(이벤트 리스너, fetch API, DOM 업데이트)은 chatbot1.js를 예시로 삼으면 됩니다.
+# 2. Java 설치 (KoNLPy용)
+# macOS:
+brew install openjdk@11
 
-    - 단, 현재 예시는 임의의 이미지를 항상 출력하도록 되어 있으니, 팀 챗봇 캐릭터 이미지로 교체하고 싶다면 해당 부분을 수정하세요.
+# Ubuntu:
+sudo apt-get install default-jdk
 
-    - 추가적으로, 응답 형태나 포맷이 달라질 경우(예: JSON 구조 변경), 그에 맞게 프런트 처리 로직도 수정해야 합니다.
+# Windows:
+# https://www.oracle.com/java/technologies/downloads/
 
+# 3. 의존성 설치
+pip install -r requirements.txt
 
-## 5. data 폴더 / static 하위 폴더
+# 4. 실행
+python app.py
 
-### 임베딩 벡터 / 필요한 데이터 저장:
+# 5. 브라우저에서 http://localhost:5000 접속
+```
 
-- 각 팀은 data/chatbot@/ 형태로 폴더를 만들어, 여기에 임베딩 결과(json 등)나 기타 필요한 텍스트, 이미지, 스크립트 파일 등을 저장합니다.
+</details>
 
-- chatbot@.py에서 임베딩 데이터를 불러올 때도 이 경로를 맞춰주세요.
+---
 
+## 📁 프로젝트 구조
 
-## 6. 추가 패키지 requirements.txt
+```
+3-chatbot-project/
+│
+├── 📄 과제 수행 가이드
+│   ├── ASSIGNMENT_GUIDE.md      ⭐ 학생 필독!
+│   ├── WORKFLOW_TEST.md          (교수/TA용)
+│   ├── DOCKER_GUIDE.md
+│   └── REFACTORING_SUMMARY.md
+│
+├── 🐳 Docker 설정
+│   ├── Dockerfile
+│   ├── docker-compose.yml
+│   └── .dockerignore
+│
+├── ⚙️ 환경 설정
+│   ├── .env.example              (예제)
+│   ├── .env                      (실제, Git에 포함 안됨)
+│   ├── .gitignore
+│   ├── vercel.json               (Vercel 배포용)
+│   └── requirements.txt          (Python 의존성)
+│
+├── 🔧 설정 파일 (✏️ 수정 필요)
+│   └── config/
+│       └── chatbot_config.json   ✏️ 챗봇 메타데이터
+│
+├── 🚀 애플리케이션 (🚫 수정 금지)
+│   ├── app.py                    🚫 Flask 앱
+│   ├── templates/                🚫 HTML 템플릿
+│   │   ├── index.html
+│   │   ├── detail.html
+│   │   └── chat.html
+│   └── static/
+│       ├── css/style.css         🚫
+│       └── js/chatbot.js         🚫
+│
+├── 🤖 챗봇 로직 (✏️ 일부 커스터마이징)
+│   └── generation/chatbot/
+│       └── chatbot.py            ✏️ RAG 로직 (주석 참고)
+│
+└── 📦 데이터 & 에셋 (✏️ 작성 필요)
+    └── static/
+        ├── data/chatbot/         ✏️ 텍스트 데이터 & 임베딩
+        │   ├── chardb_text/      ✏️ 텍스트 파일 작성
+        │   ├── build_db.py       ✏️ 임베딩 생성 스크립트
+        │   └── imagedb_text/     (선택)
+        ├── images/chatbot/       ✏️ 썸네일 & 갤러리 이미지
+        └── videos/chatbot/       (선택) 비디오 파일
 
-### 임베딩 패키지, 기타 라이브러리:
+✏️ = 학생이 작성/수정해야 하는 파일
+🚫 = 절대 수정하면 안 되는 파일 (템플릿)
+```
 
-- 예: numpy, pandas, openai, scikit-learn 등등.
+---
 
-- 새로운 라이브러리를 사용하면, 반드시 requirements.txt에 추가하여 다른 팀원/환경에서도 동일한 버전으로 설치 가능하도록 해주세요.
+## 📝 과제 수행 단계
 
+### 1️⃣ 설정 파일 작성 (30분)
 
-## 그 밖에 권장사항
+`config/chatbot_config.json`:
 
-- .gitignore: API 키나 민감 파일이 유출되지 않도록 .gitignore 설정도 점검해 주세요.
+```json
+{
+  "name": "우리 챗봇 이름",
+  "description": "챗봇 설명 4-5줄",
+  "tags": ["#태그1", "#태그2", "#태그3"],
+  "thumbnail": "images/chatbot/thumbnail.png",
+  "character": {
+    "age": 20,
+    "university": "대학교명",
+    "major": "전공",
+    "personality": "성격",
+    "background": "배경 스토리"
+  },
+  "system_prompt": {
+    "base": "당신의 챗봇 페르소나",
+    "rules": ["반말을 사용하세요", "이모티콘을 사용하지 마세요"]
+  }
+}
+```
 
-- 버전 관리: 각 팀원 간에 충돌이 많지 않도록, pull/push 전후로 branch 관리를 꼼꼼히 해주세요.
+### 2️⃣ 텍스트 데이터 준비 (1-2시간)
 
-- UI/UX 개선 건의: 필요하다면 스타일 수정, 대화 구조(봇 이미지를 왼쪽, 유저 메시지를 오른쪽 등)도 팀별로 자유롭게 건의 가능합니다.
+`static/data/chatbot/chardb_text/` 폴더에 텍스트 파일 작성:
 
+- `character_info.txt`: 캐릭터 정보
+- `dialogues.txt`: 대화 데이터 (Q&A 20개 이상)
+- `background.txt`: 배경 스토리 (선택)
 
+### 3️⃣ 이미지 준비 (30분)
 
-## Chatbot5
-- [Chatbot5 README](generation/chatbot5/README.md)
+`static/images/chatbot/` 폴더에 이미지 추가:
 
-## Chatbot6
-- [Chatbot6 README](generation/chatbot6/README.md)
+- `thumbnail.png`: 1:1 비율 썸네일
+- `photo1.png`, `photo2.png`, ...: 갤러리 이미지 (선택)
 
-## Chatbot7
-- [Chatbot5 README](generation/chatbot7/README.md)
+### 4️⃣ 임베딩 생성 (15분)
 
-## Chatbot8
-- [Chatbot5 README](generation/chatbot8/README.md)
+```bash
+# build_db.py 스크립트 작성 후 실행
+docker-compose exec chatbot python static/data/chatbot/build_db.py
+```
 
-## Chatbot9
-- [Chatbot5 README](generation/chatbot9/README.md)
+### 5️⃣ 챗봇 로직 구현 (3-4시간) ⭐ **핵심!**
 
+`generation/chatbot/chatbot.py`에서 10개 TODO 구현:
+
+1. 라이브러리 임포트
+2. 설정 파일 로드
+3. OpenAI API 키 설정
+4. ChromaDB 초기화
+5. 임베딩 생성 함수
+6. 키워드 추출 함수 (선택)
+7. RAG 검색 함수 ⭐
+8. LangChain 메모리 설정
+9. 시스템 프롬프트 생성
+10. 응답 생성 함수 (통합) ⭐
+
+**상세 가이드**: [IMPLEMENTATION_GUIDE.md](IMPLEMENTATION_GUIDE.md)
+
+### 6️⃣ 테스트 (30분)
+
+```bash
+# 로컬 실행
+docker-compose up
+
+# 브라우저에서 http://localhost:5000
+# 채팅 테스트
+```
+
+### 7️⃣ 배포 (20분)
+
+#### Vercel 배포
+
+```bash
+1. https://vercel.com 접속
+2. GitHub로 로그인
+3. 프로젝트 Import
+4. Environment Variables 설정
+   - OPENAI_API_KEY 입력
+5. Deploy
+```
+
+**자세한 단계**: [ASSIGNMENT_GUIDE.md](ASSIGNMENT_GUIDE.md) 참고
+
+---
+
+## 🧪 테스트
+
+### 헬스체크
+
+```bash
+curl http://localhost:5000/health
+# 응답: {"status":"ok","chatbot":"챗봇이름"}
+```
+
+### 챗봇 직접 테스트
+
+```bash
+# Docker 컨테이너 접속
+docker-compose exec chatbot bash
+
+# Python 대화형 모드
+python generation/chatbot/chatbot.py
+
+# 질문 입력
+질문을 입력하세요(종료: quit): 안녕?
+질문을 입력하세요(종료: quit): quit
+```
+
+---
+
+## 👥 팀 협업 워크플로우
+
+### 조원 A (Repository Owner)
+
+1. Organization 레포 Fork
+2. 로컬에 Clone
+3. Collaborator 추가 (조원 B)
+4. 조원 B의 Pull Request 리뷰
+5. Merge 후 배포
+
+### 조원 B (Contributor)
+
+1. 조원 A의 레포 Clone
+2. Feature 브랜치 생성
+3. 과제 수행
+4. Commit & Push
+5. Pull Request 생성
+6. 코드 리뷰 반영 후 Merge
+
+**자세한 워크플로우**: [ASSIGNMENT_GUIDE.md](ASSIGNMENT_GUIDE.md#-step-by-step-과제-수행)
+
+---
+
+## 🔧 트러블슈팅
+
+### Q: Docker가 실행되지 않아요
+
+```bash
+# Docker Desktop이 실행 중인지 확인
+# macOS: 상단 메뉴바에 Docker 아이콘
+
+# Docker 재시작
+docker-compose down
+docker-compose up --build
+```
+
+### Q: OpenAI API 오류
+
+```bash
+# .env 파일 확인
+cat .env
+
+# API 키가 올바른지 확인
+# https://platform.openai.com/api-keys
+```
+
+### Q: RAG가 작동하지 않아요
+
+```bash
+# 임베딩 파일 확인
+ls static/data/chatbot/chardb_embedding/
+
+# 없으면 재생성
+docker-compose exec chatbot python static/data/chatbot/build_db.py
+```
+
+**더 많은 문제 해결**: [ASSIGNMENT_GUIDE.md#-문제-해결](ASSIGNMENT_GUIDE.md#-문제-해결)
+
+---
+
+## 📚 API 문서
+
+### `/` - 메인 페이지
+
+챗봇 정보 표시
+
+### `/detail` - 상세 페이지
+
+챗봇 소개 및 이름 입력
+
+### `/chat` - 채팅 화면
+
+실시간 대화
+
+### `/api/chat` - 챗봇 API
+
+**Method**: `POST`  
+**Body**:
+
+```json
+{
+  "message": "안녕하세요",
+  "username": "사용자"
+}
+```
+
+**Response**:
+
+```json
+{
+  "reply": "안녕하세요! 무엇을 도와드릴까요?"
+}
+```
+
+### `/health` - 헬스체크
+
+**Method**: `GET`  
+**Response**:
+
+```json
+{
+  "status": "ok",
+  "chatbot": "챗봇이름"
+}
+```
+
+---
+
+## 🌟 주요 기능
+
+### 1. RAG (Retrieval-Augmented Generation)
+
+- ChromaDB를 사용한 벡터 데이터베이스
+- 텍스트 유사도 기반 문서 검색
+- 관련 정보를 활용한 정확한 답변 생성
+
+### 2. 대화 메모리
+
+- LangChain의 ConversationSummaryBufferMemory 사용
+- 대화 맥락 유지
+- 자연스러운 다회차 대화
+
+### 3. 한국어 처리
+
+- KoNLPy를 이용한 명사 추출
+- 키워드 기반 검색 최적화
+
+### 4. 확장성
+
+- 쉬운 설정 변경 (JSON)
+- 모듈화된 코드 구조
+- Docker를 통한 배포 간소화
+
+---
+
+## 📖 참고 자료
+
+### 공식 문서
+
+- [OpenAI API 문서](https://platform.openai.com/docs)
+- [LangChain 문서](https://python.langchain.com/)
+- [ChromaDB 문서](https://docs.trychroma.com/)
+- [Flask 문서](https://flask.palletsprojects.com/)
+- [Docker 문서](https://docs.docker.com/)
+
+### 학습 자료
+
+- [RAG 개념](https://www.pinecone.io/learn/retrieval-augmented-generation/)
+- [프롬프트 엔지니어링](https://www.promptingguide.ai/)
+- [Git 협업 가이드](https://git-scm.com/book/ko/v2)
+
+---
+
+## 🤝 기여
+
+이 프로젝트는 교육용 템플릿입니다.  
+문제를 발견하거나 개선 아이디어가 있다면 Issue나 Pull Request를 생성해주세요.
+
+---
+
+## 📄 라이선스
+
+MIT License
+
+---
+
+## 👨‍💻 제작
+
+**HateSlop Organization**  
+OpenAI API와 RAG를 활용한 캐릭터 챗봇 프로젝트
+
+---
+
+## 🎓 교육용 안내
+
+이 프로젝트는 다음을 학습하기 위한 템플릿입니다:
+
+- ✅ OpenAI API 활용
+- ✅ RAG (Retrieval-Augmented Generation)
+- ✅ 벡터 데이터베이스 (ChromaDB)
+- ✅ 프롬프트 엔지니어링
+- ✅ Flask 웹 개발
+- ✅ Docker 컨테이너화
+- ✅ Git/GitHub 협업
+- ✅ Vercel 배포
+
+---
+
+<div align="center">
+
+**Made with ❤️ by HateSlop**
+
+[![GitHub](https://img.shields.io/badge/GitHub-HateSlop-black?logo=github)](https://github.com/hateslop)
+
+</div>
