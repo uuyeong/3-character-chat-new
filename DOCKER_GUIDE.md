@@ -10,7 +10,7 @@
 
 ### 2. **간편한 설정**
 
-- 복잡한 환경 설정을 `docker-compose up` 한 번으로 해결
+- 복잡한 환경 설정을 `docker compose up` 한 번으로 해결
 - KoNLPy를 위한 Java 설치, Python 가상환경 등 자동 처리
 - 팀원 간 설정 불일치 없음
 
@@ -18,7 +18,7 @@
 
 - 프로젝트가 시스템에 영향을 주지 않음
 - 여러 프로젝트 동시 작업 가능
-- 깨끗한 제거 가능 (`docker-compose down`)
+- 깨끗한 제거 가능 (`docker compose down`)
 
 ---
 
@@ -68,7 +68,7 @@
    ```bash
    # Ubuntu
    sudo apt-get update
-   sudo apt-get install docker.io docker-compose
+   sudo apt-get install docker.io docker compose
    ```
 
 2. **환경변수 설정**
@@ -87,16 +87,16 @@
 
 ```bash
 # 1. 빌드 및 실행
-docker-compose up --build
+docker compose up --build
 
 # 2. 백그라운드 실행
-docker-compose up -d
+docker compose up -d
 
 # 3. 로그 확인
-docker-compose logs -f
+docker compose logs -f
 
 # 4. 종료
-docker-compose down
+docker compose down
 ```
 
 #### 방법 2: Docker만 사용
@@ -123,35 +123,35 @@ docker stop chatbot-app
 
 ```bash
 # 앱 시작
-docker-compose up
+docker compose up
 
 # 변경사항 반영 (재빌드)
-docker-compose up --build
+docker compose up --build
 
 # 로그 보기
-docker-compose logs -f chatbot
+docker compose logs -f chatbot
 
 # 컨테이너 상태 확인
-docker-compose ps
+docker compose ps
 
 # 컨테이너 내부 접속 (디버깅)
-docker-compose exec chatbot bash
+docker compose exec chatbot bash
 ```
 
 ### 유지보수
 
 ```bash
 # 컨테이너 정지
-docker-compose stop
+docker compose stop
 
 # 컨테이너 시작 (재생성 없이)
-docker-compose start
+docker compose start
 
 # 컨테이너 재시작
-docker-compose restart
+docker compose restart
 
 # 완전 삭제 (볼륨 포함)
-docker-compose down -v
+docker compose down -v
 
 # 이미지 삭제
 docker rmi chatbot-app
@@ -161,16 +161,16 @@ docker rmi chatbot-app
 
 ```bash
 # 컨테이너 내부에서 Python 실행
-docker-compose exec chatbot python
+docker compose exec chatbot python
 
 # 챗봇 모듈 직접 테스트
-docker-compose exec chatbot python generation/chatbot/chatbot.py
+docker compose exec chatbot python generation/chatbot/chatbot.py
 
 # 환경변수 확인
-docker-compose exec chatbot env
+docker compose exec chatbot env
 
 # 설치된 패키지 확인
-docker-compose exec chatbot pip list
+docker compose exec chatbot pip list
 ```
 
 ---
@@ -179,7 +179,7 @@ docker-compose exec chatbot pip list
 
 ### 포트 변경
 
-`docker-compose.yml`:
+`docker compose.yml`:
 
 ```yaml
 ports:
@@ -188,7 +188,7 @@ ports:
 
 ### 환경변수 추가
 
-`docker-compose.yml`:
+`docker compose.yml`:
 
 ```yaml
 environment:
@@ -198,7 +198,7 @@ environment:
 
 ### 볼륨 추가
 
-`docker-compose.yml`:
+`docker compose.yml`:
 
 ```yaml
 volumes:
@@ -218,7 +218,7 @@ docker ps
 # 특정 포트 사용 프로세스 찾기 (macOS/Linux)
 lsof -i :5000
 
-# 포트 변경 (docker-compose.yml 수정)
+# 포트 변경 (docker compose.yml 수정)
 ports:
   - "8080:5000"
 ```
@@ -227,10 +227,10 @@ ports:
 
 ```bash
 # 빌드 캐시 사용
-docker-compose build --no-cache
+docker compose build --no-cache
 
 # 빌드 중간 출력 확인
-docker-compose build --progress=plain
+docker compose build --progress=plain
 ```
 
 ### Q: ChromaDB 데이터가 사라짐
@@ -240,7 +240,7 @@ docker-compose build --progress=plain
 docker volume ls
 
 # 볼륨을 삭제하지 않고 컨테이너만 종료
-docker-compose down  # (대신 docker-compose down -v 사용하지 말것)
+docker compose down  # (대신 docker compose down -v 사용하지 말것)
 
 # 볼륨 백업
 docker run --rm -v chatbot-data:/data -v $(pwd):/backup \
@@ -251,26 +251,26 @@ docker run --rm -v chatbot-data:/data -v $(pwd):/backup \
 
 ```bash
 # Java 설치 확인
-docker-compose exec chatbot java -version
+docker compose exec chatbot java -version
 
 # Java 경로 확인
-docker-compose exec chatbot echo $JAVA_HOME
+docker compose exec chatbot echo $JAVA_HOME
 
 # 수동 설치 (필요시)
-docker-compose exec chatbot apt-get update && apt-get install -y default-jdk
+docker compose exec chatbot apt-get update && apt-get install -y default-jdk
 ```
 
 ### Q: 코드 변경이 반영 안 됨
 
 ```bash
 # 볼륨 마운트 확인
-docker-compose exec chatbot ls -la /app
+docker compose exec chatbot ls -la /app
 
 # 재빌드
-docker-compose up --build
+docker compose up --build
 
 # 캐시 없이 재빌드
-docker-compose build --no-cache
+docker compose build --no-cache
 ```
 
 ---
@@ -334,7 +334,7 @@ Docker 환경 설정 시 확인사항:
 
 - [ ] Docker Desktop 설치 및 실행 확인
 - [ ] `.env` 파일 생성 및 API 키 입력
-- [ ] `docker-compose up --build` 성공 확인
+- [ ] `docker compose up --build` 성공 확인
 - [ ] `http://localhost:5001` 접속 확인
 - [ ] `/health` 엔드포인트 응답 확인
 - [ ] 채팅 기능 정상 작동 확인

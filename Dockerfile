@@ -5,16 +5,9 @@ FROM python:3.11-slim
 WORKDIR /app
 
 # 시스템 패키지 업데이트 및 필수 패키지 설치
-# - build-essential: Python 패키지 컴파일용
-# - default-jdk: KoNLPy(한국어 처리)를 위한 Java
 RUN apt-get update && apt-get install -y \
     build-essential \
-    default-jdk \
     && rm -rf /var/lib/apt/lists/*
-
-# Java 환경변수 설정 (KoNLPy 필수)
-ENV JAVA_HOME=/usr/lib/jvm/default-java
-ENV PATH=$JAVA_HOME/bin:$PATH
 
 # Python 의존성 파일 복사
 COPY requirements.txt .

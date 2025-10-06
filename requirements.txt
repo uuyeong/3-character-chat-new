@@ -1,8 +1,6 @@
 beautifulsoup4==4.13.5
 chromadb==1.1.0
 Flask==3.1.2
-konlpy==0.6.0
-kss.core==1.6.5
 langchain==0.3.27
 langchain_chroma==0.2.6
 langchain_community==0.3.29
