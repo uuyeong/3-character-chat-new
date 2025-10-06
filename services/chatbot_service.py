@@ -112,7 +112,7 @@ class ChatbotService:
     3. LangChain 메모리 관리
     4. 응답 생성 파이프라인
     
-    학생이 구현해야 할 메서드:
+    직접 구현해야 할 메서드:
     - __init__: 모든 구성 요소 초기화
     - _load_config: 설정 파일 로드
     - _init_chromadb: 벡터 데이터베이스 초기화
@@ -151,7 +151,7 @@ class ChatbotService:
         - ChromaDB: import chromadb
         - LangChain: from langchain.memory import ConversationSummaryBufferMemory
         """
-        print("[ChatbotService] 초기화 중...")
+        print("[ChatbotService] 초기화 중... ")
         
         # 여기에 초기화 코드 작성
         self.config = {}
