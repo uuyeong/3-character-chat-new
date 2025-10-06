@@ -19,7 +19,6 @@
         margin: 0;
         padding: 0;
         font-family: "IBM Plex Sans KR", sans-serif;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         min-height: 100vh;
         display: flex;
         align-items: center;
@@ -34,7 +33,6 @@
         overflow: hidden;
       }
       .header {
-        background: linear-gradient(135deg, #e8dff5, #f3e7ff);
         padding: 30px;
         text-align: center;
       }
@@ -86,8 +84,8 @@
         display: inline-block;
         margin-top: 20px;
         padding: 15px 40px;
-        background: linear-gradient(135deg, #667eea, #764ba2);
         color: white;
+        background: #764ba2;
         text-decoration: none;
         border-radius: 25px;
         font-size: 1.1rem;
@@ -110,31 +108,14 @@
   <body>
     <div class="container">
       <div class="header">
-        <h1>🤖 캐릭터 챗봇</h1>
-        <p>OpenAI API & RAG 기반 대화형 AI</p>
-        <p>모든 스타일 자유롭게 바꾸시면 됩니다.</p>
+        <h1>모든 스타일 자유롭게 바꾸시면 됩니다.</h1>
       </div>
-
-      <div class="card">
+      <div class="card" style="flex-direction: column; align-items: center">
         <img
           src="./static/images/hateslop/logo_black_genai.png"
           alt="{{ bot.name }}"
         />
-        <h2>{{ bot.name }}</h2>
-
-        <div class="tags">
-          {% for tag in bot.tags %}
-          <span class="tag">{{ tag }}</span>
-          {% endfor %}
-        </div>
-
-        <div class="description">{{ bot.description | safe }}</div>
-
         <a href="{{ url_for('detail') }}" class="start-btn">시작하기</a>
-      </div>
-
-      <div class="footer">
-        © 2025 캐릭터 챗봇 프로젝트. OpenAI API를 활용한 교육용 프로젝트입니다.
       </div>
     </div>
   </body>

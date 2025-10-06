@@ -26,6 +26,10 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'dev-secret-key-change-this')
 
+# 개발 환경 설정
+app.config['TEMPLATES_AUTO_RELOAD'] = True
+app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
+
 # 프로젝트 루트 경로
 BASE_DIR = Path(__file__).resolve().parent
 

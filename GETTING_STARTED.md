@@ -59,17 +59,17 @@ docker compose up --build
 
 **정상 작동 화면:**
 
-### 메인 페이지
+메인 페이지
 
-![메인 페이지](static/images/docs/screenshot-main.png)
+![메인 페이지](static/images/hateslop/example1.png)
 
-### 상세 페이지
+상세 페이지
 
-![상세 페이지](static/images/docs/screenshot-detail.png)
+![상세 페이지](static/images/hateslop/example2.png)
 
-### 채팅 페이지
+채팅 페이지
 
-![채팅 페이지](static/images/docs/screenshot-chat.png)
+![채팅 페이지](static/images/hateslop/example3.png)
 
 ---
 
