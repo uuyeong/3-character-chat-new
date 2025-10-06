@@ -8,6 +8,9 @@
 
 ## ⚡ 빠른 시작
 
+- hateslop organization에서 fork 한 것이라 가정
+- docker desktop 설치 및 실행한 상태라 가정
+
 ```bash
 # 1. Fork & Clone
 git clone https://github.com/YOUR_USERNAME/chatbot-project.git
@@ -23,7 +26,7 @@ docker compose up --build
 # 4. 브라우저에서 http://localhost:5001 접속
 ```
 
-**정상 작동 화면:**
+**정상 작동 화면**
 
 메인 페이지
 
@@ -41,12 +44,13 @@ docker compose up --build
 
 ## 📚 문서 가이드
 
-| 문서                                                | 내용                         | 비고   |
-| --------------------------------------------------- | ---------------------------- | ------ |
-| **[ARCHITECTURE.md](ARCHITECTURE.md)** ⭐⭐         | 시스템 아키텍처 (필독)       | 필독   |
-| **[DOCKER_HOT_RELOAD.md](DOCKER_HOT_RELOAD.md)** 🔥 | Docker 개발 환경 실전 가이드 | (참고) |
-| **[DOCKER_GUIDE.md](DOCKER_GUIDE.md)**              | Docker 사용 완전 가이드      | (참고) |
-| **[ADVANCED_TOPICS.md](ADVANCED_TOPICS.md)** 🚀     | 성능 개선 & 최신 기술 트렌드 | (심화) |
+| 문서                                                | 내용                         | 비고     |
+| --------------------------------------------------- | ---------------------------- | -------- |
+| **[README.md](README.md)** ⭐⭐                     | 프로젝트 개요 (필독)         | 현재문서 |
+| **[ARCHITECTURE.md](ARCHITECTURE.md)** ⭐⭐         | 시스템 아키텍처 (필독)       | 필독     |
+| **[DOCKER_HOT_RELOAD.md](DOCKER_HOT_RELOAD.md)** 🔥 | Docker 개발 환경 실전 가이드 | (참고)   |
+| **[DOCKER_GUIDE.md](DOCKER_GUIDE.md)**              | Docker 사용 완전 가이드      | (참고)   |
+| **[ADVANCED_TOPICS.md](ADVANCED_TOPICS.md)** 🚀     | 성능 개선 & 최신 기술 트렌드 | (심화)   |
 
 ---
 
@@ -80,7 +84,7 @@ docker compose up --build
 
 ```
 chatbot-project/
-├── app.py                     # 🚫 템플릿 (수정 금지)
+├── app.py                     # 🚫 템플릿 (수정 금지, 수정 원한다면 의존성 있는 파일)
 ├── services/
 │   ├── __init__.py
 │   └── chatbot_service.py     # ✏️ 학회원 구현 파일 (AI 로직)
@@ -107,14 +111,12 @@ chatbot-project/
 ├── requirements.txt           # 🚫 템플릿
 ├── vercel.json                # 🚫 템플릿
 ├── .env.example               # 참고용
-└── README.md                  # 이 파일
+└── README.md                  # 현재 파일
 ```
 
 ### 📁 파일별 역할
 
 #### 🚫 템플릿 파일 (수정하지 마세요!)
-
-_수정을 원한다면 의존성을 가진 파일을 같이 수정하셔야 합니다._
 
 - `app.py`: Flask 애플리케이션 핵심 로직
 - `templates/*.html`: 웹 UI 템플릿
@@ -122,14 +124,14 @@ _수정을 원한다면 의존성을 가진 파일을 같이 수정하셔야 합
 - `Dockerfile`, `docker-compose.yml`: Docker 설정
 - `requirements.txt`: Python 의존성
 
+> _커스텀 원하시면 수정하셔도 되지만, 의존성을 가진 파일을 같이 수정하셔야 합니다._
+
 #### ✏️ 작성/수정할 파일
 
 - `services/chatbot_service.py`: **AI 로직 구현** (RAG, Embedding, LLM)
 - `config/chatbot_config.json`: 챗봇 설정 (이름, 성격, 시스템 프롬프트)
 - `static/data/chatbot/chardb_text/`: 텍스트 데이터 (json, markdown, txt 자유롭게 사용하시면 됩니다.)
 - `static/images/chatbot/`: 챗봇 관련 이미지
-
----
 
 ## 📚 학습 자료
 
