@@ -15,8 +15,8 @@ services:
       - SECRET_KEY=${SECRET_KEY:-dev-secret-key-please-change}
     volumes:
       # 개발 시 코드 변경사항 실시간 반영
-      - ./app_refactored.py:/app/app_refactored.py
-      - ./generation:/app/generation
+      - ./app.py:/app/app.py
+      - ./services:/app/services
       - ./templates:/app/templates
       - ./static:/app/static
       - ./config:/app/config

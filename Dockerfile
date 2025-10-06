@@ -42,4 +42,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:5000/health')" || exit 1
 
 # 애플리케이션 실행
-CMD ["python", "app_refactored.py"]
+CMD ["python", "app.py"]
