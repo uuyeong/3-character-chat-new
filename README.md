@@ -38,7 +38,7 @@
 - 갤러리에 보여줄 이미지를 static/images/chatbotX/ 폴더에 넣고, chat.html의 <img> 경로를 적절히 바꿔주세요.
 
 
-## 3. generation/chatbot@.py
+## 3. generation/chatbot@/chatbot@.py
 
 ### 응답 및 임베딩 비교 코드:
 
