@@ -6,19 +6,38 @@
 [![Python](https://img.shields.io/badge/Python-3.11-blue.svg)](https://www.python.org/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)](https://www.docker.com/)
 
+## ⚡ 5분 빠른 시작
+
+```bash
+# 1. Fork & Clone
+git clone https://github.com/YOUR_USERNAME/3-chatbot-project.git
+cd 3-chatbot-project
+
+# 2. .env 파일 생성 및 API 키 입력
+cp .env.example .env
+nano .env  # OPENAI_API_KEY 입력
+
+# 3. Docker 실행
+docker-compose up --build
+
+# 4. http://localhost:5000 접속
+```
+
+**상세 가이드**: [GETTING_STARTED.md](GETTING_STARTED.md) ⭐
+
 ---
 
 ## 📚 문서 가이드
 
 이 프로젝트는 여러 가이드 문서를 제공합니다. 목적에 맞게 선택하세요:
 
-| 문서                                                     | 대상       | 내용                              |
-| -------------------------------------------------------- | ---------- | --------------------------------- |
-| **[ASSIGNMENT_GUIDE.md](ASSIGNMENT_GUIDE.md)**           | 👨‍🎓 학생    | 과제 수행 완전 가이드 (필독!)     |
-| **[IMPLEMENTATION_GUIDE.md](IMPLEMENTATION_GUIDE.md)** ⭐ | 👨‍🎓 학생    | AI 로직 구현 상세 가이드 (핵심!)  |
-| **[WORKFLOW_TEST.md](WORKFLOW_TEST.md)**                 | 👨‍🏫 교수/TA | 워크플로우 테스트 가이드          |
-| **[DOCKER_GUIDE.md](DOCKER_GUIDE.md)**                   | 🐳 모두    | Docker 사용 완전 가이드           |
-| **[REFACTORING_SUMMARY.md](REFACTORING_SUMMARY.md)**     | 📊 참고    | 리팩토링 상세 보고서              |
+| 문서 | 대상 | 내용 | 읽는 순서 |
+|------|------|------|----------|
+| **[GETTING_STARTED.md](GETTING_STARTED.md)** ⭐ | 👨‍🎓 학생 | 5분 빠른 시작 가이드 | 1️⃣ 필독! |
+| **[START_HERE.md](START_HERE.md)** | 👨‍🎓 학생 | 프로젝트 소개 및 FAQ | 2️⃣ |
+| **[ASSIGNMENT_GUIDE.md](ASSIGNMENT_GUIDE.md)** | 👨‍🎓 학생 | 과제 수행 완전 가이드 | 3️⃣ |
+| **[IMPLEMENTATION_GUIDE.md](IMPLEMENTATION_GUIDE.md)** ⭐ | 👨‍🎓 학생 | AI 로직 구현 상세 가이드 (핵심!) | 4️⃣ |
+| **[DOCKER_GUIDE.md](DOCKER_GUIDE.md)** | 🐳 모두 | Docker 사용 완전 가이드 | (참고) |
 
 ---
 
