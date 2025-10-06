@@ -6,7 +6,7 @@
 
 ✏️ 수정/작성해야 하는 파일:
   - config/chatbot_config.json        (챗봇 설정)
-  - generation/chatbot/chatbot.py     (RAG 로직, 일부 커스터마이징)
+  - services/chatbot_service.py       (AI 로직: RAG, Embedding, LLM)
   - static/data/chatbot/chardb_text/  (텍스트 데이터)
   - static/images/chatbot/            (이미지 파일)
   - static/videos/chatbot/            (비디오 파일, 선택)
@@ -108,18 +108,21 @@ def api_chat():
         if not user_message:
             return jsonify({'error': 'Message is required'}), 400
         
-        # 챗봇 로직 임포트 (지연 로딩)
-        from generation.chatbot.chatbot import generate_response
+        # 챗봇 서비스 임포트 (지연 로딩)
+        from services import get_chatbot_service
         
         # 응답 생성
-        reply = generate_response(user_message, username)
+        chatbot = get_chatbot_service()
+        response = chatbot.generate_response(user_message, username)
         
-        return jsonify({'reply': reply})
+        return jsonify(response)
         
     except ImportError as e:
-        return jsonify({'error': f'Chatbot module not found: {str(e)}'}), 500
+        print(f"[ERROR] 챗봇 서비스 임포트 실패: {e}")
+        return jsonify({'reply': '챗봇 서비스를 불러올 수 없습니다. services/chatbot_service.py를 구현해주세요.'}), 500
     except Exception as e:
-        return jsonify({'error': f'Error generating response: {str(e)}'}), 500
+        print(f"[ERROR] 응답 생성 실패: {e}")
+        return jsonify({'reply': '죄송해요, 일시적인 오류가 발생했어요. 다시 시도해주세요.'}), 500
 
 # 헬스체크 엔드포인트 (Vercel용)
 @app.route('/health')

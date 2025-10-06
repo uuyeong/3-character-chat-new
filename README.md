@@ -35,8 +35,9 @@ docker-compose up --build
 |------|------|------|----------|
 | **[GETTING_STARTED.md](GETTING_STARTED.md)** ⭐ | 👨‍🎓 학생 | 5분 빠른 시작 가이드 | 1️⃣ 필독! |
 | **[START_HERE.md](START_HERE.md)** | 👨‍🎓 학생 | 프로젝트 소개 및 FAQ | 2️⃣ |
-| **[ASSIGNMENT_GUIDE.md](ASSIGNMENT_GUIDE.md)** | 👨‍🎓 학생 | 과제 수행 완전 가이드 | 3️⃣ |
-| **[IMPLEMENTATION_GUIDE.md](IMPLEMENTATION_GUIDE.md)** ⭐ | 👨‍🎓 학생 | AI 로직 구현 상세 가이드 (핵심!) | 4️⃣ |
+| **[ARCHITECTURE.md](ARCHITECTURE.md)** ⭐⭐ | 👨‍🎓 학생 | 시스템 아키텍처 (필독!) | 3️⃣ |
+| **[ASSIGNMENT_GUIDE.md](ASSIGNMENT_GUIDE.md)** | 👨‍🎓 학생 | 과제 수행 완전 가이드 | 4️⃣ |
+| **[IMPLEMENTATION_GUIDE.md](IMPLEMENTATION_GUIDE.md)** ⭐ | 👨‍🎓 학생 | AI 로직 구현 상세 가이드 (핵심!) | 5️⃣ |
 | **[DOCKER_GUIDE.md](DOCKER_GUIDE.md)** | 🐳 모두 | Docker 사용 완전 가이드 | (참고) |
 
 ---
@@ -255,18 +256,18 @@ docker-compose exec chatbot python static/data/chatbot/build_db.py
 
 ### 5️⃣ 챗봇 로직 구현 (3-4시간) ⭐ **핵심!**
 
-`generation/chatbot/chatbot.py`에서 10개 TODO 구현:
+`services/chatbot_service.py`에서 7개 메서드 구현:
 
-1. 라이브러리 임포트
-2. 설정 파일 로드
-3. OpenAI API 키 설정
-4. ChromaDB 초기화
-5. 임베딩 생성 함수
-6. 키워드 추출 함수 (선택)
-7. RAG 검색 함수 ⭐
-8. LangChain 메모리 설정
-9. 시스템 프롬프트 생성
-10. 응답 생성 함수 (통합) ⭐
+```python
+class ChatbotService:
+    def __init__()              # 1. 초기화
+    def _load_config()          # 2. 설정 로드
+    def _init_chromadb()        # 3. DB 연결
+    def _create_embedding()     # 4. 임베딩 생성
+    def _search_similar()       # 5. RAG 검색 ⭐ 핵심!
+    def _build_prompt()         # 6. 프롬프트 설계
+    def generate_response()     # 7. 응답 생성 ⭐⭐ 통합!
+```
 
 **상세 가이드**: [IMPLEMENTATION_GUIDE.md](IMPLEMENTATION_GUIDE.md)
 
