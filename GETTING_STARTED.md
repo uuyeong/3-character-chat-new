@@ -60,12 +60,15 @@ docker compose up --build
 **정상 작동 화면:**
 
 ### 메인 페이지
+
 ![메인 페이지](static/images/docs/screenshot-main.png)
 
 ### 상세 페이지
+
 ![상세 페이지](static/images/docs/screenshot-detail.png)
 
 ### 채팅 페이지
+
 ![채팅 페이지](static/images/docs/screenshot-chat.png)
 
 ---
