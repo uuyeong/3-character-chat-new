@@ -81,7 +81,7 @@ SECRET_KEY=your-secret-key-here
 docker-compose up --build
 ```
 
-브라우저에서 `http://localhost:5000` 접속하여 기본 템플릿 확인
+브라우저에서 `http://localhost:5001` 접속하여 기본 템플릿 확인
 
 ---
 
@@ -410,7 +410,7 @@ if user_message.strip().lower() == "init":
 # Docker로 실행
 docker-compose up
 
-# 브라우저에서 http://localhost:5000 접속
+# 브라우저에서 http://localhost:5001 접속
 ```
 
 **테스트 체크리스트**:

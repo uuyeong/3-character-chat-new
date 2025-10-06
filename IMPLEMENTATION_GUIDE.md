@@ -443,7 +443,7 @@ python services/chatbot_service.py
 
 ```bash
 docker-compose up
-# http://localhost:5000 접속
+# http://localhost:5001 접속
 ```
 
 ### 3. 디버깅 로그 확인

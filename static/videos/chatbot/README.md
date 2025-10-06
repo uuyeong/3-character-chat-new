@@ -95,7 +95,7 @@ ffmpeg -i input.mp4 -vf scale=1280:720 -c:v libx264 -crf 28 video.mp4
 # Docker로 실행
 docker-compose up
 
-# 브라우저에서 http://localhost:5000/chat 접속
+# 브라우저에서 http://localhost:5001/chat 접속
 # 🎬 버튼 클릭하여 영상 확인
 ```
 

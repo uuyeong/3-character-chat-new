@@ -53,9 +53,17 @@ docker compose up --build
 
 ### 4단계: 확인
 
-브라우저에서 http://localhost:5000 접속
+브라우저에서 http://localhost:5001 접속
 
 ✅ 기본 템플릿이 정상 작동하면 성공!
+
+**정상 작동 화면:**
+
+<img src="https://www.notion.so/image/attachment%3Aa2870aaf-8d7c-4f0c-ac50-5d713fb72741%3Aimage.png?table=block&id=284219be-4e0b-80e3-9117-ee0850cf3023&spaceId=c18e7d08-d585-4e16-bd89-4e451c2cb079&width=2000&userId=1b37c595-3d33-47d7-90be-4d68c460d992&cache=v2" alt="메인 페이지" width="800">
+
+<img src="https://www.notion.so/image/attachment%3A911aa800-0d00-4f18-8547-626fc850da38%3Aimage.png?table=block&id=284219be-4e0b-8043-a97a-d005b455730f&spaceId=c18e7d08-d585-4e16-bd89-4e451c2cb079&width=2000&userId=1b37c595-3d33-47d7-90be-4d68c460d992&cache=v2" alt="상세 페이지" width="800">
+
+<img src="https://www.notion.so/image/attachment%3Acfde8b88-dbff-4d91-af57-0fbd62cead14%3Aimage.png?table=block&id=284219be-4e0b-80a0-8fd5-ea826e42d0ed&spaceId=c18e7d08-d585-4e16-bd89-4e451c2cb079&width=2000&userId=1b37c595-3d33-47d7-90be-4d68c460d992&cache=v2" alt="채팅 페이지" width="800">
 
 ---
 

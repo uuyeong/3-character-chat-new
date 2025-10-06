@@ -335,7 +335,7 @@ Docker 환경 설정 시 확인사항:
 - [ ] Docker Desktop 설치 및 실행 확인
 - [ ] `.env` 파일 생성 및 API 키 입력
 - [ ] `docker-compose up --build` 성공 확인
-- [ ] `http://localhost:5000` 접속 확인
+- [ ] `http://localhost:5001` 접속 확인
 - [ ] `/health` 엔드포인트 응답 확인
 - [ ] 채팅 기능 정상 작동 확인
 - [ ] 데이터 영속성 확인 (재시작 후)

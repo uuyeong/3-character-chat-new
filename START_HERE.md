@@ -66,7 +66,7 @@ nano .env  # OPENAI_API_KEY 입력
 # 3. 실행
 docker-compose up --build
 
-# 4. 브라우저에서 http://localhost:5000 접속
+# 4. 브라우저에서 http://localhost:5001 접속
 ```
 
 ---
