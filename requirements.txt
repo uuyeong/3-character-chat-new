@@ -1,10 +1,16 @@
-beautifulsoup4==4.13.5
-chromadb==1.1.0
+# Web Framework
 Flask==3.1.2
+
+# AI & VectorDB (Core Libraries)
+openai==1.108.2
+chromadb==1.1.0
+numpy==2.3.3
+
+# LLM Framework (for Memory, etc.)
 langchain==0.3.27
 langchain_chroma==0.2.6
 langchain_community==0.3.29
 langchain_openai==0.3.33
-numpy==2.3.3
-openai==1.108.2
+
+# Utilities
 python-dotenv==1.1.1
