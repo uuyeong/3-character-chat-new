@@ -79,7 +79,8 @@ docker compose up --build
 | **[README.md](README.md)** ⭐⭐                 | 프로젝트 개요                | 현재문서 |
 | **[ARCHITECTURE.md](ARCHITECTURE.md)** ⭐⭐     | 시스템 아키텍처              | 필독     |
 | **[DOCKER-GUIDE.md](DOCKER-GUIDE.md)** ⭐⭐     | 개발 환경 구성               | 필독     |
-| **[VERCEL-GUIDE.md](VERCEL-GUIDE.md)** ⭐⭐     | 배포                         | 필독     |
+| **[RENDER-GUIDE.md](RENDER-GUIDE.md)** ⭐⭐     | 배포 (Render - 무료, 권장)   | 필독     |
+| **[RAILWAY-GUIDE.md](RAILWAY-GUIDE.md)** ⭐     | 배포 (Railway - 대안)        | (선택)   |
 | **[ADVANCED_TOPICS.md](ADVANCED_TOPICS.md)** 🚀 | 성능 개선 & 최신 기술 트렌드 | (심화)   |
 
 ---
@@ -90,7 +91,7 @@ docker compose up --build
 
 - 📖 **학습 목표**: RAG, Embedding, LLM, Vector Database
 - 👥 **협업 방식**: 프로듀서가 기획한 내용을 바탕으로 캐릭터 챗봇을 완성
-- 🚀 **배포**: Vercel CLI를 통한 프로덕션 배포
+- 🚀 **배포**: Render.com (무료) 또는 Railway를 통한 프로덕션 배포
 - 🐳 **환경**: Docker로 일관된 개발 환경 보장
 
 ### 핵심 기능
@@ -107,7 +108,7 @@ docker compose up --build
 - **Backend**: Flask (Python 3.11)
 - **AI**: OpenAI API, LangChain, ChromaDB
 - **Frontend**: Vanilla JavaScript, HTML, CSS
-- **Deployment**: Docker, Vercel CLI
+- **Deployment**: Docker, Render.com (권장) / Railway
 - **Version Control**: Git, GitHub
 
 ## 🏗️ 프로젝트 구조
@@ -128,17 +129,16 @@ chatbot-project/
 │   ├── videos/
 │   │   └── something/           # ✏️ 비디오 파일 (선택)
 │   ├── css/
-│   │   └── style.css          # 🚫 템플릿 (스타일 변경 원하면 수정 가능)
+│   │   └── style.css          # # ✏️ 학회원 구현 파일 (스타일)
 │   └── js/
-│       └── chatbot.js         # 🚫 템플릿 (수정 원한다면 의존성 있는 파일 함께 수정)
+│       └── chatbot.js         # # ✏️ 학회원 구현 파일 (Front 로직)
 ├── templates/
-│   ├── index.html             # 🚫 템플릿 (수정 원한다면 의존성 있는 파일 함께 수정)
-│   ├── detail.html            # 🚫 템플릿 (수정 원한다면 의존성 있는 파일 함께 수정)
-│   └── chat.html              # 🚫 템플릿 (수정 원한다면 의존성 있는 파일 함께 수정)
+│   ├── index.html             # ✏️ 학회원 구현 파일
+│   ├── detail.html            # ✏️ 학회원 구현 파일
+│   └── chat.html              # ✏️ 학회원 구현 파일
 ├── Dockerfile                 # 🚫 템플릿
 ├── docker-compose.yml         # 🚫 템플릿
 ├── requirements.txt           # 🚫 템플릿
-├── vercel.json                # 🚫 템플릿
 ├── .env.example               # 참고용
 └── README.md                  # 현재 파일
 ```
