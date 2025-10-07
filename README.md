@@ -21,6 +21,8 @@ GOAL)
 
 > \*바이브코딩 교육은 학회 커리큘럼에 맞춰 추후 진행될 예정입니다.
 
+> \*해당 프로젝트 답안지가 어떻게 작성되었는지 궁금하시다면, .cursor/rules 의 내용을 살펴보세요. 해당 내용을 LLM에게 지침으로 주고 Task 를 기반으로 바이브코딩한 것입니다. 당연히 해당 문서들도 모두 AI와 함께 작성하였습니다.
+
 TIPS)
 
 - 유료) 바이브코딩 툴을 이용한다면 그를 활용하세요.
@@ -70,15 +72,14 @@ docker compose up --build
 
 ![채팅 페이지](static/images/hateslop/example3.png)
 
----
-
 ## 📚 문서 가이드
 
 | 문서                                            | 내용                         | 비고     |
 | ----------------------------------------------- | ---------------------------- | -------- |
-| **[README.md](README.md)** ⭐⭐                 | 프로젝트 개요 (필독)         | 현재문서 |
-| **[ARCHITECTURE.md](ARCHITECTURE.md)** ⭐⭐     | 시스템 아키텍처 (필독)       | 필독     |
-| **[DOCKER-GUIDE.md](DOCKER-GUIDE.md)** ⭐⭐     | 시스템 아키텍처 (필독)       | 필독     |
+| **[README.md](README.md)** ⭐⭐                 | 프로젝트 개요                | 현재문서 |
+| **[ARCHITECTURE.md](ARCHITECTURE.md)** ⭐⭐     | 시스템 아키텍처              | 필독     |
+| **[DOCKER-GUIDE.md](DOCKER-GUIDE.md)** ⭐⭐     | 개발 환경 구성               | 필독     |
+| **[VERCEL-GUIDE.md](VERCEL-GUIDE.md)** ⭐⭐     | 배포                         | 필독     |
 | **[ADVANCED_TOPICS.md](ADVANCED_TOPICS.md)** 🚀 | 성능 개선 & 최신 기술 트렌드 | (심화)   |
 
 ---
@@ -113,7 +114,7 @@ docker compose up --build
 
 ```
 chatbot-project/
-├── app.py                     # 🚫 템플릿 (수정 금지, 수정 원한다면 의존성 있는 파일)
+├── app.py                     # 🚫 템플릿 (수정 원한다면 의존성 있는 파일함께 수정)
 ├── services/
 │   ├── __init__.py
 │   └── chatbot_service.py     # ✏️ 학회원 구현 파일 (AI 로직)
@@ -121,20 +122,19 @@ chatbot-project/
 │   └── chatbot_config.json    # ✏️ 챗봇 설정 (예시)
 ├── static/
 │   ├── data/
-│   │   └── chatbot/
-│   │       └── chardb_text/   # ✏️ 텍스트 데이터 (예시)
+│   │     └── chardb_text/   # ✏️ 텍스트 데이터 (예시)
 │   ├── images/
-│   │   └── chatbot/           # ✏️ 이미지 파일
+│   │   └── something/           # ✏️ 이미지 파일
 │   ├── videos/
-│   │   └── chatbot/           # ✏️ 비디오 파일 (선택)
+│   │   └── something/           # ✏️ 비디오 파일 (선택)
 │   ├── css/
-│   │   └── style.css          # 🚫 템플릿 (수정 금지, 스타일 변경 원하면 수정 가능)
+│   │   └── style.css          # 🚫 템플릿 (스타일 변경 원하면 수정 가능)
 │   └── js/
-│       └── chatbot.js         # 🚫 템플릿 (수정 금지, 수정 원한다면 의존성 있는 파일 함께 수정)
+│       └── chatbot.js         # 🚫 템플릿 (수정 원한다면 의존성 있는 파일 함께 수정)
 ├── templates/
-│   ├── index.html             # 🚫 템플릿 (수정 금지, 수정 원한다면 의존성 있는 파일 함께 수정)
-│   ├── detail.html            # 🚫 템플릿 (수정 금지, 수정 원한다면 의존성 있는 파일 함께 수정)
-│   └── chat.html              # 🚫 템플릿 (수정 금지, 수정 원한다면 의존성 있는 파일 함께 수정)
+│   ├── index.html             # 🚫 템플릿 (수정 원한다면 의존성 있는 파일 함께 수정)
+│   ├── detail.html            # 🚫 템플릿 (수정 원한다면 의존성 있는 파일 함께 수정)
+│   └── chat.html              # 🚫 템플릿 (수정 원한다면 의존성 있는 파일 함께 수정)
 ├── Dockerfile                 # 🚫 템플릿
 ├── docker-compose.yml         # 🚫 템플릿
 ├── requirements.txt           # 🚫 템플릿
@@ -142,6 +142,32 @@ chatbot-project/
 ├── .env.example               # 참고용
 └── README.md                  # 현재 파일
 ```
+
+### **static/js/chatbot.js**
+
+JS-파이썬 매핑:
+
+- 이 JS 파일은 `chat.html`에서 동적으로 로드되어, **사용자 메시지를 `/api/chat`**으로 보내고, 서버(파이썬) 응답을 화면에 표시하는 역할을 합니다.
+
+- `chatbot.js` 참고:
+  - 기본 메시지 전송 로직(이벤트 리스너, fetch API, DOM 업데이트)은 `chatbot.js`를 예시로 삼으면 됩니다.
+  - 단, 현재 프론트엔드는 백엔드에서 이미지 경로를 전달할 경우에만 이미지를 표시하도록 되어 있습니다. 이미지 검색 기능을 구현하기 전까지는 이미지가 표시되지 않습니다.
+  - 추가적으로, 응답 형태나 포맷이 달라질 경우(예: JSON 구조 변경), 그에 맞게 프런트 처리 로직도 수정해야 합니다.
+
+### **static/data/chatbot/** 폴더
+
+임베딩 벡터 / 필요한 데이터 저장:
+
+- 각 팀은 **static/data/chatbot/** 폴더 아래에, 임베딩 결과나 기타 필요한 텍스트, 이미지, 스크립트 파일 등을 저장합니다.
+- `chatbot_service.py`에서 임베딩 데이터를 불러올 때도 이 경로를 기준으로 맞춰주세요.
+
+### **추가 패키지 requirements.txt**
+
+임베딩 패키지, 기타 라이브러리:
+
+- 예: `numpy`, `pandas`, `openai`, `scikit-learn` 등등.
+- 새로운 라이브러리를 사용하면, 반드시 `requirements.txt`에 추가하여 다른 팀원/환경에서도 동일한 버전으로 설치 가능하도록 해주세요.
+- 해당 내용을 추가하게 되면 Docker 이미지를 새롭게 `build` 해야 합니다. 자세한 가이드는 [DOCK-GUIDE.md](DOCKER-GUIDE.md)에서 **"상황 2: 새로운 Python 라이브러리를 추가하는 경우"**를 참고하세요.
 
 ### 📁 파일별 역할
 

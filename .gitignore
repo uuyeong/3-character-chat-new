@@ -44,3 +44,6 @@ env/
 # 임시 파일
 *.tmp
 *.bak
+
+# repomix code base
+repomix-output.xml
