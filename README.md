@@ -28,7 +28,7 @@ TIPS)
 - 유료) 바이브코딩 툴을 이용한다면 그를 활용하세요.
 - 무료) repomix 를 이용해 코드베이스 전체를 google ai studio 에 넣어서 정확한 내용 기반으로 LLM 과 분석하세요. (Google AI Studio 를 쓰는 이유는 처리할 수 있는 Token 수가 1M으로 타 서비스 대비 압도적으로 많고 무료이기 때문)
 
-  [repomix 활용방법](https://pickle-snail-efe.notion.site/AgentOps-241e1458c63781dba0b1d451eddb3b48)
+  [repomix 활용방법](https://hateslop.notion.site/AgentOps-285219be4e0b8068974cc572a53bf20a)
 
   [gitingest : GitHub 저장소를 LLM 친화적인 텍스트로 변환하는 도구](https://discuss.pytorch.kr/t/gitingest-github-llm/6896)
 
