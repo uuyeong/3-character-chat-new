@@ -2,16 +2,12 @@
 Flask==3.0.0
 
 # AI & VectorDB (Core Libraries)
-# Note: Using a lighter version of chromadb to meet Vercel's size limits.
-openai~=1.10.0
+openai>=1.0.0,<2.0.0
 chromadb==0.4.24
-numpy==1.26.4
 
-# LLM Framework (for Memory, etc.)
-# Using a compatible set of langchain libraries
-langchain==0.1.13
-langchain-community==0.0.29
-langchain-openai==0.1.0
+# LLM Framework -> Installing only the core and necessary components
+langchain-core
+langchain-openai
 
 # Utilities
 python-dotenv==1.0.1
