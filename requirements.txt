@@ -8,5 +8,3 @@ langchain_openai==0.3.33
 numpy==2.3.3
 openai==1.108.2
 python-dotenv==1.1.1
-scikit_learn==1.7.2
-selenium==4.35.0
