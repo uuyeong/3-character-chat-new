@@ -80,14 +80,11 @@ docker compose up --build
 | **[ARCHITECTURE.md](ARCHITECTURE.md)** ⭐⭐     | 시스템 아키텍처              | 필독     |
 | **[DOCKER-GUIDE.md](DOCKER-GUIDE.md)** ⭐⭐     | 개발 환경 구성               | 필독     |
 | **[RENDER-GUIDE.md](RENDER-GUIDE.md)** ⭐⭐     | 배포 (Render - 무료, 권장)   | 필독     |
-| **[RAILWAY-GUIDE.md](RAILWAY-GUIDE.md)** ⭐     | 배포 (Railway - 대안)        | (선택)   |
 | **[ADVANCED_TOPICS.md](ADVANCED_TOPICS.md)** 🚀 | 성능 개선 & 최신 기술 트렌드 | (심화)   |
 
 ---
 
 ## 🎯 프로젝트 개요
-
-헤이트슬롭 프로듀서 엔지니어 합동 프로젝트입니다.
 
 - 📖 **학습 목표**: RAG, Embedding, LLM, Vector Database
 - 👥 **협업 방식**: 프로듀서가 기획한 내용을 바탕으로 캐릭터 챗봇을 완성
@@ -167,11 +164,13 @@ JS-파이썬 매핑:
 
 - 예: `numpy`, `pandas`, `openai`, `scikit-learn` 등등.
 - 새로운 라이브러리를 사용하면, 반드시 `requirements.txt`에 추가하여 다른 팀원/환경에서도 동일한 버전으로 설치 가능하도록 해주세요.
-- 해당 내용을 추가하게 되면 Docker 이미지를 새롭게 `build` 해야 합니다. 자세한 가이드는 [DOCK-GUIDE.md](DOCKER-GUIDE.md)에서 **"상황 2: 새로운 Python 라이브러리를 추가하는 경우"**를 참고하세요.
+- 해당 내용을 추가하게 되면 Docker 이미지를 새롭게 `build` 해야 합니다. 자세한 가이드는 [DOCK-GUIDE.md](DOCKER-GUIDE.md)에서 "상황 2: 새로운 Python 라이브러리를 추가하는 경우" 를 참고하세요.
 
 ### 📁 파일별 역할
 
-#### 🚫 템플릿 파일 (수정하지 마세요!)
+#### 🚫 템플릿 파일
+
+> _커스텀 원하시면 수정하셔도 되지만, 의존성을 가진 파일을 같이 수정하셔야 합니다._
 
 - `app.py`: Flask 애플리케이션 핵심 로직
 - `templates/*.html`: 웹 UI 템플릿
@@ -179,14 +178,12 @@ JS-파이썬 매핑:
 - `Dockerfile`, `docker-compose.yml`: Docker 설정
 - `requirements.txt`: Python 의존성
 
-> _커스텀 원하시면 수정하셔도 되지만, 의존성을 가진 파일을 같이 수정하셔야 합니다._
-
 #### ✏️ 작성/수정할 파일
 
 - `services/chatbot_service.py`: **AI 로직 구현** (RAG, Embedding, LLM)
 - `config/chatbot_config.json`: 챗봇 설정 (이름, 성격, 시스템 프롬프트)
-- `static/data/chatbot/chardb_text/`: 텍스트 데이터 (json, markdown, txt 자유롭게 사용하시면 됩니다.)
-- `static/images/chatbot/`: 챗봇 관련 이미지
+- `static/data/**/*`: 텍스트 데이터 (json, markdown, txt 자유롭게 사용하시면 됩니다.)
+- `static/images/**/*`: 챗봇 관련 이미지
 
 ## 📚 학습 자료
 
