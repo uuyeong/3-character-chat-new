@@ -28,13 +28,18 @@
 *.webp filter=lfs diff=lfs merge=lfs -text
 
 # --- 모델 및 데이터 파일 (Git LFS 사용) ---
-*.pt filter=lfs diff=lfs merge=lfs -text     # PyTorch 모델
+# PyTorch 모델
+*.pt filter=lfs diff=lfs merge=lfs -text
 *.pth filter=lfs diff=lfs merge=lfs -text
-*.ckpt filter=lfs diff=lfs merge=lfs -text   # Checkpoint
-*.h5 filter=lfs diff=lfs merge=lfs -text     # Keras 모델
+# Checkpoint
+*.ckpt filter=lfs diff=lfs merge=lfs -text
+# Keras 모델
+*.h5 filter=lfs diff=lfs merge=lfs -text
 *.onnx filter=lfs diff=lfs merge=lfs -text
-*.pkl filter=lfs diff=lfs merge=lfs -text    # Pickle 데이터
-*.npz filter=lfs diff=lfs merge=lfs -text    # Numpy 압축
+# Pickle 데이터
+*.pkl filter=lfs diff=lfs merge=lfs -text
+# Numpy 압축
+*.npz filter=lfs diff=lfs merge=lfs -text
 *.npy filter=lfs diff=lfs merge=lfs -text
 *.csv filter=lfs diff=lfs merge=lfs -text
 *.parquet filter=lfs diff=lfs merge=lfs -text
