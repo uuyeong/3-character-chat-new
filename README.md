@@ -206,3 +206,112 @@ JS-파이썬 매핑:
    - https://arxiv.org/abs/2310.11511
 
 **더 많은 자료**: [ADVANCED_TOPICS.md](ADVANCED_TOPICS.md#-관련-논문-및-연구)
+
+## 👥 협업 워크플로우
+
+### Git 협업 방식 (Fork & Collaborator)
+
+워크플로우 단계별 설명
+
+#### 1️⃣ **초기 셋업** (조원A)
+
+```bash
+# HateSlop Organization에서 Fork
+# hateslop 올가니케이션 GitHub 웹에서 Fork 버튼 클릭
+
+# Clone & 초기 설정
+git clone https://github.com/조원A/chatbot-project.git
+cd chatbot-project
+
+# 개발 환경 구축
+cp .env.example .env
+# .env 파일에 OPENAI_API_KEY 입력
+docker compose up --build
+```
+
+#### 2️⃣ **Collaborator 초대** (조원A)
+
+1. GitHub Repository 페이지 → **Settings** 탭
+2. 왼쪽 메뉴 → **Collaborators**
+3. **Add people** → 조원B의 GitHub 아이디 입력
+4. 조원B 이메일로 초대 링크 발송
+
+#### 3️⃣ **협업 시작** (조원B)
+
+```bash
+# 초대 수락 후 Clone
+git clone https://github.com/조원A/chatbot-project.git
+cd chatbot-project
+
+# 개발 브랜치 생성
+git checkout -b feature/chatbot-service
+
+# 개발 환경 구축
+cp .env.example .env
+# .env 파일에 OPENAI_API_KEY 입력
+docker compose up --build
+
+# 작업 후 커밋 & 푸시
+git add .
+git commit -m "feat: implement RAG search logic"
+git push origin feature/chatbot-service
+```
+
+#### 4️⃣ **Pull Request & 코드 리뷰**
+
+1. **조원B**: GitHub에서 **New Pull Request** 생성
+   - Base: `조원A/chatbot-project` (main)
+   - Compare: `feature/chatbot-service`
+2. **조원A**: PR 리뷰 및 피드백
+3. **조원B**: 피드백 반영 후 추가 커밋
+4. **조원A**: 리뷰 완료 후 **Merge**
+
+#### 5️⃣ **포트폴리오 저장** (조원B)
+
+```bash
+# 조원A의 레포지토리를 조원B 계정으로 Fork
+# GitHub 웹에서 조원A/chatbot-project → Fork 버튼 클릭
+
+# 본인 레포지토리에 최종 작업물 저장 완료
+# URL: https://github.com/조원B/chatbot-project
+```
+
+### 📋 협업 규칙 (권장사항)
+
+- **브랜치 전략**
+
+  - `main`: 안정적인 배포 버전
+  - `feature/*`: 기능 개발 브랜치
+  - `fix/*`: 버그 수정 브랜치
+
+- **커밋 컨벤션**
+
+  ```
+  feat: 새로운 기능 추가
+  fix: 버그 수정
+  docs: 문서 수정
+  style: 코드 포맷팅, 세미콜론 누락 등
+  refactor: 코드 리팩토링
+  test: 테스트 코드
+  chore: 빌드 작업, 패키지 매니저 설정 등
+  ```
+
+- **PR 템플릿** (권장)
+
+  ```markdown
+  ## 작업 내용
+
+  - [ ] RAG 검색 로직 구현
+  - [ ] ChromaDB 연동
+  - [ ] 테스트 완료
+
+  ## 테스트 방법
+
+  1. Docker 환경 실행
+  2. http://localhost:5001/chat 접속
+  3. 대화 테스트
+
+  ## 스크린샷
+
+  (선택사항)
+  ```
