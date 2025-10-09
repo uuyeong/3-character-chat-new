@@ -58,7 +58,7 @@ docker compose up --build
 # 4. 브라우저에서 http://localhost:5001 접속
 ```
 
-**정상 작동 화면**
+정상 작동 화면
 
 메인 페이지
 
@@ -74,39 +74,39 @@ docker compose up --build
 
 ## 📚 문서 가이드
 
-| 문서                                            | 내용                         | 비고     |
-| ----------------------------------------------- | ---------------------------- | -------- |
-| **[README.md](README.md)** ⭐⭐                 | 프로젝트 개요                | 현재문서 |
-| **[ARCHITECTURE.md](ARCHITECTURE.md)** ⭐⭐     | 시스템 아키텍처              | 필독     |
-| **[DOCKER-GUIDE.md](DOCKER-GUIDE.md)** ⭐⭐     | 개발 환경 구성               | 필독     |
-| **[RENDER-GUIDE.md](RENDER-GUIDE.md)** ⭐⭐     | 배포 (Render - 무료, 권장)   | 필독     |
-| **[ADVANCED_TOPICS.md](ADVANCED_TOPICS.md)** 🚀 | 성능 개선 & 최신 기술 트렌드 | (심화)   |
+| 문서                                        | 내용                         | 비고     |
+| ------------------------------------------- | ---------------------------- | -------- |
+| [README.md](README.md) ⭐⭐                 | 프로젝트 개요                | 현재문서 |
+| [ARCHITECTURE.md](ARCHITECTURE.md) ⭐⭐     | 시스템 아키텍처              | 필독     |
+| [DOCKER-GUIDE.md](DOCKER-GUIDE.md) ⭐⭐     | 개발 환경 구성               | 필독     |
+| [RENDER-GUIDE.md](RENDER-GUIDE.md) ⭐⭐     | 배포 (Render - 무료, 권장)   | 필독     |
+| [ADVANCED_TOPICS.md](ADVANCED_TOPICS.md) 🚀 | 성능 개선 & 최신 기술 트렌드 | (심화)   |
 
 ---
 
 ## 🎯 프로젝트 개요
 
-- 📖 **학습 목표**: RAG, Embedding, LLM, Vector Database
-- 👥 **협업 방식**: 프로듀서가 기획한 내용을 바탕으로 캐릭터 챗봇을 완성
-- 🚀 **배포**: Render.com (무료) 또는 Railway를 통한 프로덕션 배포
-- 🐳 **환경**: Docker로 일관된 개발 환경 보장
+- 📖 학습 목표: RAG, Embedding, LLM, Vector Database
+- 👥 협업 방식: 프로듀서가 기획한 내용을 바탕으로 캐릭터 챗봇을 완성
+- 🚀 배포: Render.com (무료) 또는 Railway를 통한 프로덕션 배포
+- 🐳 환경: Docker로 일관된 개발 환경 보장
 
 ### 핵심 기능
 
-- 🤖 **OpenAI GPT** 기반 대화 생성
-- 📚 **RAG** (Retrieval-Augmented Generation)를 통한 지식 기반 답변
-- 💾 **ChromaDB**를 활용한 임베딩 벡터 저장
-- 🧠 **LangChain** 기반 대화 메모리 관리
-- 🎨 **Vanilla JavaScript** 기반 웹 인터페이스
-- 🐳 **Docker**를 통한 환경 일관성 보장
+- 🤖 OpenAI GPT 기반 대화 생성
+- 📚 RAG (Retrieval-Augmented Generation)를 통한 지식 기반 답변
+- 💾 ChromaDB를 활용한 임베딩 벡터 저장
+- 🧠 LangChain 기반 대화 메모리 관리
+- 🎨 Vanilla JavaScript 기반 웹 인터페이스
+- 🐳 Docker를 통한 환경 일관성 보장
 
 ### 기술 스택
 
-- **Backend**: Flask (Python 3.11)
-- **AI**: OpenAI API, LangChain, ChromaDB
-- **Frontend**: Vanilla JavaScript, HTML, CSS
-- **Deployment**: Docker, Render.com (권장) / Railway
-- **Version Control**: Git, GitHub
+- Backend: Flask (Python 3.11)
+- AI: OpenAI API, LangChain, ChromaDB
+- Frontend: Vanilla JavaScript, HTML, CSS
+- Deployment: Docker, Render.com (권장) / Railway
+- Version Control: Git, GitHub
 
 ## 🏗️ 프로젝트 구조
 
@@ -140,25 +140,25 @@ chatbot-project/
 └── README.md                  # 현재 파일
 ```
 
-### **static/js/chatbot.js**
+### static/js/chatbot.js
 
 JS-파이썬 매핑:
 
-- 이 JS 파일은 `chat.html`에서 동적으로 로드되어, **사용자 메시지를 `/api/chat`**으로 보내고, 서버(파이썬) 응답을 화면에 표시하는 역할을 합니다.
+- 이 JS 파일은 `chat.html`에서 동적으로 로드되어, 사용자 메시지를 `/api/chat`으로 보내고, 서버(파이썬) 응답을 화면에 표시하는 역할을 합니다.
 
 - `chatbot.js` 참고:
   - 기본 메시지 전송 로직(이벤트 리스너, fetch API, DOM 업데이트)은 `chatbot.js`를 예시로 삼으면 됩니다.
   - 단, 현재 프론트엔드는 백엔드에서 이미지 경로를 전달할 경우에만 이미지를 표시하도록 되어 있습니다. 이미지 검색 기능을 구현하기 전까지는 이미지가 표시되지 않습니다.
   - 추가적으로, 응답 형태나 포맷이 달라질 경우(예: JSON 구조 변경), 그에 맞게 프런트 처리 로직도 수정해야 합니다.
 
-### **static/data/chatbot/** 폴더
+### static/data/chatbot/ 폴더
 
 임베딩 벡터 / 필요한 데이터 저장:
 
-- 각 팀은 **static/data/chatbot/** 폴더 아래에, 임베딩 결과나 기타 필요한 텍스트, 이미지, 스크립트 파일 등을 저장합니다.
+- 각 팀은 static/data/chatbot/ 폴더 아래에, 임베딩 결과나 기타 필요한 텍스트, 이미지, 스크립트 파일 등을 저장합니다.
 - `chatbot_service.py`에서 임베딩 데이터를 불러올 때도 이 경로를 기준으로 맞춰주세요.
 
-### **추가 패키지 requirements.txt**
+### 추가 패키지 requirements.txt
 
 임베딩 패키지, 기타 라이브러리:
 
@@ -180,32 +180,32 @@ JS-파이썬 매핑:
 
 #### ✏️ 작성/수정할 파일
 
-- `services/chatbot_service.py`: **AI 로직 구현** (RAG, Embedding, LLM)
+- `services/chatbot_service.py`: AI 로직 구현 (RAG, Embedding, LLM)
 - `config/chatbot_config.json`: 챗봇 설정 (이름, 성격, 시스템 프롬프트)
-- `static/data/**/*`: 텍스트 데이터 (json, markdown, txt 자유롭게 사용하시면 됩니다.)
-- `static/images/**/*`: 챗봇 관련 이미지
+- `static/data//*`: 텍스트 데이터 (json, markdown, txt 자유롭게 사용하시면 됩니다.)
+- `static/images//*`: 챗봇 관련 이미지
 
 ## 📚 학습 자료
 
 ### 공식 문서
 
-1. **OpenAI API Documentation**
+1. OpenAI API Documentation
    - https://platform.openai.com/docs
-2. **LangChain Documentation**
+2. LangChain Documentation
    - https://python.langchain.com/docs
-3. **ChromaDB Documentation**
+3. ChromaDB Documentation
    - https://docs.trychroma.com/
 
 ### 추천 논문
 
-1. **RAG 기초**: "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks" (Lewis et al., 2020)
+1. RAG 기초: "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks" (Lewis et al., 2020)
 
    - https://arxiv.org/abs/2005.11401
 
-2. **Self-RAG**: "Self-RAG: Learning to Retrieve, Generate, and Critique" (Asai et al., 2024)
+2. Self-RAG: "Self-RAG: Learning to Retrieve, Generate, and Critique" (Asai et al., 2024)
    - https://arxiv.org/abs/2310.11511
 
-**더 많은 자료**: [ADVANCED_TOPICS.md](ADVANCED_TOPICS.md#-관련-논문-및-연구)
+더 많은 자료: [ADVANCED_TOPICS.md](ADVANCED_TOPICS.md#-관련-논문-및-연구)
 
 ## 👥 협업 워크플로우
 
@@ -213,7 +213,7 @@ JS-파이썬 매핑:
 
 워크플로우 단계별 설명
 
-#### 1️⃣ **초기 셋업** (조원A)
+#### 1️⃣ 초기 셋업 (조원A)
 
 ```bash
 # HateSlop Organization에서 Fork
@@ -229,14 +229,14 @@ cp .env.example .env
 docker compose up --build
 ```
 
-#### 2️⃣ **Collaborator 초대** (조원A)
+#### 2️⃣ Collaborator 초대 (조원A)
 
-1. GitHub Repository 페이지 → **Settings** 탭
-2. 왼쪽 메뉴 → **Collaborators**
-3. **Add people** → 조원B의 GitHub 아이디 입력
+1. GitHub Repository 페이지 → Settings 탭
+2. 왼쪽 메뉴 → Collaborators
+3. Add people → 조원B의 GitHub 아이디 입력
 4. 조원B 이메일로 초대 링크 발송
 
-#### 3️⃣ **협업 시작** (조원B)
+#### 3️⃣ 협업 시작 (조원B)
 
 ```bash
 # 초대 수락 후 Clone
@@ -257,16 +257,16 @@ git commit -m "feat: implement RAG search logic"
 git push origin feature/chatbot-service
 ```
 
-#### 4️⃣ **Pull Request & 코드 리뷰**
+#### 4️⃣ Pull Request & 코드 리뷰
 
-1. **조원B**: GitHub에서 **New Pull Request** 생성
+1. 조원B: GitHub에서 New Pull Request 생성
    - Base: `조원A/chatbot-project` (main)
    - Compare: `feature/chatbot-service`
-2. **조원A**: PR 리뷰 및 피드백
-3. **조원B**: 피드백 반영 후 추가 커밋
-4. **조원A**: 리뷰 완료 후 **Merge**
+2. 조원A: PR 리뷰 및 피드백
+3. 조원B: 피드백 반영 후 추가 커밋
+4. 조원A: 리뷰 완료 후 Merge
 
-#### 5️⃣ **포트폴리오 저장** (조원B)
+#### 5️⃣ 포트폴리오 저장 (조원B)
 
 ```bash
 # 조원A의 레포지토리를 조원B 계정으로 Fork
@@ -278,13 +278,13 @@ git push origin feature/chatbot-service
 
 ### 📋 협업 규칙 (권장사항)
 
-- **브랜치 전략**
+- 브랜치 전략
 
   - `main`: 안정적인 배포 버전
   - `feature/*`: 기능 개발 브랜치
   - `fix/*`: 버그 수정 브랜치
 
-- **커밋 컨벤션**
+- 커밋 컨벤션
 
   ```
   feat: 새로운 기능 추가
@@ -296,7 +296,7 @@ git push origin feature/chatbot-service
   chore: 빌드 작업, 패키지 매니저 설정 등
   ```
 
-- **PR 템플릿** (권장)
+- PR 템플릿 (권장)
 
   ```markdown
   ## 작업 내용
@@ -322,254 +322,213 @@ git push origin feature/chatbot-service
 
 ### 🎯 제출 요구사항
 
-과제 완료 후 **반드시 다음 2가지를 제출**해주세요:
+과제 완료 후 아래 2가지를 제출해주세요:
 
-#### 1️⃣ **배포된 애플리케이션 URL**
+#### 1️⃣ 배포된 애플리케이션 URL
 
 ```
 🌐 배포 URL: https://your-app-name.onrender.com
 ```
 
-> 📝 **배포 방법**: [RENDER-GUIDE.md](RENDER-GUIDE.md) 참고
+> 📝 배포 방법: [RENDER-GUIDE.md](RENDER-GUIDE.md) 참고
 
-#### 2️⃣ **프로젝트 README.md 작성**
+#### 2️⃣ 프로젝트 README.md 작성
 
-팀별로 **Fork한 Repository의 README.md**에 다음 내용을 **상세히** 작성해주세요:
+팀별로 Fork한 Repository의 README.md에 다음 내용을 상세히 작성해주세요:
 
 ---
 
 ### 📋 README.md 필수 작성 항목
 
-#### 1. 📐 **시스템 아키텍처**
+#### 1. 📐 시스템 아키텍처
 
 프로젝트의 전체 구조를 설명해주세요.
 
-**예시**:
+예시:
+
 ```markdown
 ## 🏗️ 시스템 아키텍처
 
 ### 전체 구조도
+
 [다이어그램 또는 이미지]
 
 ### 데이터 흐름
+
 사용자 입력 → Flask API → ChatbotService → RAG 검색 (ChromaDB) → OpenAI API → 응답 생성
 ```
 
-#### 2. 🛠️ **사용한 기술 스택**
+#### 2. 🛠️ 사용한 기술 스택
 
-**예시**:
+예시:
+
 ```markdown
 ## 🛠️ 기술 스택
 
 ### Backend
-- **Flask 3.0**: RESTful API 서버
-- **OpenAI API (gpt-4o-mini)**: 대화 생성 엔진
-- **ChromaDB**: 벡터 데이터베이스 (임베딩 저장/검색)
-- **LangChain**: LLM 통합 및 메모리 관리
+
+- Flask 3.0: RESTful API 서버
+- OpenAI API (gpt-4o-mini): 대화 생성 엔진
+- ChromaDB: 벡터 데이터베이스 (임베딩 저장/검색)
+- LangChain: LLM 통합 및 메모리 관리
 
 ### Frontend
-- **Vanilla JavaScript**: 프레임워크 없는 순수 JS
-- **HTML5/CSS3**: 반응형 UI
+
+- Vanilla JavaScript: 프레임워크 없는 순수 JS
+- HTML5/CSS3: 반응형 UI
 
 ### Infrastructure
-- **Docker**: 컨테이너화
-- **Render.com**: 클라우드 배포
+
+- Docker: 컨테이너화
+- Render.com: 클라우드 배포
 ```
 
-#### 3. 💡 **기술 선택 이유**
+#### 3. 💡 기술 선택 이유
 
 각 기술을 선택한 이유를 구체적으로 설명해주세요.
 
-**예시**:
+예시:
+
 ```markdown
 ## 💡 기술 선택 이유
 
 ### ChromaDB를 선택한 이유
-- **이유 1**: Python 네이티브 지원으로 Flask와 통합이 쉬움
-- **이유 2**: 별도 서버 설치 없이 임베디드 모드로 사용 가능
-- **이유 3**: 벡터 유사도 검색이 빠르고 정확함
+
+- 이유 1: Python 네이티브 지원으로 Flask와 통합이 쉬움
+- 이유 2: 별도 서버 설치 없이 임베디드 모드로 사용 가능
+- 이유 3: 벡터 유사도 검색이 빠르고 정확함
 
 ### RAG 패턴을 적용한 이유
-- **문제 인식**: LLM은 학습 데이터에 없는 최신 정보나 특정 도메인 지식에 약함
-- **해결 방법**: ChromaDB에 서강대 관련 지식을 저장하고, 관련 정보를 검색하여 프롬프트에 포함
-- **효과**: 환각(Hallucination) 감소 및 정확한 답변 생성
+
+- 문제 인식: LLM은 학습 데이터에 없는 최신 정보나 특정 도메인 지식에 약함
+- 해결 방법: ChromaDB에 서강대 관련 지식을 저장하고, 관련 정보를 검색하여 프롬프트에 포함
+- 효과: 환각(Hallucination) 감소 및 정확한 답변 생성
 ```
 
-#### 4. ⚠️ **개발 시 겪은 문제점**
+#### 4. ⚠️ 개발 시 겪은 문제점
 
-**예시**:
+예시:
+
 ```markdown
 ## ⚠️ 개발 중 문제점
 
 ### 문제 1: RAG 검색 결과의 품질 문제
-- **현상**: 사용자 질문과 무관한 문서가 검색됨
-- **원인**: 임베딩 모델이 한국어 유사도를 제대로 판단하지 못함
-- **증상**: "학식 추천해줘" 질문에 "도서관 위치" 답변 반환
+
+- 현상: 사용자 질문과 무관한 문서가 검색됨
+- 원인: 임베딩 모델이 한국어 유사도를 제대로 판단하지 못함
+- 증상: "학식 추천해줘" 질문에 "도서관 위치" 답변 반환
 
 ### 문제 2: Docker 환경에서 ChromaDB 데이터 손실
-- **현상**: 컨테이너 재시작 시 임베딩 데이터가 사라짐
-- **원인**: Volume 마운트 설정 누락
+
+- 현상: 컨테이너 재시작 시 임베딩 데이터가 사라짐
+- 원인: Volume 마운트 설정 누락
 ```
 
-#### 5. ✅ **문제 해결 방법**
+#### 5. ✅ 문제 해결 방법
 
-**예시**:
-```markdown
+예시:
+
+````markdown
 ## ✅ 해결 방법
 
 ### 문제 1 해결: 유사도 임계값 조정
-**시도한 방법들**:
+
+시도한 방법들:
+
 1. ❌ 임베딩 모델 변경 → 큰 효과 없음
 2. ✅ 유사도 점수 임계값 0.7로 상향 조정 → 정확도 85% 달성
 3. ✅ 메타데이터 필터링 추가 (카테고리별 검색)
 
-**최종 구현 코드**:
+최종 구현 코드:
 \```python
-def _search_similar(self, query: str, threshold=0.7):
-    results = self.collection.query(
-        query_embeddings=embedding,
-        n_results=5
-    )
-    # 유사도 필터링
-    filtered = [r for r in results if r['distance'] < threshold]
-    return filtered
+def \_search_similar(self, query: str, threshold=0.7):
+results = self.collection.query(
+query_embeddings=embedding,
+n_results=5
+) # 유사도 필터링
+filtered = [r for r in results if r['distance'] < threshold]
+return filtered
 \```
 
 ### 문제 2 해결: Docker Volume 설정
-**docker-compose.yml 수정**:
+
+docker-compose.yml 수정:
 \```yaml
 volumes:
-  - ./static/data/chatbot/chardb_embedding:/app/static/data/chatbot/chardb_embedding
-\```
-```
 
-#### 6. 🚀 **성능 개선 노력**
+- ./static/data/chatbot/chardb_embedding:/app/static/data/chatbot/chardb_embedding
+  \```
+````
 
-**예시**:
+#### 6. 🚀 성능 개선 노력
+
+예시:
+
 ```markdown
 ## 🚀 성능 개선
 
 ### 개선 1: 응답 속도 최적화
-- **Before**: 평균 5초 소요
-- **After**: 평균 2초로 단축 (60% 개선)
-- **방법**: 
+
+- Before: 평균 5초 소요
+- After: 평균 2초로 단축 (60% 개선)
+- 방법:
   - ChromaDB 쿼리 결과 캐싱
   - OpenAI API 호출 시 max_tokens 제한
 
 ### 개선 2: 메모리 사용량 감소
-- **Before**: Docker 컨테이너 메모리 800MB 사용
-- **After**: 400MB로 절반 감소
-- **방법**: 불필요한 라이브러리 제거, 임베딩 벡터 차원 축소
+
+- Before: Docker 컨테이너 메모리 800MB 사용
+- After: 400MB로 절반 감소
+- 방법: 불필요한 라이브러리 제거, 임베딩 벡터 차원 축소
 ```
 
-#### 7. 😔 **아쉬웠던 점**
+#### 7. 😔 아쉬웠던 점
 
-**예시**:
+예시:
+
 ```markdown
 ## 😔 아쉬웠던 점
 
 ### 1. 멀티모달 기능 미구현
-- **계획**: 이미지 임베딩을 통한 이미지 검색 기능
-- **현실**: 시간 부족으로 텍스트 검색만 구현
-- **향후 계획**: CLIP 모델을 활용한 이미지-텍스트 통합 검색 도입
+
+- 계획: 이미지 임베딩을 통한 이미지 검색 기능
+- 현실: 시간 부족으로 텍스트 검색만 구현
+- 향후 계획: CLIP 모델을 활용한 이미지-텍스트 통합 검색 도입
 
 ### 2. 테스트 코드 부족
-- **현황**: 핵심 로직에 대한 단위 테스트 없음
-- **문제**: 리팩토링 시 기존 기능 동작 보장 어려움
-- **교훈**: TDD(Test-Driven Development) 방식 도입 필요성 느낌
+
+- 현황: 핵심 로직에 대한 단위 테스트 없음
+- 문제: 리팩토링 시 기존 기능 동작 보장 어려움
+- 교훈: TDD(Test-Driven Development) 방식 도입 필요성 느낌
 ```
 
-#### 8. 🤔 **회고 및 성찰**
+#### 8. 🤔 회고 및 성찰
 
-**예시**:
+예시:
+
 ```markdown
 ## 🤔 회고 및 성찰
 
 ### 기술적 성장
-- **RAG 이해도 향상**: 이론으로만 알던 RAG를 실제 구현하며 내부 동작 원리 이해
-- **프롬프트 엔지니어링**: 시스템 프롬프트 최적화를 통해 답변 품질 30% 개선
-- **Vector Database 경험**: ChromaDB를 통해 벡터 검색의 강력함을 체감
+
+- RAG 이해도 향상: 이론으로만 알던 RAG를 실제 구현하며 내부 동작 원리 이해
+- 프롬프트 엔지니어링: 시스템 프롬프트 최적화를 통해 답변 품질 30% 개선
+- Vector Database 경험: ChromaDB를 통해 벡터 검색의 강력함을 체감
 
 ### 협업 경험
-- **Git 협업**: PR 리뷰를 통해 코드 품질 향상
-- **역할 분담**: 프로듀서-엔지니어 간 명확한 업무 분담으로 효율성 증가
+
+- Git 협업: PR 리뷰를 통해 코드 품질 향상
+- 역할 분담: 프로듀서-엔지니어 간 명확한 업무 분담으로 효율성 증가
 
 ### 아쉬운 점 및 개선 방향
-- **시간 관리**: 초반 설계에 시간을 더 투자했다면 리팩토링 시간 단축 가능
-- **문서화**: 개발 중 문서화를 소홀히 하여 나중에 일괄 작성 → 부담 증가
-- **다음 프로젝트에서는**: 애자일 방식으로 1주 단위 스프린트 도입 계획
+
+- 시간 관리: 초반 설계에 시간을 더 투자했다면 리팩토링 시간 단축 가능
+- 문서화: 개발 중 문서화를 소홀히 하여 나중에 일괄 작성 → 부담 증가
+- 다음 프로젝트에서는: 애자일 방식으로 1주 단위 스프린트 도입 계획
 ```
 
 ---
 
 ### 🎤 최종 발표 PPT 가이드
 
-위의 README.md 내용을 기반으로 **팀별 최종 발표 PPT**를 작성해주세요.
-
-**권장 슬라이드 구성**:
-1. **프로젝트 소개** (1-2장)
-2. **시스템 아키텍처** (2-3장)
-3. **핵심 기술 설명** (3-4장)
-4. **문제점 & 해결 과정** (3-4장)
-5. **성능 개선 노력** (1-2장)
-6. **데모 시연** (라이브 또는 영상)
-7. **회고 및 Q&A** (1-2장)
-
----
-
-## 🌐 Render.com 배포 - 2주 사용 가능 여부
-
-### ✅ **결론: 2주간 무료 사용 가능!**
-
-**Render.com 무료 플랜 특징**:
-
-| 항목 | 제한사항 | 2주 사용 가능 여부 |
-|------|---------|-------------------|
-| **월 사용 시간** | 750시간/월 | ✅ 충분 (720시간 = 30일) |
-| **비용** | 완전 무료 | ✅ 과금 없음 |
-| **Sleep 모드** | 15분 비활성 시 중단 | ✅ 문제 없음 (첫 요청 시 30초 내 재시작) |
-| **데이터베이스** | PostgreSQL 30일 후 만료 | ✅ 2주는 여유 있음 |
-| **메모리** | 512MB | ✅ 충분 |
-| **저장공간** | 제한 없음 | ✅ ChromaDB 데이터 저장 가능 |
-
-### ⚠️ **주의사항**
-
-1. **Sleep 모드**: 15분간 요청이 없으면 인스턴스가 중단됩니다.
-   - 첫 요청 시 30초 정도 대기 시간 발생
-   - **발표 직전**: 미리 한 번 접속하여 Wake up 시켜두세요!
-
-2. **데이터베이스 만료**: PostgreSQL을 사용하는 경우 30일 후 만료
-   - 이 프로젝트는 ChromaDB(파일 기반)를 사용하므로 문제없음
-
-3. **지속적 운영**: 발표 이후에도 포트폴리오로 유지하려면
-   - 무료 플랜 그대로 사용 가능 (기간 제한 없음)
-   - Sleep 모드로 인한 지연만 감수하면 됨
-
-### 📊 **비교: 다른 배포 플랫폼**
-
-| 플랫폼 | 무료 기간 | 비용 | 2주 사용 |
-|--------|----------|------|---------|
-| **Render.com** | 무제한 | 무료 | ✅ 권장 |
-| Railway | $5 크레딧 소진 시 종료 | 초과 시 과금 | ⚠️ 크레딧 부족 가능 |
-| Heroku | 무료 플랜 폐지 | 최소 $5/월 | ❌ 비용 발생 |
-| Vercel | 무제한 | 무료 (정적 사이트) | ❌ Flask 지원 안 함 |
-
----
-
-### 🚀 **배포 시작하기**
-
-배포 방법은 [RENDER-GUIDE.md](RENDER-GUIDE.md)를 참고하세요!
-
-**빠른 체크리스트**:
-- [ ] Render 계정 생성 (GitHub 연동)
-- [ ] GitHub Repository에 코드 Push
-- [ ] Render에서 Web Service 생성
-- [ ] 환경 변수 설정 (`OPENAI_API_KEY`)
-- [ ] 배포 완료 후 URL 테스트
-- [ ] README.md에 배포 URL 작성
-
-**발표 전날 필수 체크**:
-- [ ] 배포 URL이 정상 작동하는지 확인
-- [ ] Sleep 모드에서 Wake up 테스트
-- [ ] 주요 기능 시나리오 테스트 (대화 3~5턴)
-- [ ] 이미지 로딩 확인
+위의 README.md 내용을 기반으로 팀별 최종 발표 PPT를 작성해주세요.
