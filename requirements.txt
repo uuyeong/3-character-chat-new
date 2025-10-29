@@ -11,3 +11,4 @@ langchain-openai
 
 # Utilities
 python-dotenv==1.0.1
+numpy<2.0.0  # ChromaDB 호환성을 위해 1.x 버전 사용

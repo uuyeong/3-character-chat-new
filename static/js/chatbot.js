@@ -9,6 +9,85 @@ const sendBtn = document.getElementById("send-btn");
 const videoBtn = document.getElementById("videoBtn");
 const imageBtn = document.getElementById("imageBtn");
 
+// ============================================
+// 임시로 만든 버튼 기능, 나중에 수정 필요
+// ============================================
+
+// 버튼 렌더링 함수
+function renderButtons(buttons) {
+  if (!buttons || buttons.length === 0) return;
+  
+  const buttonContainer = document.createElement('div');
+  buttonContainer.classList.add('button-container');
+  buttonContainer.style.cssText = `
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 15px 0;
+    padding: 10px;
+    justify-content: center;
+  `;
+  
+  buttons.forEach(buttonText => {
+    const button = document.createElement('button');
+    button.classList.add('choice-button');
+    button.textContent = buttonText;
+    button.style.cssText = `
+      padding: 12px 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      font-weight: 500;
+      transition: all 0.3s;
+      box-shadow: 0 4px 15px rgba(118, 75, 162, 0.3);
+    `;
+    
+    button.onmouseover = () => {
+      button.style.transform = 'translateY(-2px)';
+      button.style.boxShadow = '0 6px 20px rgba(118, 75, 162, 0.4)';
+    };
+    
+    button.onmouseout = () => {
+      button.style.transform = 'translateY(0)';
+      button.style.boxShadow = '0 4px 15px rgba(118, 75, 162, 0.3)';
+    };
+    
+    button.onclick = () => {
+      userMessageInput.value = buttonText;
+      sendMessage();
+      buttonContainer.remove();
+    };
+    
+    buttonContainer.appendChild(button);
+  });
+  
+  chatLog.appendChild(buttonContainer);
+  chatLog.scrollTop = chatLog.scrollHeight;
+}
+
+// 입력창 활성화/비활성화 함수
+function setInputEnabled(enabled) {
+  if (userMessageInput) {
+    userMessageInput.disabled = !enabled;
+    userMessageInput.placeholder = enabled 
+      ? "메시지를 입력하세요..." 
+      : "버튼을 클릭해주세요...";
+    userMessageInput.style.opacity = enabled ? '1' : '0.5';
+  }
+  if (sendBtn) {
+    sendBtn.disabled = !enabled;
+    sendBtn.style.opacity = enabled ? '1' : '0.5';
+    sendBtn.style.cursor = enabled ? 'pointer' : 'not-allowed';
+  }
+}
+
+// ============================================
+// 임시 버튼 기능 끝
+// ============================================
+
 // 메시지 전송 함수
 async function sendMessage(isInitial = false) {
   let message;
@@ -52,10 +131,26 @@ async function sendMessage(isInitial = false) {
       imagePath = data.reply.image || null;
     } else {
       replyText = data.reply;
-      imagePath = null;
+      imagePath = data.image || null;
     }
 
     appendMessage("bot", replyText, imagePath);
+    
+    // ============================================
+    // 임시로 만든 버튼 처리, 나중에 수정 필요
+    // ============================================
+    
+    // 버튼이 있으면 렌더링하고 입력창 비활성화
+    if (data.buttons && data.buttons.length > 0) {
+      renderButtons(data.buttons);
+      setInputEnabled(false);
+    } else {
+      setInputEnabled(true);
+    }
+    
+    // ============================================
+    // 임시 버튼 처리 끝
+    // ============================================
   } catch (err) {
     console.error("메시지 전송 에러:", err);
     removeMessage(loadingId);
@@ -164,6 +259,9 @@ document.querySelectorAll(".modal").forEach((modal) => {
 // 페이지 로드 시 초기 메시지 요청
 window.addEventListener("load", () => {
   console.log("페이지 로드 완료");
+  
+  // 임시: 초기에는 입력창 비활성화 (버튼 대기)
+  setInputEnabled(false);
 
   setTimeout(() => {
     if (chatLog && chatLog.childElementCount === 0) {
