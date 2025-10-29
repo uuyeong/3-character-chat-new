@@ -34,6 +34,7 @@ class PostOfficeSession:
     def __init__(self, username: str):
         self.username = username
         self.phase = 1  # 현재 Phase (1-5)
+        self.intro_step = 0  # 입장 단계 (0: 첫 인사, 1: 편지 소개)
         self.selected_room = None  # 선택한 방
         self.selected_drawer = None  # 선택한 서랍
         self.conversation_history = []  # 대화 기록
@@ -230,28 +231,33 @@ class ChatbotService:
             print(f"[에러] Embedding 생성 실패: {e}")
             return None
     
-    def _search_similar(self, query: str, top_k: int = 3) -> list:
-        """RAG 검색"""
+    def _search_similar(self, query: str, top_k: int = 3, room_filter: str = None) -> list:
+        """RAG 검색 (방별 필터링 지원)"""
         if not self.collection:
             return []
-        
+            
         try:
-           query_embedding = self._create_embedding(query)
-           if not query_embedding:
+            query_embedding = self._create_embedding(query)
+            if not query_embedding:
                 return []
-        
-           results = self.collection.query(
-               query_embeddings=[query_embedding],
-                n_results=top_k
+            
+            # 방 필터링 (특정 방의 데이터만 검색)
+            where_filter = None
+            if room_filter:
+                where_filter = {"room": room_filter}
+            
+            results = self.collection.query(
+                query_embeddings=[query_embedding],
+                n_results=top_k,
+                where=where_filter
             )
             
-            
-           documents = []
-           if results and results['documents']:
+            documents = []
+            if results and results['documents']:
                 for doc in results['documents'][0]:
                     documents.append(doc)
-                    
-           return documents
+            
+            return documents
         except Exception as e:
             print(f"[에러] RAG 검색 실패: {e}")
             return []
@@ -440,35 +446,42 @@ class ChatbotService:
         print(f"\n{'='*50}")
         print(f"[Phase {session.phase}] {username}: {user_message}")
         
-        # Phase 1: 입장 (init 또는 첫 메시지)
+        # Phase 1: 입장 (2개 메시지 연속 전송)
         if user_message.strip().lower() == "init" or len(session.conversation_history) == 0:
             session.phase = 1
-            reply = f"밤손님이군. ...흐음. (장부를 뒤적이며)\n\n{username} 앞으로 도착한 '편지'가 있는데, 꽤 오래 묵혀뒀더군."
+            session.intro_step = 1  # 바로 Step 1로 (편지 소개까지 완료)
+            
+            # 첫 번째 메시지
+            message1 = f"흐음. 이곳은 시간의 경계에 있는 '별빛 우체국'이자, 잃어버린 기억의 저장소일세. 나는 이곳의 국장인 '부엉'이지."
+            
+            # 두 번째 메시지
+            message2 = f"(장부를 뒤적이며) 자, {username} 앞으로 도착한 '편지'가 있는데, 꽤 오래 묵혀뒀더군. 아마 '10년 전의 당신' 또는 '10년 후의 당신'이 보낸 것일세."
             
             session.add_message("user", user_message)
-            session.add_message("assistant", reply)
-        
+            session.add_message("assistant", message1 + " " + message2)
+            
             return {
-                "reply": reply,
+                "replies": [message1, message2],  # 배열로 전송
                 "image": None,
-                "phase": session.phase,
+                "phase": 1,
+                "intro_step": 1,
                 "buttons": ["저에게 온 편지요?"]
             }
         
         # 사용자 메시지 기록
         session.add_message("user", user_message)
         
-        # Phase 1 → 2 전환: "저에게 온 편지요?" 버튼만 허용
+        # Phase 1 → Phase 2 전환: "저에게 온 편지요?" 입력 시
         if session.phase == 1:
             if "저에게 온 편지" in user_message or "편지" in user_message:
                 session.phase = 2
             else:
                 # 잘못된 입력
-                reply = "...흠? (고개를 갸우뚱하며) \n버튼을 눌러주겠나?"
+                reply = "...흠? (고개를 갸우뚱하며)\n버튼을 눌러주겠나?"
                 return {
                     "reply": reply,
                     "image": None,
-                    "phase": session.phase,
+                    "phase": 1,
                     "buttons": ["저에게 온 편지요?"]
                 }
         
@@ -515,8 +528,12 @@ class ChatbotService:
                 session.phase = 3.5
                 # 다음 턴에서 서랍 선택 처리
             
-            # RAG 검색
-            rag_context = self._search_similar(user_message, top_k=2)
+            # RAG 검색 (현재 방의 데이터만)
+            rag_context = self._search_similar(
+                user_message, 
+                top_k=3, 
+                room_filter=session.selected_room
+            )
             
             # 시스템 프롬프트 (심층 질문 유도)
             room_data = self.config.get('rooms', {}).get(session.selected_room, {})
@@ -618,8 +635,12 @@ class ChatbotService:
                 session.phase = 4
                 # 다음 턴에서 편지 생성
             
-            # RAG 검색
-            rag_context = self._search_similar(user_message, top_k=2)
+            # RAG 검색 (현재 방의 데이터만)
+            rag_context = self._search_similar(
+                user_message, 
+                top_k=3, 
+                room_filter=session.selected_room
+            )
             
             # 시스템 프롬프트 (더 깊은 질문)
             system_prompt = f"""당신은 별빛 우체국의 부엉이 우체국장입니다. 오랜 시간 사람들의 마음을 들어온 통찰력 있는 가이드입니다.

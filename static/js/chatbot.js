@@ -124,32 +124,54 @@ async function sendMessage(isInitial = false) {
     // 로딩 메시지 제거
     removeMessage(loadingId);
 
-    // 응답 파싱
-    let replyText, imagePath;
-    if (typeof data.reply === "object" && data.reply !== null) {
-      replyText = data.reply.reply || data.reply;
-      imagePath = data.reply.image || null;
+    // ============================================
+    // 임시로 만든 연속 메시지 처리, 나중에 수정 필요
+    // ============================================
+    
+    // 연속 메시지 처리 (replies 배열)
+    if (data.replies && Array.isArray(data.replies)) {
+      // 각 메시지를 순차적으로 렌더링
+      data.replies.forEach((replyText, index) => {
+        setTimeout(() => {
+          appendMessage("bot", replyText, null);
+          
+          // 마지막 메시지 후 버튼 렌더링
+          if (index === data.replies.length - 1) {
+            if (data.buttons && data.buttons.length > 0) {
+              setTimeout(() => {
+                renderButtons(data.buttons);
+                setInputEnabled(false);
+              }, 500);
+            } else {
+              setInputEnabled(true);
+            }
+          }
+        }, index * 1000); // 1초 간격
+      });
     } else {
-      replyText = data.reply;
-      imagePath = data.image || null;
-    }
+      // 기존 단일 메시지 처리
+      let replyText, imagePath;
+      if (typeof data.reply === "object" && data.reply !== null) {
+        replyText = data.reply.reply || data.reply;
+        imagePath = data.reply.image || null;
+      } else {
+        replyText = data.reply;
+        imagePath = data.image || null;
+      }
 
-    appendMessage("bot", replyText, imagePath);
-    
-    // ============================================
-    // 임시로 만든 버튼 처리, 나중에 수정 필요
-    // ============================================
-    
-    // 버튼이 있으면 렌더링하고 입력창 비활성화
-    if (data.buttons && data.buttons.length > 0) {
-      renderButtons(data.buttons);
-      setInputEnabled(false);
-    } else {
-      setInputEnabled(true);
+      appendMessage("bot", replyText, imagePath);
+      
+      // 버튼이 있으면 렌더링하고 입력창 비활성화
+      if (data.buttons && data.buttons.length > 0) {
+        renderButtons(data.buttons);
+        setInputEnabled(false);
+      } else {
+        setInputEnabled(true);
+      }
     }
     
     // ============================================
-    // 임시 버튼 처리 끝
+    // 임시 처리 끝
     // ============================================
   } catch (err) {
     console.error("메시지 전송 에러:", err);
