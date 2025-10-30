@@ -47,3 +47,6 @@ env/
 
 # repomix code base
 repomix-output.xml
+
+# PDFs
+static/data/chatbot/source_pdfs/

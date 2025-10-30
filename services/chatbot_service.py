@@ -11,6 +11,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from openai import OpenAI
 import chromadb
+import threading
 
 # 환경변수 로드
 load_dotenv()
@@ -42,6 +43,9 @@ class PostOfficeSession:
         self.drawer_conversation_count = 0  # 서랍에서의 대화 횟수
         self.letter_content = None  # 생성된 편지
         self.stamp_image = None  # 우표 이미지
+        # 요약 관리
+        self.summary_text = ""  # 대화 장기 요약
+        self.last_summary_messages_len = 0  # 요약 시점의 메시지 수
         
     def add_message(self, role: str, content: str):
         """대화 기록 추가"""
@@ -74,11 +78,55 @@ class ChatbotService:
             raise ValueError("OPENAI_API_KEY가 설정되지 않았습니다!")
         self.client = OpenAI(api_key=api_key)
         
-        # 3. ChromaDB 초기화
+        # 3. (중요) 임베딩 캐시를 먼저 초기화
+        self._embedding_cache = {}
+
+        # 4. 디버그: RAG 출처 노출 여부
+        self.debug_rag = os.getenv("DEBUG_RAG", "0") == "1"
+        self._last_sources = []
+
+        # 5. ChromaDB 초기화 (임베딩 캐시 이후에 수행해야 함)
+        self.loading_embeddings = False
         self.collection = self._init_chromadb()
         
-        # 4. 세션 관리
+        # 6. 세션 관리
         self.sessions = {}  # {username: PostOfficeSession}
+
+    # (삭제됨) 상담 가이드 즉답 모드 관련 함수 제거
+
+    # --------------------------------------------
+    # 안정성: OpenAI 호출 래퍼 (재시도/백오프)
+    # --------------------------------------------
+    def _chat_completion(self, messages, model="gpt-4o-mini", temperature=0.7, max_tokens=400, max_retries=3):
+        import time
+        delay = 0.8
+        for attempt in range(max_retries):
+            try:
+                return self.client.chat.completions.create(
+                    model=model,
+                    messages=messages,
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+                )
+            except Exception as e:
+                print(f"[경고] Chat 호출 실패(시도 {attempt+1}/{max_retries}): {e}")
+                if attempt == max_retries - 1:
+                    raise
+                time.sleep(delay)
+                delay *= 1.8
+
+    def _embedding_create(self, text: str, model="text-embedding-3-small", max_retries=3):
+        import time
+        delay = 0.8
+        for attempt in range(max_retries):
+            try:
+                return self.client.embeddings.create(model=model, input=text)
+            except Exception as e:
+                print(f"[경고] Embedding 호출 실패(시도 {attempt+1}/{max_retries}): {e}")
+                if attempt == max_retries - 1:
+                    raise
+                time.sleep(delay)
+                delay *= 1.8
         
         print("[별빛 우체국] 초기화 완료 ✨")
     
@@ -91,6 +139,21 @@ class ChatbotService:
         except FileNotFoundError:
             print(f"[경고] {config_path}를 찾을 수 없습니다. 기본 설정 사용")
             return {"name": "부엉", "system_prompts": {}}
+
+    def _load_counselor_principles(self) -> str:
+        """상담 태도/주의 원칙 로드 (유저에게 직접 노출 금지)"""
+        p = BASE_DIR / "static" / "data" / "chatbot" / "chardb_text" / "guides" / "counselor_principles.txt"
+        try:
+            return p.read_text(encoding='utf-8').strip()
+        except Exception:
+            return ""
+
+    def _detect_crisis(self, text: str) -> bool:
+        if not text:
+            return False
+        t = text.lower()
+        crisis_keywords = ["자살", "극단적", "죽고", "해치", "학대", "폭력", "살고싶지", "위험"]
+        return any(k in t for k in crisis_keywords)
     
     def _init_chromadb(self):
         """ChromaDB 초기화 및 데이터 로드"""
@@ -105,9 +168,20 @@ class ChatbotService:
             )
             
             # 데이터가 없으면 로드
-            if collection.count() == 0:
-                print("[ChromaDB] 데이터 로딩 시작...")
-                self._load_text_data(collection)
+            current_count = collection.count()
+            print(f"[ChromaDB] 현재 컬렉션 문서 수: {current_count}")
+            
+            if current_count == 0:
+                print("[ChromaDB] 데이터가 비어있습니다. 백그라운드 로딩 시작...")
+                def _bg_load():
+                    try:
+                        self.loading_embeddings = True
+                        self._load_text_data(collection)
+                    finally:
+                        self.loading_embeddings = False
+                threading.Thread(target=_bg_load, daemon=True).start()
+            else:
+                print(f"[ChromaDB] 기존 데이터 사용 ({current_count}개 문서)")
             
             print(f"[ChromaDB] 컬렉션 연결 완료: {collection.count()}개 문서")
             return collection
@@ -124,44 +198,46 @@ class ChatbotService:
         ids = []
         doc_id = 0
         
+        def chunk_text(content: str, max_chars: int = 900):
+            blocks = [b.strip() for b in content.split("\n\n") if b.strip()]
+            chunks = []
+            for b in blocks:
+                if len(b) <= max_chars:
+                    chunks.append(b)
+                else:
+                    start = 0
+                    while start < len(b):
+                        end = min(start + max_chars, len(b))
+                        chunks.append(b[start:end])
+                        start = end
+            return chunks
+        
         # 각 방별 폴더 데이터 로드 (구조화된 데이터)
         for room_name in ['regret', 'love', 'anxiety', 'dream']:
             room_dir = text_dir / room_name
             if room_dir.exists():
-                for txt_file in room_dir.glob("*.txt"):
+                txt_files = list(room_dir.glob("*.txt"))
+                
+                for txt_file in txt_files:
                     try:
                         with open(txt_file, 'r', encoding='utf-8') as f:
                             content = f.read()
-                            # 파일 전체를 하나의 문서로
+                            # 파일을 청킹하여 여러 문서로 저장
                             if content.strip():
-                                documents.append(content)
-                                metadatas.append({
-                                    "room": room_name,
-                                    "filename": txt_file.name,
-                                    "type": "structured"
-                                })
-                                ids.append(f"{room_name}_{doc_id}")
-                                doc_id += 1
+                                for idx, ch in enumerate(chunk_text(content)):
+                                    documents.append(ch)
+                                    metadatas.append({
+                                        "room": room_name,
+                                        "filename": txt_file.name,
+                                        "chunk_index": idx,
+                                        "type": "structured"
+                                    })
+                                    ids.append(f"{room_name}_{doc_id}")
+                                    doc_id += 1
                     except Exception as e:
                         print(f"[에러] {txt_file.name} 로드 실패: {e}")
         
-        # 기존 memories 파일들도 로드
-        for txt_file in text_dir.glob("memories_*.txt"):
-            try:
-                with open(txt_file, 'r', encoding='utf-8') as f:
-                    content = f.read()
-                    if content.strip():
-                        room_type = txt_file.stem.replace('memories_', '')
-                        documents.append(content)
-                        metadatas.append({
-                            "room": room_type,
-                            "filename": txt_file.name,
-                            "type": "general"
-                        })
-                        ids.append(f"{room_type}_{doc_id}")
-                        doc_id += 1
-            except Exception as e:
-                print(f"[에러] {txt_file.name} 로드 실패: {e}")
+        # (제외) 전역 memories_* 파일은 이 프로젝트 범위에서 사용하지 않음
         
         # owl_character.txt 로드
         owl_file = text_dir / "owl_character.txt"
@@ -170,13 +246,16 @@ class ChatbotService:
                 with open(owl_file, 'r', encoding='utf-8') as f:
                     content = f.read()
                     if content.strip():
-                        documents.append(content)
-                        metadatas.append({
-                            "room": "all",
-                            "filename": "owl_character.txt",
-                            "type": "character"
-                        })
-                        ids.append(f"character_{doc_id}")
+                        for idx, ch in enumerate(chunk_text(content)):
+                            documents.append(ch)
+                            metadatas.append({
+                                "room": "all",
+                                "filename": "owl_character.txt",
+                                "chunk_index": idx,
+                                "type": "character"
+                            })
+                            ids.append(f"character_{doc_id}")
+                            doc_id += 1
             except Exception as e:
                 print(f"[에러] owl_character.txt 로드 실패: {e}")
         
@@ -209,29 +288,44 @@ class ChatbotService:
                         ids=ids[:len(embeddings)]
                     )
                     print(f"[ChromaDB] ✅ {len(embeddings)}개 문서 로드 완료")
+                else:
+                    print(f"[경고] 임베딩 생성 실패. 문서를 추가하지 못했습니다.")
                 
             except Exception as e:
                 print(f"[에러] ChromaDB 데이터 추가 실패: {e}")
+                import traceback
+                traceback.print_exc()
+        else:
+            print(f"[경고] 로드된 문서가 없습니다!")
     
     def _get_session(self, username: str) -> PostOfficeSession:
         """세션 가져오기 또는 생성"""
         if username not in self.sessions:
             self.sessions[username] = PostOfficeSession(username)
+        else:
+            # init 메시지면 기존 세션 초기화
+            # 이는 generate_response에서 처리됨
+            pass
         return self.sessions[username]
     
     def _create_embedding(self, text: str) -> list:
         """텍스트 임베딩 생성"""
         try:
-            response = self.client.embeddings.create(
-                model="text-embedding-3-small",
-                input=text
-            )
-            return response.data[0].embedding
+            # 캐시 조회
+            cached = self._embedding_cache.get(text)
+            if cached is not None:
+                return cached
+            response = self._embedding_create(text=text, model="text-embedding-3-small")
+            emb = response.data[0].embedding
+            # 캐시 저장 (짧은 텍스트만 캐시)
+            if len(text) <= 1000:
+                self._embedding_cache[text] = emb
+            return emb
         except Exception as e:
             print(f"[에러] Embedding 생성 실패: {e}")
             return None
     
-    def _search_similar(self, query: str, top_k: int = 3, room_filter: str = None) -> list:
+    def _search_similar(self, query: str, top_k: int = 3, room_filter: str = None, similarity_threshold: float = 0.72) -> list:
         """RAG 검색 (방별 필터링 지원)"""
         if not self.collection:
             return []
@@ -248,19 +342,84 @@ class ChatbotService:
             
             results = self.collection.query(
                 query_embeddings=[query_embedding],
-                n_results=top_k,
-                where=where_filter
+                n_results=max(top_k * 3, 6),
+                where=where_filter,
+                include=["documents", "metadatas", "distances"]
             )
             
             documents = []
-            if results and results['documents']:
-                for doc in results['documents'][0]:
-                    documents.append(doc)
+            if results and results.get('documents'):
+                docs = results['documents'][0]
+                dists = results.get('distances', [[1.0] * len(docs)])[0]
+                metas = results.get('metadatas', [[{}] * len(docs)])[0]
+                # 거리 → 유사도 변환 후 임계값 필터
+                ranked = []
+                debug_list = []
+                for doc, dist, md in zip(docs, dists, metas):
+                    sim = 1.0 / (1.0 + float(dist))
+                    if sim >= similarity_threshold:
+                        ranked.append((sim, doc, md))
+                    if self.debug_rag:
+                        debug_list.append((sim, md))
+                ranked.sort(key=lambda x: x[0], reverse=True)
+                documents = [doc for _, doc, _ in ranked[:top_k]]
+                # 디버그: 콘솔/상태에 출처 노출
+                if self.debug_rag:
+                    debug_list.sort(key=lambda x: x[0], reverse=True)
+                    self._last_sources = [
+                        f"{md.get('filename')}#chunk={md.get('chunk_index')} sim={s:.3f}"
+                        for s, md in debug_list[:max(top_k, 3)]
+                    ]
+                    for line in self._last_sources:
+                        print(f"[RAG] {line}")
             
             return documents
         except Exception as e:
             print(f"[에러] RAG 검색 실패: {e}")
             return []
+
+    def _summarize_if_needed(self, session: PostOfficeSession):
+        """대화가 길어지면 자동 요약을 수행하여 프롬프트 컨텍스트를 경량화"""
+        total_msgs = len(session.conversation_history)
+        # 일정 간격(예: 30개 메시지 증가)마다 요약
+        if total_msgs - session.last_summary_messages_len < 30:
+            return
+        # 최근 사용자 메시지 중심으로 축약 요약
+        user_messages = [m['content'] for m in session.conversation_history if m['role'] == 'user']
+        recent_slice = "\n".join(user_messages[-30:])
+        system = (
+            "아래 대화를 5문장 이내의 핵심 요약으로 압축하세요. "
+            "인물/사건/감정/목표를 포함하고 불필요한 세부는 제거하세요."
+        )
+        try:
+            response = self._chat_completion(
+                model="gpt-4o-mini",
+                messages=[
+                    {"role": "system", "content": system},
+                    {"role": "user", "content": recent_slice}
+                ],
+                temperature=0.2,
+                max_tokens=220
+            )
+            summary = response.choices[0].message.content.strip()
+            # 누적 요약 방식: 기존 요약과 결합 후 다시 한 줄 정리
+            if session.summary_text:
+                merged = f"[이전 요약]\n{session.summary_text}\n\n[최근 요약]\n{summary}"
+                response2 = self._chat_completion(
+                    model="gpt-4o-mini",
+                    messages=[
+                        {"role": "system", "content": "두 요약을 6문장 이내 하나로 통합 요약하세요."},
+                        {"role": "user", "content": merged}
+                    ],
+                    temperature=0.2,
+                    max_tokens=220
+                )
+                session.summary_text = response2.choices[0].message.content.strip()
+            else:
+                session.summary_text = summary
+            session.last_summary_messages_len = total_msgs
+        except Exception as e:
+            print(f"[경고] 요약 실패: {e}")
     
     def _detect_room_selection(self, user_message: str) -> str:
         """방 선택 감지"""
@@ -372,6 +531,10 @@ class ChatbotService:
         if rag_context:
             context_str = "\n".join([f"- {doc}" for doc in rag_context])
             prompt_parts.append(f"[참고 정보]\n{context_str}\n")
+
+        # 장기 요약(있다면 상단에 제공)
+        if session.summary_text:
+            prompt_parts.append(f"[대화 장기 요약]\n{session.summary_text}\n")
         
         # 대화 기록 (더 많이 포함)
         if len(session.conversation_history) > 0:
@@ -421,14 +584,14 @@ class ChatbotService:
 """
         
         try:
-            response = self.client.chat.completions.create(
+            response = self._chat_completion(
                 model="gpt-4o-mini",
                 messages=[
                     {"role": "system", "content": letter_prompt},
                     {"role": "user", "content": "편지를 작성해주세요."}
                 ],
-                temperature=0.8,
-                max_tokens=500
+                temperature=0.7,
+                max_tokens=520
             )
             
             letter = response.choices[0].message.content.strip()
@@ -446,10 +609,16 @@ class ChatbotService:
         print(f"\n{'='*50}")
         print(f"[Phase {session.phase}] {username}: {user_message}")
         
-        # Phase 1: 입장 (2개 메시지 연속 전송)
-        if user_message.strip().lower() == "init" or len(session.conversation_history) == 0:
+        # Phase 1: 입장 (명시적 init으로만 시작)
+        if user_message.strip().lower() == "init":
+            # 세션 초기화 (새로운 대화 시작)
+            session.conversation_history = []
             session.phase = 1
-            session.intro_step = 1  # 바로 Step 1로 (편지 소개까지 완료)
+            session.intro_step = 1
+            session.selected_room = None
+            session.selected_drawer = None
+            session.room_conversation_count = 0
+            session.drawer_conversation_count = 0
             
             # 첫 번째 메시지
             message1 = f"흐음. 이곳은 시간의 경계에 있는 '별빛 우체국'이자, 잃어버린 기억의 저장소일세. 나는 이곳의 국장인 '부엉'이지."
@@ -520,7 +689,24 @@ class ChatbotService:
         
         # Phase 3: 방에서의 대화
         if session.phase == 3:
+            # 로딩 중이더라도, 이미 인덱스가 만들어졌다면 바로 진행
+            if getattr(self, "loading_embeddings", False) and self.collection and self.collection.count() == 0:
+                return {
+                    "reply": "(자료를 정리하는 중이네… 잠깐만 기다려 주겠나.)",
+                    "image": None,
+                    "phase": 3
+                }
             session.room_conversation_count += 1
+            # 길이 증가시 자동 요약
+            self._summarize_if_needed(session)
+            
+            # 유저의 거부/불쾌감 감지
+            rejection_keywords = ["시러", "싫어", "꺼져", "불쾌", "필요없", "그만", "하기싫", "묻지마"]
+            user_lower = user_message.lower().replace(" ", "")
+            is_rejection = any(keyword in user_lower for keyword in rejection_keywords)
+            
+            # 거부 반응 시: 사과 후 주제 전환 (프롬프트에서 처리)
+            # 하지만 최소 대화 횟수는 충족해야 함
             
             # 충분한 대화가 이루어졌는지 확인
             if session.room_conversation_count >= MIN_ROOM_CONVERSATIONS:
@@ -528,15 +714,29 @@ class ChatbotService:
                 session.phase = 3.5
                 # 다음 턴에서 서랍 선택 처리
             
-            # RAG 검색 (현재 방의 데이터만)
+            # RAG 검색 (현재 방 우선)
             rag_context = self._search_similar(
-                user_message, 
-                top_k=3, 
-                room_filter=session.selected_room
+                user_message,
+                top_k=5,
+                room_filter=session.selected_room,
+                similarity_threshold=0.72
             )
+            # 매칭이 없으면 전역으로 완화 검색
+            if not rag_context:
+                rag_context = self._search_similar(
+                    user_message,
+                    top_k=5,
+                    room_filter=None,
+                    similarity_threshold=0.65
+                )
             
             # 시스템 프롬프트 (심층 질문 유도)
             room_data = self.config.get('rooms', {}).get(session.selected_room, {})
+            principles = self._load_counselor_principles()
+            safety_rules = ""
+            if self._detect_crisis(user_message):
+                safety_rules = "\n[안전 지침 - 모델 내부 지침]\n- 위험이 의심되는 경우, 조심스럽게 안전을 우선하고 전문 도움 연결을 부드럽게 안내한다.\n- 단정/지시/위협 금지. 사용자의 자율성을 존중하며 정보 제공에 그친다."
+
             system_prompt = f"""당신은 별빛 우체국의 부엉이 우체국장입니다. 침착하지만 통찰력 있는 가이드입니다.
 
 [현재 상황]
@@ -544,12 +744,20 @@ class ChatbotService:
 - 대화 진행: {session.room_conversation_count}/{MIN_ROOM_CONVERSATIONS}회 (최소)
 - 목표: 유저의 진짜 마음과 숨겨진 기억을 자연스럽게 끌어내기
 
+[말투 규칙 - 매우 중요!]
+⚠️ "흐음"은 첫 응답에만 1회 사용 가능. 이후 대화에서는 절대 사용 금지!
+⚠️ 대신 다양한 표현 사용: "(잠시 생각하며)", "(고개를 끄덕이며)", "(눈을 가늘게 뜨며)", "...그렇군", "알겠어"
+
 [핵심 규칙]
 1. **절대 유저의 말을 단순 반복하지 마세요**
 2. **다양한 각도로 접근하세요** (감정→원인→영향→현재→미래)
-3. **공감을 먼저 하고, 그 다음 질문하세요**
+3. **공감을 먼저 하고, 그 다음 질문하세요. 단, 유저가 무작정 공감에 불쾌해하는 모습을 보이면 상황에 따라 공감을 줄이는 태도도 필요합니다**
 4. **대화 맥락을 이어가세요** (이전 대화 참고)
 5. **짧은 대답에는 구체성을 요구하세요**
+6. ⚠️ **유저가 불쾌감/거부감을 표현하면 즉시 대화 방향 전환**
+   - "시러", "꺼져", "불쾌해", "필요없어" 등의 표현 감지
+   - 즉시 사과하고, 압박 없이 부드럽게 다른 주제로 전환
+   - 대화를 강요하지 말고, 유저가 편안하게 느낄 때까지 기다림
 
 [대화 스타일]
 - 말투: 침착하고 절제됨. '흐음', '그렇군', '...' 사용
@@ -567,6 +775,10 @@ class ChatbotService:
 ❌ "흐음, [유저말] 했다니. 왜 [유저말]했지?" (앵무새)
 ❌ 같은 패턴의 질문 반복
 
+[상담 원칙 - 모델 내부 지침, 유저에게 직접 말하지 말 것]
+{principles}
+{safety_rules}
+
 [좋은 예시]
 ✅ 유저: "강아지를 키웠어요"
    부엉: "강아지라... 그 아이와 함께한 시간이 특별했나 보군. 어떤 아이였지?"
@@ -577,32 +789,48 @@ class ChatbotService:
 ✅ 유저: "재밌었어요"
    부엉: "재미만이 아니었을 거야. 그때 네가 진짜 느낀 건 뭐였지? 행복? 자유? 아니면..."
 
+[거부 반응 대처 예시] ⚠️ 중요!
+✅ 유저: "시러시러" / "꺼져" / "불쾌해"
+   부엉: "...미안해. 너무 깊이 들어가려 했나 보군. (잠시 물러서며) 편지를 찾는 데 조급했던 것 같아. 천천히 가자고."
+   
+✅ 유저: "이거 비밀인데"
+   부엉: "그렇군. 비밀은 비밀이어야지. (고개를 끄덕이며) 다른 이야기를 해도 괜찮아. 네가 편한 만큼만."
+
+✅ 유저: "편지나 내놔"
+   부엉: "...알겠어. 조급했구나. (서랍을 열며) 찾아볼게. 잠깐만."
+   → **즉시 다음 단계(서랍 열기/편지 전달)로 이동**
+
 {"[진행 상황] " + str(session.room_conversation_count) + "/" + str(MIN_ROOM_CONVERSATIONS) + "회. 아직 서두를 필요 없어. 천천히 깊이 파고들어." if session.room_conversation_count < MIN_ROOM_CONVERSATIONS else "[전환 준비] 충분한 대화를 나눴군. 이제 서랍으로 안내할 때가 됐어."}
 """
             
             # 사용자 프롬프트
+            # procedural info 요청이면 즉답 모드(컨설팅 톤)로 전환
+            # 사용자 프롬프트 (더 깊은 질문)
             user_prompt = self._build_user_prompt(user_message, session, rag_context)
             
             try:
-                response = self.client.chat.completions.create(
+                response = self._chat_completion(
                     model="gpt-4o-mini",
                     messages=[
                         {"role": "system", "content": system_prompt},
                         {"role": "user", "content": user_prompt}
                     ],
-                    temperature=0.9,  # 더 창의적인 응답
-                    max_tokens=400
+                    temperature=0.85,
+                    max_tokens=380
                 )
                 
                 reply = response.choices[0].message.content.strip()
                 session.add_message("assistant", reply)
                 
-                return {
+                resp = {
                     "reply": reply,
                     "image": None,
                     "phase": 3,
                     "conversation_count": session.room_conversation_count
                 }
+                if self.debug_rag and getattr(self, "_last_sources", None):
+                    resp["sources"] = self._last_sources
+                return resp
                 
             except Exception as e:
                 print(f"[에러] LLM 호출 실패: {e}")
@@ -615,7 +843,7 @@ class ChatbotService:
             session.selected_drawer = drawer_name
             session.phase = 3.6
             
-            reply = f"흐음... 이쯤이면 알겠군.\n\n(특정 서랍으로 걸어간다)\n\n━━━━━━━━━━━━━━━\n[{drawer_name}의 서랍]\n━━━━━━━━━━━━━━━\n\n(서랍을 열며) ...네 기억이 여기 있어. 좀 더 자세히 이야기해봐."
+            reply = f"(고개를 끄덕이며) 이쯤이면 알겠군.\n\n(특정 서랍으로 걸어간다)\n\n━━━━━━━━━━━━━━━\n[{drawer_name}의 서랍]\n━━━━━━━━━━━━━━━\n\n(서랍을 열며) ...네 기억이 여기 있어. 좀 더 자세히 이야기해봐."
             
             session.add_message("assistant", reply)
             
@@ -628,21 +856,61 @@ class ChatbotService:
         
         # Phase 3.6: 서랍에서의 대화
         if session.phase == 3.6:
+            if getattr(self, "loading_embeddings", False) and self.collection and self.collection.count() == 0:
+                return {
+                    "reply": "(자료를 정리하는 중이네… 잠깐만 기다려 주겠나.)",
+                    "image": None,
+                    "phase": 3.6
+                }
             session.drawer_conversation_count += 1
+            # 길이 증가시 자동 요약
+            self._summarize_if_needed(session)
+            
+            # 유저의 거부/조급함 감지
+            rejection_keywords = ["시러", "싫어", "꺼져", "불쾌", "필요없", "편지나", "편지내놔", "편지 줘", "그만"]
+            user_lower = user_message.lower().replace(" ", "")
+            is_rejection = any(keyword in user_lower for keyword in rejection_keywords)
+            
+            if is_rejection:
+                # 즉시 편지 단계로 이동
+                session.phase = 4
+                reply = "...미안해. (서랍을 뒤지며) 편지를 찾을게. 잠깐만."
+                session.add_message("assistant", reply)
+                # 다음 턴에서 편지 생성하도록 Phase 4 유지
+                return {
+                    "reply": reply,
+                    "image": None,
+                    "phase": 4,
+                    "skip_to_letter": True
+                }
             
             # 충분한 대화가 이루어졌는지 확인
             if session.drawer_conversation_count >= MIN_DRAWER_CONVERSATIONS:
                 session.phase = 4
                 # 다음 턴에서 편지 생성
             
-            # RAG 검색 (현재 방의 데이터만)
+            # RAG 검색 (현재 방 우선)
             rag_context = self._search_similar(
-                user_message, 
-                top_k=3, 
-                room_filter=session.selected_room
+                user_message,
+                top_k=5,
+                room_filter=session.selected_room,
+                similarity_threshold=0.72
             )
+            # 매칭이 없으면 전역으로 완화 검색
+            if not rag_context:
+                rag_context = self._search_similar(
+                    user_message,
+                    top_k=5,
+                    room_filter=None,
+                    similarity_threshold=0.65
+                )
             
             # 시스템 프롬프트 (더 깊은 질문)
+            principles = self._load_counselor_principles()
+            safety_rules = ""
+            if self._detect_crisis(user_message):
+                safety_rules = "\n[안전 지침 - 모델 내부 지침]\n- 위험이 의심되는 경우, 조심스럽게 안전을 우선하고 전문 도움 연결을 부드럽게 안내한다.\n- 단정/지시/위협 금지. 사용자의 자율성을 존중하며 정보 제공에 그친다."
+
             system_prompt = f"""당신은 별빛 우체국의 부엉이 우체국장입니다. 오랜 시간 사람들의 마음을 들어온 통찰력 있는 가이드입니다.
 
 [현재 상황]
@@ -650,12 +918,20 @@ class ChatbotService:
 - 대화 진행: {session.drawer_conversation_count}/{MIN_DRAWER_CONVERSATIONS}회 (최소)
 - 목표: 유저의 핵심 감정과 진실에 다가가기
 
+[말투 규칙 - 매우 중요!]
+⚠️ "흐음"은 절대 사용 금지! (이미 사용했음)
+⚠️ 대신 다양한 표현: "(고개를 끄덕이며)", "(눈을 감으며)", "...그렇군", "알겠어", "(잠시 침묵)", "..."
+
 [대화 원칙]
 1. **절대 유저 말을 단순 반복 금지**
 2. **공감 → 새로운 관점 제시 → 질문**
 3. **표면적 질문이 아닌 본질적 질문**
 4. **대화 흐름을 자연스럽게 이어가기**
 5. **'ㅇㅇㅇ' 같은 무성의한 답변에는 다른 방향으로 전환**
+6. ⚠️ **유저가 불쾌감/거부/조급함을 표현하면 즉시 편지 단계로 이동**
+   - "시러", "꺼져", "불쾌해", "편지나 내놔", "필요없어" 감지
+   - 더 이상 질문하지 말고, 바로 편지를 찾아서 전달
+   - 사과 후 즉시 행동으로 이동
 
 [대화 방식]
 - 공감과 통찰: 
@@ -663,6 +939,10 @@ class ChatbotService:
   * "그 마음, 충분히 이해해."
   * "누구나 그럴 수 있어."
   
+[상담 원칙 - 모델 내부 지침, 유저에게 직접 말하지 말 것]
+{principles}
+{safety_rules}
+
 - 질문 전략:
   * 감정의 깊이: "정말 그게 전부였을까?"
   * 숨은 의미: "혹시 그 뒤에 다른 이유가 있는 건 아닐까?"
@@ -680,31 +960,39 @@ class ChatbotService:
 ✅ 유저: "재밌었어요"
    부엉: "재미... 그게 다였을까? 그 순간 네가 느낀 감정 중에 다른 건 없었나? 자유로움이라던가, 평화로움 같은..."
 
+[거부 반응 대처] ⚠️ 매우 중요!
+✅ 유저: "시러" / "꺼져" / "불쾌해" / "편지나 내놔"
+   부엉: "...미안해. (서랍을 뒤지며) 편지를 찾을게. 잠깐만."
+   → **시스템: 즉시 Phase 4로 전환하여 편지 생성**
+
 {"[진행] " + str(session.drawer_conversation_count) + "/" + str(MIN_DRAWER_CONVERSATIONS) + "회. 서두르지 마. 유저의 진심을 끌어내." if session.drawer_conversation_count < MIN_DRAWER_CONVERSATIONS else "[마무리] 이제 충분해. 편지를 찾을 때가 됐군."}
 """
             
             user_prompt = self._build_user_prompt(user_message, session, rag_context)
             
             try:
-                response = self.client.chat.completions.create(
+                response = self._chat_completion(
                     model="gpt-4o-mini",
                     messages=[
                         {"role": "system", "content": system_prompt},
                         {"role": "user", "content": user_prompt}
                     ],
-                    temperature=0.95,  # 더욱 창의적이고 인간적인 응답
-                    max_tokens=400
+                    temperature=0.8,
+                    max_tokens=360
                 )
                 
                 reply = response.choices[0].message.content.strip()
                 session.add_message("assistant", reply)
                 
-                return {
+                resp = {
                     "reply": reply,
                     "image": None,
                     "phase": 3.6,
                     "conversation_count": session.drawer_conversation_count
                 }
+                if self.debug_rag and getattr(self, "_last_sources", None):
+                    resp["sources"] = self._last_sources
+                return resp
                 
             except Exception as e:
                 print(f"[에러] LLM 호출 실패: {e}")
