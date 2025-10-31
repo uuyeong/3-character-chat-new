@@ -91,14 +91,19 @@
         }
       }
       .message.user {
+        display: inline-block;
+        float: right;
+        clear:both;
         text-align: right;
         color: #0056b3;
-        margin-left: 20%;
+        max-width: 75%;
       }
       .message.bot {
         background: #f5f5f5;
         color: #333;
         margin-right: 20%;
+        float: left;
+        clear: both;
       }
       .bot-big-img {
         display: block;
@@ -225,6 +230,64 @@
       }
       .image-grid img:hover {
         transform: scale(1.05);
+      }
+
+/* 퀵 버튼 컨테이너 스타일 (JS에서 제거한 인라인 스타일 대체) */
+      .quick-reply-buttons {
+          display: flex;
+          justify-content: center; /* 버튼 중앙 정렬 */
+          gap: 10px; /* 버튼 사이 간격 */
+          margin: 15px 0;
+          padding: 10px;
+          flex-wrap: wrap; 
+          clear: both; /* 레이아웃 안정화 */
+      }
+
+      .reply-btn {
+          padding: 12px 20px;
+          color: white;
+          border: none;
+          border-radius: 20px;
+          cursor: pointer;
+          font-size: 0.95rem;
+          font-weight: 500;
+          transition: all 0.3s;
+          box-shadow: 0 4px 15px rgba(118, 75, 162, 0.3); /* 기본 그림자 */
+          /* 기본 배경색 (혹시 클래스가 지정되지 않았을 경우 대비) */
+          /*background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); */
+      }
+
+      /* 마우스 오버 효과 (JS 이벤트 대체) */
+      .reply-btn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(118, 75, 162, 0.4);
+      }
+
+      /* 개별 버튼 색상 설정 */
+
+      /* 1. 후회의 방  */
+      .reply-btn.regret-room {
+        background: #6e59c4 !important; 
+        box-shadow: 0 4px 15px rgba(93, 63, 211, 0.3);
+      }
+
+      /* 2. 사랑의 방  */
+      .reply-btn.love-room {
+        background: #d67fab !important; 
+        box-shadow: 0 4px 15px rgba(255, 105, 180, 0.3);
+      }
+
+      /* 3. 불안의 방  */
+      .reply-btn.anxiety-room {
+        background: #42749f !important; 
+        box-shadow: 0 4px 15px rgba(76, 154, 217, 0.3);
+      }
+
+      /* 4. 꿈의 방 */
+      .reply-btn.dream-room {
+        background: #FFD700 !important; 
+        /*color: #333; 텍스트를 검은색으로 변경 */
+        box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
       }
     </style>
   </head>
