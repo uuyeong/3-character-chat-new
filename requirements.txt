@@ -8,6 +8,11 @@ chromadb==0.4.24
 # LLM Framework -> Installing only the core and necessary components
 langchain-core
 langchain-openai
+langchain-community  # PDF 로더 및 문서 분할 기능
+langchain-text-splitters  # 텍스트 분할 전용 모듈
+
+# PDF Processing
+pypdf>=4.0.0  # PDF 파싱
 
 # Utilities
 python-dotenv==1.0.1
