@@ -147,10 +147,8 @@ class ChatbotService:
         # 8. 세션 관리
         self.sessions = {}  # {username: PostOfficeSession}
 
-    # (삭제됨) 상담 가이드 즉답 모드 관련 함수 제거
-
     # --------------------------------------------
-    # 안정성: OpenAI 호출 래퍼 (재시도/백오프)
+    # OpenAI 호출 래퍼 (재시도/백오프)
     # --------------------------------------------
     def _chat_completion(self, messages, model="gpt-4o-mini", temperature=0.7, max_tokens=400, max_retries=3):
         import time
@@ -539,9 +537,7 @@ class ChatbotService:
         """상담 매뉴얼 벡터 DB 초기화 (RAG-D)"""
         counseling_db_path = BASE_DIR / "static" / "data" / "chatbot" / "counseling_vectordb"
         
-        print(f"[RAG-D] 초기화 시작...")
-        print(f"[RAG-D] 경로 확인: {counseling_db_path}")
-        print(f"[RAG-D] 경로 존재: {counseling_db_path.exists()}")
+        print(f"[RAG-D] 초기화 중... ({counseling_db_path})")
         
         if not counseling_db_path.exists():
             print("[RAG-D] ❌ 상담 매뉴얼 벡터 DB가 없습니다.")
@@ -549,17 +545,14 @@ class ChatbotService:
             return None
         
         try:
-            print("[RAG-D] langchain 모듈 임포트 중...")
             from langchain_community.vectorstores import Chroma
             from langchain_openai import OpenAIEmbeddings
             
-            print("[RAG-D] OpenAI 임베딩 모델 초기화 중...")
             embeddings = OpenAIEmbeddings(
                 model="text-embedding-3-small",
                 openai_api_key=os.getenv("OPENAI_API_KEY")
             )
             
-            print("[RAG-D] ChromaDB 연결 중...")
             vectordb = Chroma(
                 persist_directory=str(counseling_db_path),
                 embedding_function=embeddings,
@@ -567,8 +560,7 @@ class ChatbotService:
             )
             
             doc_count = vectordb._collection.count()
-            print(f"[RAG-D] ✅✅✅ 상담 매뉴얼 벡터 DB 로드 완료! ({doc_count}개 청크)")
-            print(f"[RAG-D] vectordb 객체: {type(vectordb)}")
+            print(f"[RAG-D] ✅ 상담 매뉴얼 벡터 DB 로드 완료 ({doc_count}개 청크)")
             return vectordb
             
         except ImportError as ie:
@@ -585,34 +577,20 @@ class ChatbotService:
     
     def _search_counseling_knowledge(self, query: str, top_k: int = 3) -> list:
         """상담 매뉴얼에서 관련 지식 검색 (RAG-D)"""
-        print(f"[RAG-D] _search_counseling_knowledge 호출됨")
-        print(f"[RAG-D] counseling_vectordb 상태: {self.counseling_vectordb is not None}")
-        
         if not self.counseling_vectordb:
-            print(f"[RAG-D] ❌ counseling_vectordb가 None입니다!")
             return []
         
         try:
-            print(f"[RAG-D] 검색 실행: query='{query}', top_k={top_k}")
             results = self.counseling_vectordb.similarity_search(query, k=top_k)
-            print(f"[RAG-D] 검색 완료: {len(results)}개 문서 반환")
+            counseling_context = [doc.page_content for doc in results]
             
-            counseling_context = []
-            for doc in results:
-                counseling_context.append(doc.page_content)
-            
-            print(f"[RAG-D] ✅ 상담 매뉴얼 검색 결과: {len(counseling_context)}개 청크")
-            if counseling_context:
-                for i, ctx in enumerate(counseling_context[:2], 1):
-                    preview = ctx[:100].replace('\n', ' ')
-                    print(f"        [{i}] {preview}...")
+            if self.debug_rag and counseling_context:
+                print(f"[RAG-D] 상담 매뉴얼 검색: {len(counseling_context)}개 청크")
             
             return counseling_context
             
         except Exception as e:
-            print(f"[RAG-D] ❌ 검색 실패: {e}")
-            import traceback
-            traceback.print_exc()
+            print(f"[RAG-D] 검색 실패: {e}")
             return []
     
     # ============================================
@@ -1186,14 +1164,8 @@ class ChatbotService:
                              "죽", "자해", "자살", "극단", "아프", "괴롭", "지쳐", "버티", "견디", "잠"]
             needs_counseling = is_crisis or any(k in user_message for k in crisis_keywords)
             
-            if needs_counseling:
-                if self.counseling_vectordb:
-                    counseling_knowledge = self._search_counseling_knowledge(user_message, top_k=3)
-                    print(f"[RAG-D] 검색 시도 - 키워드 매칭: {needs_counseling}, 결과: {len(counseling_knowledge)}개")
-                    if counseling_knowledge and self.debug_rag:
-                        print(f"[RAG-D] 상담 매뉴얼 지식 활용: {len(counseling_knowledge)}개 청크")
-                else:
-                    print(f"[RAG-D] ⚠️ counseling_vectordb가 로드되지 않음!")
+            if needs_counseling and self.counseling_vectordb:
+                counseling_knowledge = self._search_counseling_knowledge(user_message, top_k=3)
             
             # RAG-P: 페르소나 검색 (상황에 맞는 부엉이의 자기 공개)
             conversation_context = session.get_summary()
@@ -1251,7 +1223,6 @@ class ChatbotService:
                     
                     counseling_context += "⚠️ 위 지식 기반 구체적 평가 질문 (수면, 식사, 일상 영향 등)\n"
                     counseling_context += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-                    print(f"[RAG-D] counseling_context 길이: {len(counseling_context)}자")
             
             # 페르소나 정보를 시스템 프롬프트에 포함 (RAG-P)
             persona_context = ""
@@ -1343,9 +1314,7 @@ class ChatbotService:
 {persona_context}
 """
             
-            # 사용자 프롬프트
-            # procedural info 요청이면 즉답 모드(컨설팅 톤)로 전환
-            # 사용자 프롬프트 (더 깊은 질문)
+            # 사용자 프롬프트 구성
             user_prompt = self._build_user_prompt(user_message, session, rag_context)
             
             try:
@@ -1362,8 +1331,8 @@ class ChatbotService:
                     max_tokens=600  # 전문 지식 포함 답변을 위해 증가
                 )
                 
-                if is_crisis:
-                    print(f"[RAG-D] 위기 모드로 응답 생성 (temperature={temp})")
+                if is_crisis and self.debug_rag:
+                    print(f"[RAG-D] 위기 모드 응답 (temp={temp})")
                 
                 reply = response.choices[0].message.content.strip()
                 session.add_message("assistant", reply)
@@ -1588,14 +1557,8 @@ class ChatbotService:
                                      "죽", "자해", "자살", "극단", "아프", "괴롭", "지쳐", "버티", "견디", "잠"]
             needs_counseling_drawer = is_crisis_drawer or any(k in user_message for k in crisis_keywords_drawer)
             
-            if needs_counseling_drawer:
-                if self.counseling_vectordb:
-                    counseling_knowledge_drawer = self._search_counseling_knowledge(user_message, top_k=3)
-                    print(f"[RAG-D] 서랍 단계 검색 시도 - 키워드 매칭: {needs_counseling_drawer}, 결과: {len(counseling_knowledge_drawer)}개")
-                    if counseling_knowledge_drawer and self.debug_rag:
-                        print(f"[RAG-D] 서랍 단계 상담 매뉴얼 지식 활용: {len(counseling_knowledge_drawer)}개 청크")
-                else:
-                    print(f"[RAG-D] ⚠️ counseling_vectordb가 로드되지 않음!")
+            if needs_counseling_drawer and self.counseling_vectordb:
+                counseling_knowledge_drawer = self._search_counseling_knowledge(user_message, top_k=3)
             
             # RAG-P: 페르소나 검색 (상황에 맞는 부엉이의 자기 공개) - Phase 3.6
             conversation_context_drawer = session.get_summary()
@@ -1652,7 +1615,6 @@ class ChatbotService:
                     
                     counseling_context_drawer += "⚠️ 위 지식 기반 구체적 평가 (수면, 식사, 일상 영향)\n"
                     counseling_context_drawer += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-                    print(f"[RAG-D] 서랍 단계 counseling_context 길이: {len(counseling_context_drawer)}자")
             
             # 페르소나 정보를 시스템 프롬프트에 포함 (RAG-P) - Phase 3.6
             persona_context_drawer = ""
@@ -1707,7 +1669,6 @@ class ChatbotService:
 [상담 원칙 - 모델 내부 지침, 유저에게 직접 말하지 말 것]
 {principles}
 {safety_rules}
-
 - 질문 전략:
   * 감정의 깊이: "정말 그게 전부였을까?"
   * 숨은 의미: "혹시 그 뒤에 다른 이유가 있는 건 아닐까?"
@@ -1751,8 +1712,8 @@ class ChatbotService:
                     max_tokens=600  # 전문 지식 포함 답변을 위해 증가
                 )
                 
-                if is_crisis_drawer:
-                    print(f"[RAG-D] 서랍 단계 위기 모드로 응답 생성 (temperature={temp_drawer})")
+                if is_crisis_drawer and self.debug_rag:
+                    print(f"[RAG-D] 서랍 위기 모드 응답 (temp={temp_drawer})")
                 
                 reply = response.choices[0].message.content.strip()
                 session.add_message("assistant", reply)
@@ -1835,55 +1796,3 @@ def get_chatbot_service():
     if _chatbot_service is None:
         _chatbot_service = ChatbotService()
     return _chatbot_service
-
-
-# ============================================================================
-# 테스트용 메인 함수
-# ============================================================================
-
-if __name__ == "__main__":
-    """로컬 테스트"""
-    print("\n" + "✨"*30)
-    print("별빛 우체국 테스트")
-    print("✨"*30 + "\n")
-    
-    service = get_chatbot_service()
-    username = "여행자"
-    
-    # Phase 1
-    print("\n[Phase 1: 입장]")
-    response = service.generate_response("init", username)
-    print(f"부엉: {response['reply']}\n")
-    
-    # Phase 2
-    print("\n[Phase 2: 탐험]")
-    response = service.generate_response("저에게 온 편지요?", username)
-    print(f"부엉: {response['reply']}\n")
-    
-    # 방 선택
-    print("\n[방 선택: 후회의 방]")
-    response = service.generate_response("'후회'의 방", username)
-    print(f"부엉: {response['reply']}\n")
-    
-    # Phase 3
-    print("\n[Phase 3: 심층 대화]")
-    conversations = [
-        "10년 전에 꿈을 포기했어요",
-        "주변의 반대가 심했고, 제가 부족하다고 느꼈죠",
-        "지금도 그때를 떠올리면 후회가 돼요"
-    ]
-    
-    for msg in conversations:
-        print(f"\n{username}: {msg}")
-        response = service.generate_response(msg, username)
-        print(f"부엉: {response['reply']}")
-    
-    # Phase 4: 편지 발견
-    print("\n\n[Phase 4: 편지 발견]")
-    response = service.generate_response("그때로 돌아갈 수 있다면...", username)
-    print(f"부엉: {response['reply']}\n")
-    
-    # Phase 5: 엔딩
-    print("\n\n[Phase 5: 엔딩]")
-    response = service.generate_response("고마워요", username)
-    print(f"부엉: {response['reply']}\n")
