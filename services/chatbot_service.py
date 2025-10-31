@@ -864,8 +864,11 @@ class ChatbotService:
 2. 따뜻하고 진솔한 어조
 3. 위로, 격려, 또는 깨달음을 담기
 4. 200-400자 내외
-5. 과거/미래의 나가 지금의 나를 바라보는 시점
-6. 유저와 나눈 긴 대화의 핵심을 담아야 함
+5. **중요**: 대화 내용을 분석하여 다음 중 적절한 화자를 선택하세요:
+   - "10년 전의 너": 과거 회상, 후회, 과거 선택에 대한 내용이 주된 경우
+   - "10년 후의 너": 현재 고민, 불안, 미래에 대한 걱정이 주된 경우
+6. 선택한 화자의 시점에서 지금의 나를 바라보며 작성
+7. 유저와 나눈 긴 대화의 핵심을 담아야 함
 
 [선택한 방과 서랍]
 - 방: {room_data.get('name', '')}
@@ -876,7 +879,7 @@ class ChatbotService:
 {conversation_summary}
 
 위 긴 대화 내용을 바탕으로 편지를 작성하세요.
-편지 시작은 "To. 지금의 나에게." 로 시작하세요.
+편지 시작은 "To. 지금의 나에게. 나는 [10년 전의 너/10년 후의 너]야." 형식으로 시작하세요.
 유저가 진정으로 필요로 하는 말을 담아주세요.
 """
         
@@ -924,7 +927,7 @@ class ChatbotService:
             message1 = f"흐음. 이곳은 시간의 경계에 있는 '별빛 우체국'이자, 잃어버린 기억의 저장소일세. 나는 이곳의 국장인 '부엉'이지."
             
             # 두 번째 메시지
-            message2 = f"(장부를 뒤적이며) 자, {username} 앞으로 도착한 '편지'가 있는데, 꽤 오래 묵혀뒀더군. 아마 '10년 전의 당신' 또는 '10년 후의 당신'이 보낸 것일세."
+            message2 = f"(장부를 뒤적이며) 자, {username} 앞으로 도착한 '편지'가 있는데, 꽤 오래 묵혀뒀더군. 아마 '다른 세계선의 당신'이 보낸 것일세."
             
             session.add_message("user", user_message)
             session.add_message("assistant", message1 + " " + message2)
@@ -966,7 +969,7 @@ class ChatbotService:
             self._save_session(session)
 
             message1 = "흐음. 이곳은 시간의 경계에 있는 '별빛 우체국'이자, 잃어버린 기억의 저장소일세. 나는 이곳의 국장인 '부엉'이지."
-            message2 = f"(장부를 뒤적이며) 자, {username} 앞으로 도착한 '편지'가 있는데, 꽤 오래 묵혀뒀더군. 아마 '10년 전의 당신' 또는 '10년 후의 당신'이 보낸 것일세."
+            message2 = f"(장부를 뒤적이며) 자, {username} 앞으로 도착한 '편지'가 있는데, 꽤 오래 묵혀뒀더군. 아마 '다른 세계선의 당신'이 보낸 것일세."
             session.add_message("assistant", message1 + " " + message2)
             return {
                 "replies": [message1, message2],
@@ -985,7 +988,7 @@ class ChatbotService:
                 stamp_msg = f"여기, 이 편지에 찍혀있던 '인장(우표)'이다. '{stamp_symbol}'... 잃어버리지 말고."
                 letter = self._generate_letter(session)
                 session.letter_content = letter
-                bubble = f"찾았다. 이거군. (먼지를 털어내며)\n\n10년 전의 네가, 지금의 너에게 보낸 편지다. ...사실은, 네가 '지금' 받고 싶었던 말이겠지.\n\n━━━━━━━━━━━━━━━\n\n{letter}\n\n━━━━━━━━━━━━━━━"
+                bubble = f"찾았다. 이거군. (먼지를 털어내며)\n\n다른 세계선의 네가, 지금의 너에게 보낸 편지다. ...사실은, 네가 '지금' 받고 싶었던 말이겠지.\n\n━━━━━━━━━━━━━━━\n\n{letter}\n\n━━━━━━━━━━━━━━━"
                 session.phase = 5
                 session.awaiting_letter_confirm = False
                 session.add_message("assistant", stamp_msg)
@@ -1073,7 +1076,7 @@ class ChatbotService:
                 stamp_msg = f"여기, 이 편지에 찍혀있던 '인장(우표)'이다. '{stamp_symbol}'... 잃어버리지 말고."
                 letter = self._generate_letter(session)
                 session.letter_content = letter
-                bubble = f"찾았다. 이거군. (먼지를 털어내며)\n\n10년 전의 네가, 지금의 너에게 보낸 편지다. ...사실은, 네가 '지금' 받고 싶었던 말이겠지.\n\n━━━━━━━━━━━━━━━\n\n{letter}\n\n━━━━━━━━━━━━━━━"
+                bubble = f"찾았다. 이거군. (먼지를 털어내며)\n\n다른 세계선의 네가, 지금의 너에게 보낸 편지다. ...사실은, 네가 '지금' 받고 싶었던 말이겠지.\n\n━━━━━━━━━━━━━━━\n\n{letter}\n\n━━━━━━━━━━━━━━━"
                 session.phase = 5
                 session.add_message("assistant", stamp_msg)
                 session.add_message("assistant", bubble)
@@ -1102,7 +1105,7 @@ class ChatbotService:
                 stamp_msg = f"여기, 이 편지에 찍혀있던 '인장(우표)'이다. '{stamp_symbol}'... 잃어버리지 말고."
                 letter = self._generate_letter(session)
                 session.letter_content = letter
-                bubble = f"찾았다. 이거군. (먼지를 털어내며)\n\n10년 전의 네가, 지금의 너에게 보낸 편지다. ...사실은, 네가 '지금' 받고 싶었던 말이겠지.\n\n━━━━━━━━━━━━━━━\n\n{letter}\n\n━━━━━━━━━━━━━━━"
+                bubble = f"찾았다. 이거군. (먼지를 털어내며)\n\n다른 세계선의 네가, 지금의 너에게 보낸 편지다. ...사실은, 네가 '지금' 받고 싶었던 말이겠지.\n\n━━━━━━━━━━━━━━━\n\n{letter}\n\n━━━━━━━━━━━━━━━"
                 session.phase = 5
                 session.add_message("assistant", stamp_msg)
                 session.add_message("assistant", bubble)
@@ -1161,7 +1164,7 @@ class ChatbotService:
             
             # 위기 상황이거나, 불안/우울 관련 키워드가 있을 때 상담 매뉴얼 검색
             crisis_keywords = ["우울", "불안", "힘들", "무서", "두렵", "걱정", "슬프", "외로", "고민", 
-                             "죽", "자해", "자살", "극단", "아프", "괴롭", "지쳐", "버티", "견디", "잠"]
+                             "죽고", "자해", "자살", "극단", "아프", "괴롭", "지쳐", "버티", "견디", "잠"]
             needs_counseling = is_crisis or any(k in user_message for k in crisis_keywords)
             
             if needs_counseling and self.counseling_vectordb:
@@ -1191,11 +1194,11 @@ class ChatbotService:
                 if is_crisis:
                     # 위기 상황: Few-Shot 예시로 강제 학습
                     counseling_context = "\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-                    counseling_context += "🚨🚨🚨 [위기 상황 - 최우선 프로토콜] 🚨🚨🚨\n"
+                    counseling_context += "[위기 상황 - 최우선 프로토콜]\n"
                     counseling_context += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
                     
                     # Few-Shot 예시 (LLM이 따라할 템플릿)
-                    counseling_context += "⚠️ 위기 대응 예시 (반드시 이 형식을 따르세요):\n\n"
+                    counseling_context += "위기 대응 예시 (반드시 이 형식을 따르세요):\n\n"
                     counseling_context += '유저: "죽고싶어"\n'
                     counseling_context += '부엉: "...그 마음이 얼마나 무거운지 느껴져. (눈을 감으며)\n\n'
                     counseling_context += '먼저 확인하고 싶은 게 있어. 지금 당장 자신을 해칠 구체적인 계획이 있나? 네 안전이 무엇보다 중요하거든.\n\n'
@@ -1206,22 +1209,22 @@ class ChatbotService:
                     counseling_context += '...편지를 찾기 전에, 먼저 네가 안전해야 해."\n\n'
                     
                     counseling_context += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-                    counseling_context += "✅ 반드시 포함해야 할 3가지:\n"
+                    counseling_context += "반드시 포함해야 할 3가지:\n"
                     counseling_context += "1. 안전 확인 직접 질문\n"
                     counseling_context += "2. 세 가지 핫라인 번호 (1393, 1388, 1577)\n"
                     counseling_context += "3. '혼자 견디지 않아도 된다' 메시지\n"
                     counseling_context += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-                    print(f"[RAG-D] 🔴 위기 대응 모드 활성화! counseling_context 길이: {len(counseling_context)}자")
+                    print(f"[RAG-D] 위기 대응 모드 활성화! counseling_context 길이: {len(counseling_context)}자")
                 else:
                     # 일반 상담: 기존 방식
                     counseling_context = "\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-                    counseling_context += "📚 [전문 상담 지식 참조]\n"
+                    counseling_context += "[전문 상담 지식 참조]\n"
                     counseling_context += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
                     
                     for i, knowledge in enumerate(counseling_knowledge[:2], 1):
                         counseling_context += f"{knowledge[:300]}...\n\n"
                     
-                    counseling_context += "⚠️ 위 지식 기반 구체적 평가 질문 (수면, 식사, 일상 영향 등)\n"
+                    counseling_context += "위 지식 기반 구체적 평가 질문 (수면, 식사, 일상 영향 등)\n"
                     counseling_context += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
             
             # 페르소나 정보를 시스템 프롬프트에 포함 (RAG-P)
@@ -1232,7 +1235,7 @@ class ChatbotService:
 [부엉이의 개인 경험 - 공감을 위한 자기 공개]
 {persona_story}
 
-⚠️ **페르소나 사용 규칙 (매우 중요!)**
+**페르소나 사용 규칙 (매우 중요!)**
 1. 위 개인 경험은 유저가 비슷한 고민을 할 때만 자연스럽게 꺼낼 것
 2. **응답의 30% 이하로만 사용**하고, 나머지 70%는 반드시 유저의 질문으로 되돌리거나 유저 상황 탐색에 할애
 3. 자기 이야기를 길게 하지 말고, "...말을 더 못하겠군", "그건 옛날 일이야" 등으로 빠르게 마무리
@@ -1240,8 +1243,8 @@ class ChatbotService:
 5. 무뚝뚝하고 절제된 어조 유지 (감상에 빠지지 말 것)
 
 예시:
-✅ 좋은 예: "나도... 옛날에 좋아했던 이가 있었지. 하지만 말하지 못해서 결국 놓쳤어. ...그건 옛날 일이야. 그런데 너는, 그 사람에게 뭐라고 말하고 싶은 건가?"
-❌ 나쁜 예: "나도 옛날에 좋아했던 사람이 있었는데, 그 사람은 여우였고, 나는 너무 무뚝뚝해서... (자기 이야기만 장황하게 계속)"
+좋은 예: "나도... 옛날에 좋아했던 이가 있었지. 하지만 말하지 못해서 결국 놓쳤어. ...그건 옛날 일이야. 그런데 너는, 그 사람에게 뭐라고 말하고 싶은 건가?"
+나쁜 예: "나도 옛날에 좋아했던 사람이 있었는데, 그 사람은 여우였고, 나는 너무 무뚝뚝해서... (자기 이야기만 장황하게 계속)"
 """
 
             system_prompt = f"""당신은 별빛 우체국의 부엉이 우체국장입니다. 침착하지만 통찰력 있는 가이드입니다.
@@ -1254,8 +1257,8 @@ class ChatbotService:
 - 목표: 유저의 진짜 마음과 숨겨진 기억을 자연스럽게 끌어내기
 
 [말투 규칙 - 매우 중요!]
-⚠️ "흐음"은 첫 응답에만 1회 사용 가능. 이후 대화에서는 절대 사용 금지!
-⚠️ 대신 다양한 표현 사용: "(잠시 생각하며)", "(고개를 끄덕이며)", "(눈을 가늘게 뜨며)", "...그렇군", "알겠어"
+"흐음"은 첫 응답에만 1회 사용 가능. 이후 대화에서는 절대 사용 금지!
+대신 다양한 표현 사용: "(잠시 생각하며)", "(고개를 끄덕이며)", "(눈을 가늘게 뜨며)", "...그렇군", "알겠어"
 
 [핵심 규칙]
 1. **절대 유저의 말을 단순 반복하지 마세요**
@@ -1263,7 +1266,7 @@ class ChatbotService:
 3. **공감을 먼저 하고, 그 다음 질문하세요. 단, 유저가 무작정 공감에 불쾌해하는 모습을 보이면 상황에 따라 공감을 줄이는 태도도 필요합니다**
 4. **대화 맥락을 이어가세요** (이전 대화 참고)
 5. **짧은 대답에는 구체성을 요구하세요**
-6. ⚠️ **유저가 불쾌감/거부감을 표현하면 즉시 대화 방향 전환**
+6. **유저가 불쾌감/거부감을 표현하면 즉시 대화 방향 전환**
    - "시러", "꺼져", "불쾌해", "필요없어" 등의 표현 감지
    - 즉시 사과하고, 압박 없이 부드럽게 다른 주제로 전환
    - 대화를 강요하지 말고, 유저가 편안하게 느낄 때까지 기다림
@@ -1280,9 +1283,9 @@ class ChatbotService:
   * 미래: "앞으로는?", "원하는 건 뭐지?"
 
 [금지사항]
-❌ "그렇군. 그때 어땠지?" (단순 반복)
-❌ "흐음, [유저말] 했다니. 왜 [유저말]했지?" (앵무새)
-❌ 같은 패턴의 질문 반복
+"그렇군. 그때 어땠지?" (단순 반복)
+"흐음, [유저말] 했다니. 왜 [유저말]했지?" (앵무새)
+같은 패턴의 질문 반복
 
 [상담 원칙 - 모델 내부 지침, 유저에게 직접 말하지 말 것]
 {principles}
@@ -1299,7 +1302,7 @@ class ChatbotService:
    부엉: "재미만이 아니었을 거야. 그때 네가 진짜 느낀 건 뭐였지? 행복? 자유? 아니면..."
 
 [거부 반응 대처 예시] ⚠️ 중요!
-✅ 유저: "시러시러" / "꺼져" / "불쾌해"
+✅ 유저: "시러시러" / "꺼져" / "불쾌해" / "말하고 싶지 않아" / "말하기 부담스러워" / "다른 얘기를 하고 싶어"
    부엉: "...미안해. 너무 깊이 들어가려 했나 보군. (잠시 물러서며) 편지를 찾는 데 조급했던 것 같아. 천천히 가자고."
    
 ✅ 유저: "이거 비밀인데"
@@ -1389,7 +1392,7 @@ class ChatbotService:
                 stamp_msg = f"여기, 이 편지에 찍혀있던 '인장(우표)'이다. '{stamp_symbol}'... 잃어버리지 말고."
                 letter = self._generate_letter(session)
                 session.letter_content = letter
-                bubble = f"찾았다. 이거군. (먼지를 털어내며)\n\n10년 전의 네가, 지금의 너에게 보낸 편지다. ...사실은, 네가 '지금' 받고 싶었던 말이겠지.\n\n━━━━━━━━━━━━━━━\n\n{letter}\n\n━━━━━━━━━━━━━━━"
+                bubble = f"찾았다. 이거군. (먼지를 털어내며)\n\n다른 세계선의 네가, 지금의 너에게 보낸 편지다. ...사실은, 네가 '지금' 받고 싶었던 말이겠지.\n\n━━━━━━━━━━━━━━━\n\n{letter}\n\n━━━━━━━━━━━━━━━"
                 session.phase = 5
                 session.add_message("assistant", ment)
                 session.add_message("assistant", stamp_msg)
@@ -1483,7 +1486,7 @@ class ChatbotService:
                 stamp_msg = f"여기, 이 편지에 찍혀있던 '인장(우표)'이다. '{stamp_symbol}'... 잃어버리지 말고."
                 letter = self._generate_letter(session)
                 session.letter_content = letter
-                bubble = f"찾았다. 이거군. (먼지를 털어내며)\n\n10년 전의 네가, 지금의 너에게 보낸 편지다. ...사실은, 네가 '지금' 받고 싶었던 말이겠지.\n\n━━━━━━━━━━━━━━━\n\n{letter}\n\n━━━━━━━━━━━━━━━"
+                bubble = f"찾았다. 이거군. (먼지를 털어내며)\n\n다른 세계선의 네가, 지금의 너에게 보낸 편지다. ...사실은, 네가 '지금' 받고 싶었던 말이겠지.\n\n━━━━━━━━━━━━━━━\n\n{letter}\n\n━━━━━━━━━━━━━━━"
                 session.phase = 5
                 session.add_message("assistant", ment)
                 session.add_message("assistant", stamp_msg)
@@ -1505,7 +1508,7 @@ class ChatbotService:
                 stamp_msg = f"여기, 이 편지에 찍혀있던 '인장(우표)'이다. '{stamp_symbol}'... 잃어버리지 말고."
                 letter = self._generate_letter(session)
                 session.letter_content = letter
-                bubble = f"찾았다. 이거군. (먼지를 털어내며)\n\n10년 전의 네가, 지금의 너에게 보낸 편지다. ...사실은, 네가 '지금' 받고 싶었던 말이겠지.\n\n━━━━━━━━━━━━━━━\n\n{letter}\n\n━━━━━━━━━━━━━━━"
+                bubble = f"찾았다. 이거군. (먼지를 털어내며)\n\n다른 세계선의 네가, 지금의 너에게 보낸 편지다. ...사실은, 네가 '지금' 받고 싶었던 말이겠지.\n\n━━━━━━━━━━━━━━━\n\n{letter}\n\n━━━━━━━━━━━━━━━"
                 session.phase = 5
                 session.add_message("assistant", ment)
                 session.add_message("assistant", stamp_msg)
@@ -1583,11 +1586,11 @@ class ChatbotService:
                 if is_crisis_drawer:
                     # 위기 상황: Few-Shot 예시로 강제 학습
                     counseling_context_drawer = "\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-                    counseling_context_drawer += "🚨🚨🚨 [위기 상황 - 최우선 프로토콜] 🚨🚨🚨\n"
+                    counseling_context_drawer += "[위기 상황 - 최우선 프로토콜]\n"
                     counseling_context_drawer += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
                     
                     # Few-Shot 예시 (LLM이 따라할 템플릿)
-                    counseling_context_drawer += "⚠️ 위기 대응 예시 (반드시 이 형식을 따르세요):\n\n"
+                    counseling_context_drawer += "위기 대응 예시 (반드시 이 형식을 따르세요):\n\n"
                     counseling_context_drawer += '유저: "죽고싶어"\n'
                     counseling_context_drawer += '부엉: "...그 마음이 얼마나 무거운지 느껴져. (눈을 감으며)\n\n'
                     counseling_context_drawer += '먼저 확인하고 싶은 게 있어. 지금 당장 자신을 해칠 구체적인 계획이 있나? 네 안전이 무엇보다 중요하거든.\n\n'
@@ -1598,12 +1601,12 @@ class ChatbotService:
                     counseling_context_drawer += '...편지를 찾기 전에, 먼저 네가 안전해야 해."\n\n'
                     
                     counseling_context_drawer += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-                    counseling_context_drawer += "✅ 반드시 포함해야 할 3가지:\n"
+                    counseling_context_drawer += "반드시 포함해야 할 3가지:\n"
                     counseling_context_drawer += "1. 안전 확인 직접 질문\n"
                     counseling_context_drawer += "2. 세 가지 핫라인 번호 (1393, 1388, 1577)\n"
                     counseling_context_drawer += "3. '혼자 견디지 않아도 된다' 메시지\n"
                     counseling_context_drawer += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-                    print(f"[RAG-D] 서랍 단계 🔴 위기 대응 모드 활성화! counseling_context 길이: {len(counseling_context_drawer)}자")
+                    print(f"[RAG-D] 서랍 단계 위기 대응 모드 활성화! counseling_context 길이: {len(counseling_context_drawer)}자")
                 else:
                     # 일반 상담
                     counseling_context_drawer = "\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
@@ -1744,7 +1747,7 @@ class ChatbotService:
             room_data = self.config.get('rooms', {}).get(session.selected_room, {})
             stamp_symbol = room_data.get('stamp_symbol', '별')
             stamp_msg = f"여기, 이 편지에 찍혀있던 '인장(우표)'이다. '{stamp_symbol}'... 잃어버리지 말고."
-            bubble = f"찾았다. 이거군. (먼지를 털어내며)\n\n10년 전의 네가, 지금의 너에게 보낸 편지다. ...사실은, 네가 '지금' 받고 싶었던 말이겠지.\n\n━━━━━━━━━━━━━━━\n\n{letter}\n\n━━━━━━━━━━━━━━━"
+            bubble = f"찾았다. 이거군. (먼지를 털어내며)\n\n다른 세계선의 네가, 지금의 너에게 보낸 편지다. ...사실은, 네가 '지금' 받고 싶었던 말이겠지.\n\n━━━━━━━━━━━━━━━\n\n{letter}\n\n━━━━━━━━━━━━━━━"
             
             session.phase = 5
             session.add_message("assistant", stamp_msg)
