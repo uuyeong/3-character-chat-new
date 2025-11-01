@@ -1759,7 +1759,8 @@ class ChatbotService:
                 "image": None,
                 "phase": 5,
                 "letter": letter,
-                "buttons": ["별빛 우체국에 한번 더 입장하시겠습니까?"]
+                "buttons": ["별빛 우체국에 한번 더 입장하시겠습니까?"],
+                #"is_letter_end": True
             }
         
         # Phase 5: 엔딩
