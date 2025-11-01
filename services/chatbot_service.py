@@ -764,9 +764,14 @@ class ChatbotService:
         if is_rejection:
             return "분노"
         
-        # 부엉에게 향한 공격/거부만 분노로 처리
-        rejection_to_owl_keywords = ["꺼져", "시러", "싫어", "불쾌", "까먹", "방금", "아까"]
-        if any(k in user_message for k in rejection_to_owl_keywords):
+        # 부엉에게 향한 공격/거부만 분노로 처리 (문맥 고려)
+        # "너가 싫어", "너는 싫어" 같은 부엉에게 직접 향한 표현만 감지
+        if any(pattern in user_message for pattern in ["너가 싫어", "너는 싫어", "넌 싫어", "당신 싫어", "부엉 싫어"]):
+            return "분노"
+        
+        # 부엉과 무관한 일반 공격어만 체크
+        direct_attack_keywords = ["꺼져", "시러", "불쾌", "까먹", "필요없"]
+        if any(k in user_message for k in direct_attack_keywords):
             return "분노"
         
         # "화났어", "짜증나" 같은 유저의 감정 표현은 제외 (부엉에게 한 말이 아님)
@@ -1024,70 +1029,120 @@ class ChatbotService:
         print(f"[방 변경 감지] ❌ 감지 안됨")
         return {"type": None, "room": None}
     
-    def _select_drawer(self, session: PostOfficeSession) -> str:
-        """AI가 대화 내용을 분석하여 적절한 서랍 이름 생성"""
+    def _get_stamp_info(self, stamp_code: str) -> dict:
+        """우표 코드의 정보 반환"""
+        STAMP_CODES = {
+            'regret': {
+                'R_1': {'name': '후회_꿈', 'situation': '꿈/진로 포기, 기회 상실'},
+                'R_2': {'name': '후회_행동', 'situation': '잘못된 말/행동, 사과하지 못한 일'},
+                'R_3': {'name': '후회_관계', 'situation': '관계 단절, 소중한 사람 놓친 후회'},
+                'R_4': {'name': '후회_자아', 'situation': '게으름, 자기 관리 실패 (시간 낭비 등)'}
+            },
+            'love': {
+                'L_1': {'name': '사랑_놓친 인연', 'situation': '놓친 인연'},
+                'L_2': {'name': '사랑_짝사랑', 'situation': '짝사랑'},
+                'L_3': {'name': '사랑_이별', 'situation': '이별'},
+                'L_4': {'name': '사랑_신뢰', 'situation': '신뢰'},
+                'L_5': {'name': '사랑_오해', 'situation': '오해'},
+                'L_6': {'name': '사랑_권태', 'situation': '권태'}
+            },
+            'dream': {
+                'D_1': {'name': '꿈_방향', 'situation': '꿈/방향성 상실, 무기력, 번아웃'},
+                'D_2': {'name': '꿈_현실', 'situation': '현실적 제약 (돈/시간), 주변의 반대'},
+                'D_3': {'name': '꿈_두려움', 'situation': '실패/재능에 대한 두려움, 용기 부족'},
+                'D_4': {'name': '꿈_권태', 'situation': '꿈 성취 후의 허무함, 목표 상실'},
+                'D_5': {'name': '꿈_자아실현', 'situation': '자아실현, 내적 성장에 대한 꿈'}
+            },
+            'anxiety': {
+                'A_1': {'name': '불안_관계', 'situation': '인간 관계에 대한 불안'},
+                'A_2': {'name': '불안_선택', 'situation': '선택에 대한 불안'},
+                'A_3': {'name': '불안_일', 'situation': '일(학업)에 대한 불안'},
+                'A_4': {'name': '불안_정체성', 'situation': '정체성(삶의 방향)에 대한 불안'}
+            }
+        }
+        
+        # 우표 정보 찾기
+        for room_codes in STAMP_CODES.values():
+            if stamp_code in room_codes:
+                return room_codes[stamp_code]
+        
+        # 찾지 못하면 기본값
+        return {'name': '기억의 조각', 'situation': '잃어버린 기억에 대한 성찰'}
+    
+    def _determine_stamp_code(self, session: PostOfficeSession) -> str:
+        """DIR-S-401: 대화 내용을 분석하여 18개 우표 코드 중 하나를 선택"""
+        
+        # DIR-S-405: 18개 우표 코드 정의 (목록 외 코드는 출력 불가)
+        STAMP_CODES = {
+            'regret': {
+                'R_1': {'name': '후회_꿈', 'situation': '꿈/진로 포기, 기회 상실', 'keywords': ['꿈', '진로', '포기', '기회', '상실', '도전', '미래', '목표', '학자', '연구', '학문']},
+                'R_2': {'name': '후회_행동', 'situation': '잘못된 말/행동, 사과하지 못한 일', 'keywords': ['말', '행동', '사과', '잘못', '실수', '미안', '후회', '상처', '표현']},
+                'R_3': {'name': '후회_관계', 'situation': '관계 단절, 소중한 사람 놓친 후회', 'keywords': ['관계', '단절', '소중한', '사람', '놓친', '친구', '가족', '이별', '멀어', '연락']},
+                'R_4': {'name': '후회_자아', 'situation': '게으름, 자기 관리 실패 (시간 낭비 등)', 'keywords': ['게으름', '관리', '실패', '시간', '낭비', '자책', '노력', '건강', '외모']}
+            },
+            'love': {
+                'L_1': {'name': '사랑_놓친 인연', 'situation': '놓친 인연', 'keywords': ['놓친', '인연', '타이밍', '기회', '만남', '스쳐', '운명']},
+                'L_2': {'name': '사랑_짝사랑', 'situation': '짝사랑', 'keywords': ['짝사랑', '좋아', '고백', '못한', '혼자', '마음', '첫사랑', '썸']},
+                'L_3': {'name': '사랑_이별', 'situation': '이별', 'keywords': ['이별', '헤어', '끝', '떠나', '차', '버림', '작별', '무뚝뚝']},
+                'L_4': {'name': '사랑_신뢰', 'situation': '신뢰', 'keywords': ['신뢰', '믿음', '배신', '거짓말', '약속', '바람', '외도']},
+                'L_5': {'name': '사랑_오해', 'situation': '오해', 'keywords': ['오해', '갈등', '다툼', '싸움', '의견', '충돌']},
+                'L_6': {'name': '사랑_권태', 'situation': '권태', 'keywords': ['권태', '지루', '식', '무관심', '반복', '싫증']}
+            },
+            'dream': {
+                'D_1': {'name': '꿈_방향', 'situation': '꿈/방향성 상실, 무기력, 번아웃', 'keywords': ['방향', '상실', '무기력', '번아웃', '모르', '길', '목표', '없', '찾']},
+                'D_2': {'name': '꿈_현실', 'situation': '현실적 제약 (돈/시간), 주변의 반대', 'keywords': ['현실', '돈', '시간', '제약', '반대', '여건', '경제', '부모', '가난']},
+                'D_3': {'name': '꿈_두려움', 'situation': '실패/재능에 대한 두려움, 용기 부족', 'keywords': ['실패', '두려', '용기', '재능', '없', '못', '불안', '겁', '무서']},
+                'D_4': {'name': '꿈_권태', 'situation': '꿈 성취 후의 허무함, 목표 상실', 'keywords': ['성취', '허무', '권태', '목표', '잃', '이룬', '후', '달성', '공허']},
+                'D_5': {'name': '꿈_자아실현', 'situation': '자아실현, 내적 성장에 대한 꿈', 'keywords': ['자아', '성장', '내적', '의미', '가치', '진짜', '본질', '자기']}
+            },
+            'anxiety': {
+                'A_1': {'name': '불안_관계', 'situation': '인간 관계에 대한 불안', 'keywords': ['관계', '사람', '대인', '친구', '외로', '거부', '혼자']},
+                'A_2': {'name': '불안_선택', 'situation': '선택에 대한 불안', 'keywords': ['선택', '결정', '갈림', '고민', '어떻게', '판단', '길']},
+                'A_3': {'name': '불안_일', 'situation': '일(학업)에 대한 불안', 'keywords': ['일', '학업', '성적', '직장', '업무', '공부', '시험', '과제', '성과']},
+                'A_4': {'name': '불안_정체성', 'situation': '정체성(삶의 방향)에 대한 불안', 'keywords': ['정체성', '삶', '방향', '나', '존재', '의미', '누구', '어디']}
+            }
+        }
         
         # 대화 요약
-        conversation_summary = session.get_summary()
-        room_data = self.config.get('rooms', {}).get(session.selected_room, {})
+        conversation_summary = session.get_summary().lower()
+        selected_room = session.selected_room
         
-        # 수요일 회의 이후 서랍 예시 추가!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        drawer_prompt = f"""당신은 유저와의 대화를 분석하여 '서랍의 이름'을 정해야 합니다.
-
-[선택한 방]
-{room_data.get('name', '')}: {room_data.get('description', '')}
-
-[유저와의 대화 내용]
-{conversation_summary}
-
-[서랍 이름 예시]
-- 미완의 악보들 (음악을 포기한 사람)
-- 멈춰버린 나침반 (방향을 잃은 사람)
-- 안전지대 표지판 (도전을 두려워하는 사람)
-- 놓쳐버린 황금 티켓 (기회를 놓친 사람)
-- 닫힌 교과서 (공부를 포기한 사람)
-- 남들의 시선이 만든 벽 (타인의 평가를 두려워하는 사람)
-- 99%의 노력 (거의 성공했지만 포기한 사람)
-- 깨진 거울 (자존감을 잃은 사람)
-- 꺼진 촛불 (열정을 잃은 사람)
-- 쓰지 못한 편지 (고백하지 못한 사랑)
-- 시든 꽃다발 (끝난 사랑)
-- 찢어진 사진 (갈라선 관계)
-
-[규칙]
-1. 유저의 상황을 정확히 반영하는 은유적 이름
-2. 3-6글자 정도의 간결한 이름
-3. 시적이고 감성적인 표현
-4. 현재 들어온 방(후회/사랑/불안/꿈)의 주제와 연결
-
-**서랍 이름만 출력하세요. 다른 설명 없이 서랍 이름만 답하세요.**
-"""
+        # 현재 방의 우표 코드들만 필터링
+        if selected_room not in STAMP_CODES:
+            print(f"[우표] 알 수 없는 방: {selected_room}")
+            return 'R_1'  # 기본값
         
-        try:
-            response = self.client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=[
-                    {"role": "system", "content": drawer_prompt},
-                    {"role": "user", "content": "서랍 이름을 정해주세요."}
-                ],
-                temperature=0.8,
-                max_tokens=50
-            )
-            
-            drawer_name = response.choices[0].message.content.strip()
-            print(f"[서랍 선택] AI가 선택한 서랍: {drawer_name}")
-            return drawer_name
-            
-        except Exception as e:
-            print(f"[에러] 서랍 선택 실패: {e}")
-            # 기본 서랍 이름 (서랍 선택 실패 시 출력할 서랍들)
-            default_drawers = {
-                'regret': '포기한 꿈들',
-                'love': '잊지 못한 마음',
-                'anxiety': '멈춰버린 발걸음',
-                'dream': '빛나는 소망들'
-            }
-            return default_drawers.get(session.selected_room, '잊혀진 기억들')
+        room_stamps = STAMP_CODES[selected_room]
+        
+        # DIR-S-402: 키워드 매칭으로 가장 적합한 우표 코드 찾기
+        best_code = None
+        max_score = 0
+        
+        for code, data in room_stamps.items():
+            score = sum(1 for keyword in data['keywords'] if keyword in conversation_summary)
+            if score > max_score:
+                max_score = score
+                best_code = code
+        
+        # 매칭 실패 시 방의 첫 번째 코드 반환
+        if not best_code or max_score == 0:
+            best_code = list(room_stamps.keys())[0]
+            print(f"[우표] 키워드 매칭 실패 → 기본 코드 선택: {best_code}")
+        else:
+            stamp_info = room_stamps[best_code]
+            print(f"[우표] 선택된 코드: {best_code} ({stamp_info['name']}) - 매칭 점수: {max_score}")
+            print(f"[우표] 상황: {stamp_info['situation']}")
+        
+        # DIR-S-405: 18개 목록 외 코드는 출력 불가 - 검증
+        all_valid_codes = []
+        for room_codes in STAMP_CODES.values():
+            all_valid_codes.extend(room_codes.keys())
+        
+        if best_code not in all_valid_codes:
+            print(f"[우표] 경고: 유효하지 않은 코드 {best_code} → R_1로 대체")
+            best_code = 'R_1'
+        
+        return best_code
     
     def _build_system_prompt(self, session: PostOfficeSession) -> str:
         """Phase별 시스템 프롬프트 생성"""
@@ -1143,11 +1198,61 @@ class ChatbotService:
         return "\n".join(prompt_parts)
     
     def _generate_letter(self, session: PostOfficeSession) -> str:
-        """편지 생성 (Phase 4)"""
+        """DIR-S-403: 편지 생성 (우표 코드의 상황 정보 포함)"""
+        
+        # 우표 코드 정보 가져오기
+        stamp_code = session.selected_drawer  # 우표 코드가 저장되어 있음
+        
+        # 우표 코드 데이터 (동일한 정의 재사용)
+        STAMP_CODES = {
+            'regret': {
+                'R_1': {'name': '후회_꿈', 'situation': '꿈/진로 포기, 기회 상실'},
+                'R_2': {'name': '후회_행동', 'situation': '잘못된 말/행동, 사과하지 못한 일'},
+                'R_3': {'name': '후회_관계', 'situation': '관계 단절, 소중한 사람 놓친 후회'},
+                'R_4': {'name': '후회_자아', 'situation': '게으름, 자기 관리 실패 (시간 낭비 등)'}
+            },
+            'love': {
+                'L_1': {'name': '사랑_놓친 인연', 'situation': '놓친 인연'},
+                'L_2': {'name': '사랑_짝사랑', 'situation': '짝사랑'},
+                'L_3': {'name': '사랑_이별', 'situation': '이별'},
+                'L_4': {'name': '사랑_신뢰', 'situation': '신뢰'},
+                'L_5': {'name': '사랑_오해', 'situation': '오해'},
+                'L_6': {'name': '사랑_권태', 'situation': '권태'}
+            },
+            'dream': {
+                'D_1': {'name': '꿈_방향', 'situation': '꿈/방향성 상실, 무기력, 번아웃'},
+                'D_2': {'name': '꿈_현실', 'situation': '현실적 제약 (돈/시간), 주변의 반대'},
+                'D_3': {'name': '꿈_두려움', 'situation': '실패/재능에 대한 두려움, 용기 부족'},
+                'D_4': {'name': '꿈_권태', 'situation': '꿈 성취 후의 허무함, 목표 상실'},
+                'D_5': {'name': '꿈_자아실현', 'situation': '자아실현, 내적 성장에 대한 꿈'}
+            },
+            'anxiety': {
+                'A_1': {'name': '불안_관계', 'situation': '인간 관계에 대한 불안'},
+                'A_2': {'name': '불안_선택', 'situation': '선택에 대한 불안'},
+                'A_3': {'name': '불안_일', 'situation': '일(학업)에 대한 불안'},
+                'A_4': {'name': '불안_정체성', 'situation': '정체성(삶의 방향)에 대한 불안'}
+            }
+        }
+        
+        # 우표 정보 추출
+        stamp_info = None
+        for room_codes in STAMP_CODES.values():
+            if stamp_code in room_codes:
+                stamp_info = room_codes[stamp_code]
+                break
+        
+        if not stamp_info:
+            stamp_situation = "잃어버린 기억에 대한 성찰"
+            print(f"[편지] 경고: 우표 코드 {stamp_code}를 찾을 수 없음 → 기본 상황 사용")
+        else:
+            stamp_situation = stamp_info['situation']
+            print(f"[편지] 우표 코드: {stamp_code} ({stamp_info['name']}) - 상황: {stamp_situation}")
+        
         # 대화 요약
         conversation_summary = session.get_summary()
         room_data = self.config.get('rooms', {}).get(session.selected_room, {})
         
+        # DIR-S-403: 우표 코드의 '상황'을 프롬프트에 제공
         letter_prompt = f"""당신은 '10년 전의 나' 또는 '10년 후의 나'의 목소리로 편지를 작성합니다.
 
 [편지 작성 규칙]
@@ -1161,9 +1266,10 @@ class ChatbotService:
 6. 선택한 화자의 시점에서 지금의 나를 바라보며 작성
 7. 유저와 나눈 긴 대화의 핵심을 담아야 함
 
-[선택한 방]
+[선택한 방과 우표]
 - 방: {room_data.get('name', '')}
-- 의미: 유저의 {room_data.get('name', '')}에 대한 기억
+- 우표 주제: {stamp_situation}
+- **편지는 위 우표 주제를 반영하여 작성하세요**
 
 [유저와의 대화 내용 (총 {session.room_conversation_count + session.drawer_conversation_count}회)]
 {conversation_summary}
@@ -1357,23 +1463,28 @@ class ChatbotService:
         # 편지 확인 대기 응답 처리 (전 단계에서 버튼 노출 후)
         if session.awaiting_letter_confirm:
             if self._detect_letter_confirm_yes(user_message):
-                # 편지 즉시 전달 (인장 + 편지)
-                room_data = self.config.get('rooms', {}).get(session.selected_room, {})
-                stamp_symbol = room_data.get('stamp_symbol', '별')
-                stamp_msg = f"여기, 이 편지에 찍혀있던 '인장(우표)'이다. '{stamp_symbol}'... 잃어버리지 말고."
+                # DIR-S-404: 편지 즉시 전달 (우표 코드 포함)
+                stamp_code = self._determine_stamp_code(session)
+                
+                # 우표 정보 가져오기
+                stamp_info = self._get_stamp_info(stamp_code)
+                stamp_msg = f"자 너의 편지에 붙어 있었던 우표는 {stamp_code}이다. 이 우표는 '{stamp_info['situation']}'을 의미하지."
+                
                 letter = self._generate_letter(session)
                 session.letter_content = letter
-                bubble = f"찾았다. 이거군. (먼지를 털어내며)\n\n다른 세계선의 네가, 지금의 너에게 보낸 편지다. ...사실은, 네가 '지금' 받고 싶었던 말이겠지.\n\n━━━━━━━━━━━━━━━\n\n{letter}\n\n━━━━━━━━━━━━━━━"
+                letter_bubble = f"{letter}"  # 편지 내용만
+                
                 session.phase = 5
                 session.awaiting_letter_confirm = False
                 session.add_message("assistant", stamp_msg)
-                session.add_message("assistant", bubble)
+                session.add_message("assistant", letter_bubble)
                 self._save_session(session)
                 return {
-                    "replies": [stamp_msg, bubble],
+                    "replies": [stamp_msg, letter_bubble],
                     "image": None,
                     "phase": 5,
                     "letter": letter,
+                    "stamp_code": stamp_code,  # DIR-S-404: 우표 코드 반환
                     "buttons": ["별빛 우체국에 다시 한번 입장"]
                 }
             elif self._detect_letter_confirm_no(user_message):
@@ -1509,23 +1620,27 @@ class ChatbotService:
                         "phase": 3,
                         "buttons": ["응 편지를 받을래", "아니, 더 대화할래"]
                     }
-                room_data = self.config.get('rooms', {}).get(session.selected_room, {})
-                stamp_symbol = room_data.get('stamp_symbol', '별')
-                stamp_msg = f"여기, 이 편지에 찍혀있던 '인장(우표)'이다. '{stamp_symbol}'... 잃어버리지 말고."
+                # DIR-S-404: 편지 전달 (우표 코드 포함)
+                stamp_code = self._determine_stamp_code(session)
+                
+                # 우표 정보 가져오기
+                stamp_info = self._get_stamp_info(stamp_code)
+                stamp_msg = f"자 너의 편지에 붙어 있었던 우표는 {stamp_code}이다. 이 우표는 '{stamp_info['situation']}'을 의미하지."
                 
                 letter = self._generate_letter(session)
                 session.letter_content = letter
-                bubble = f"찾았다. 이거군. (먼지를 털어내며)\n\n다른 세계선의 네가, 지금의 너에게 보낸 편지다. ...사실은, 네가 '지금' 받고 싶었던 말이겠지.\n\n━━━━━━━━━━━━━━━\n\n{letter}\n\n━━━━━━━━━━━━━━━"
+                letter_bubble = f"{letter}"  # 편지 내용만
                 
                 session.phase = 5
                 session.add_message("assistant", stamp_msg)
-                session.add_message("assistant", bubble)
+                session.add_message("assistant", letter_bubble)
                 self._save_session(session)
                 return {
-                    "replies": [stamp_msg, bubble],  # 전환 시점이므로 감정 태그 제외
+                    "replies": [stamp_msg, letter_bubble],  # 전환 시점이므로 감정 태그 제외
                     "image": None,
                     "phase": 5,
                     "letter": letter,
+                    "stamp_code": stamp_code,  # DIR-S-404: 우표 코드 반환
                     "buttons": ["별빛 우체국에 다시 한번 입장"]
                 }
 
@@ -1540,9 +1655,9 @@ class ChatbotService:
                         "phase": 3,
                         "buttons": ["응 편지를 받을래", "아니, 더 대화할래"]
                     }
-                room_data = self.config.get('rooms', {}).get(session.selected_room, {})
-                stamp_symbol = room_data.get('stamp_symbol', '별')
-                stamp_msg = f"여기, 이 편지에 찍혀있던 '인장(우표)'이다. '{stamp_symbol}'... 잃어버리지 말고."
+                # DIR-S-404: 편지 전달 (우표 코드 포함)
+                stamp_code = self._determine_stamp_code(session)
+                stamp_msg = f"여기, 이 편지에 찍혀있던 '인장(우표)'이다. 잃어버리지 말고."
                 letter = self._generate_letter(session)
                 session.letter_content = letter
                 bubble = f"찾았다. 이거군. (먼지를 털어내며)\n\n다른 세계선의 네가, 지금의 너에게 보낸 편지다. ...사실은, 네가 '지금' 받고 싶었던 말이겠지.\n\n━━━━━━━━━━━━━━━\n\n{letter}\n\n━━━━━━━━━━━━━━━"
@@ -1555,6 +1670,7 @@ class ChatbotService:
                     "image": None,
                     "phase": 5,
                     "letter": letter,
+                    "stamp_code": stamp_code,  # DIR-S-404: 우표 코드 반환
                     "buttons": ["별빛 우체국에 다시 한번 입장"]
                 }
             # 로딩 중이더라도, 이미 인덱스가 만들어졌다면 바로 진행
@@ -2057,9 +2173,9 @@ class ChatbotService:
                 print(f"[에러] Phase 3.5 마무리 응답 생성 실패: {e}")
                 closing_parts = ["그랬군.", "알겠어."]
             
-            # 2단계: 서랍 선택 및 열기
-            drawer_name = self._select_drawer(session)
-            session.selected_drawer = drawer_name
+            # 2단계: 우표 코드 결정 (DIR-S-401)
+            stamp_code = self._determine_stamp_code(session)
+            session.selected_drawer = stamp_code  # 우표 코드 저장
             session.phase = 3.6
             
             # 3단계: 응답 구성 (마무리 응답 + 서랍 열림)
@@ -2158,27 +2274,27 @@ class ChatbotService:
                         "phase": 3.6,
                         "buttons": ["응 편지를 받을래", "아니, 더 대화할래"]
                     }
-                # 즉시 편지 단계
-                ment = "...미안해. (서랍을 뒤지며) 편지를 찾을게. 잠깐만."
+                # DIR-S-404: 즉시 편지 단계 (우표 코드 포함)
+                stamp_code = self._determine_stamp_code(session)
                 
-                room_data = self.config.get('rooms', {}).get(session.selected_room, {})
-                stamp_symbol = room_data.get('stamp_symbol', '별')
-                stamp_msg = f"여기, 이 편지에 찍혀있던 '인장(우표)'이다. '{stamp_symbol}'... 잃어버리지 말고."
+                # 우표 정보 가져오기
+                stamp_info = self._get_stamp_info(stamp_code)
+                stamp_msg = f"자 너의 편지에 붙어 있었던 우표는 {stamp_code}이다. 이 우표는 '{stamp_info['situation']}'을 의미하지."
                 
                 letter = self._generate_letter(session)
                 session.letter_content = letter
-                bubble = f"찾았다. 이거군. (먼지를 털어내며)\n\n다른 세계선의 네가, 지금의 너에게 보낸 편지다. ...사실은, 네가 '지금' 받고 싶었던 말이겠지.\n\n━━━━━━━━━━━━━━━\n\n{letter}\n\n━━━━━━━━━━━━━━━"
+                letter_bubble = f"{letter}"  # 편지 내용만
                 
                 session.phase = 5
-                session.add_message("assistant", ment)
                 session.add_message("assistant", stamp_msg)
-                session.add_message("assistant", bubble)
+                session.add_message("assistant", letter_bubble)
                 self._save_session(session)
                 return {
-                    "replies": [ment, stamp_msg, bubble],  # 전환 시점이므로 감정 태그 제외
+                    "replies": [stamp_msg, letter_bubble],  # 전환 시점이므로 감정 태그 제외
                     "image": None,
                     "phase": 5,
                     "letter": letter,
+                    "stamp_code": stamp_code,  # DIR-S-404: 우표 코드 반환
                     "buttons": ["별빛 우체국에 다시 한번 입장"]
                 }
             
@@ -2405,46 +2521,53 @@ class ChatbotService:
                         "image": None,
                         "phase": 3.6
                     }
-                # 세 말풍선: 멘트 → 인장 안내 → 편지
-                ment = "...알겠다. (서랍을 뒤지며) 편지를 찾을게. 잠깐만."
-                room_data = self.config.get('rooms', {}).get(session.selected_room, {})
-                stamp_symbol = room_data.get('stamp_symbol', '별')
-                stamp_msg = f"여기, 이 편지에 찍혀있던 '인장(우표)'이다. '{stamp_symbol}'... 잃어버리지 말고."
+                # DIR-S-404: 편지 전달 (우표 코드 포함)
+                stamp_code = self._determine_stamp_code(session)
+                
+                # 우표 정보 가져오기
+                stamp_info = self._get_stamp_info(stamp_code)
+                stamp_msg = f"자 너의 편지에 붙어 있었던 우표는 {stamp_code}이다. 이 우표는 '{stamp_info['situation']}'을 의미하지."
+                
                 letter = self._generate_letter(session)
                 session.letter_content = letter
-                bubble = f"찾았다. 이거군. (먼지를 털어내며)\n\n다른 세계선의 네가, 지금의 너에게 보낸 편지다. ...사실은, 네가 '지금' 받고 싶었던 말이겠지.\n\n━━━━━━━━━━━━━━━\n\n{letter}\n\n━━━━━━━━━━━━━━━"
+                letter_bubble = f"{letter}"  # 편지 내용만
+                
                 session.phase = 5
-                session.add_message("assistant", ment)
                 session.add_message("assistant", stamp_msg)
-                session.add_message("assistant", bubble)
+                session.add_message("assistant", letter_bubble)
                 self._save_session(session)
                 return {
-                    "replies": [ment, stamp_msg, bubble],
+                    "replies": [stamp_msg, letter_bubble],
                     "image": None,
                     "phase": 5,
                     "letter": letter,
+                    "stamp_code": stamp_code,  # DIR-S-404: 우표 코드 반환
                     "buttons": ["별빛 우체국에 다시 한번 입장"]
                 }
 
             # 반복 스로틀: 동일 의도 3회 이상이면 편지 단계로 전환
             if session.repeated_intent_count >= 3:
-                ment = "같은 요청이 반복되었구나. (고개를 끄덕이며) 편지를 바로 찾겠다. 잠깐만."
-                room_data = self.config.get('rooms', {}).get(session.selected_room, {})
-                stamp_symbol = room_data.get('stamp_symbol', '별')
-                stamp_msg = f"여기, 이 편지에 찍혀있던 '인장(우표)'이다. '{stamp_symbol}'... 잃어버리지 말고."
+                # DIR-S-404: 편지 전달 (우표 코드 포함)
+                stamp_code = self._determine_stamp_code(session)
+                
+                # 우표 정보 가져오기
+                stamp_info = self._get_stamp_info(stamp_code)
+                stamp_msg = f"자 너의 편지에 붙어 있었던 우표는 {stamp_code}이다. 이 우표는 '{stamp_info['situation']}'을 의미하지."
+                
                 letter = self._generate_letter(session)
                 session.letter_content = letter
-                bubble = f"찾았다. 이거군. (먼지를 털어내며)\n\n다른 세계선의 네가, 지금의 너에게 보낸 편지다. ...사실은, 네가 '지금' 받고 싶었던 말이겠지.\n\n━━━━━━━━━━━━━━━\n\n{letter}\n\n━━━━━━━━━━━━━━━"
+                letter_bubble = f"{letter}"  # 편지 내용만
+                
                 session.phase = 5
-                session.add_message("assistant", ment)
                 session.add_message("assistant", stamp_msg)
-                session.add_message("assistant", bubble)
+                session.add_message("assistant", letter_bubble)
                 self._save_session(session)
                 return {
-                    "replies": [ment, stamp_msg, bubble],
+                    "replies": [stamp_msg, letter_bubble],
                     "image": None,
                     "phase": 5,
                     "letter": letter,
+                    "stamp_code": stamp_code,  # DIR-S-404: 우표 코드 반환
                     "buttons": ["별빛 우체국에 한번 더 입장하시겠습니까?"]
                 }
             if getattr(self, "loading_embeddings", False) and self.collection and self.collection.count() == 0:
@@ -2872,35 +2995,37 @@ class ChatbotService:
         if session.phase == 4:
             print(f"[편지 생성] 방 대화: {session.room_conversation_count}회, 서랍 대화: {session.drawer_conversation_count}회")
             
-            # 편지 생성
+            # DIR-S-404: 우표 코드 결정 및 편지 생성
+            stamp_code = self._determine_stamp_code(session)
+            
+            # 우표 정보 가져오기
+            stamp_info = self._get_stamp_info(stamp_code)
+            stamp_msg = f"자 너의 편지에 붙어 있었던 우표는 {stamp_code}이다. 이 우표는 '{stamp_info['situation']}'을 의미하지."
+            
             letter = self._generate_letter(session)
             session.letter_content = letter
-            
-            room_data = self.config.get('rooms', {}).get(session.selected_room, {})
-            stamp_symbol = room_data.get('stamp_symbol', '별')
-            stamp_msg = f"여기, 이 편지에 찍혀있던 '인장(우표)'이다. '{stamp_symbol}'... 잃어버리지 말고."
-            
-            bubble = f"찾았다. 이거군. (먼지를 털어내며)\n\n다른 세계선의 네가, 지금의 너에게 보낸 편지다. ...사실은, 네가 '지금' 받고 싶었던 말이겠지.\n\n━━━━━━━━━━━━━━━\n\n{letter}\n\n━━━━━━━━━━━━━━━"
+            letter_bubble = f"{letter}"  # 편지 내용만
             
             session.phase = 5
             session.add_message("assistant", stamp_msg)
-            session.add_message("assistant", bubble)
+            session.add_message("assistant", letter_bubble)
             self._save_session(session)
             
             return {
-                "replies": [stamp_msg, bubble],  # 전환 시점이므로 감정 태그 제외
+                "replies": [stamp_msg, letter_bubble],  # 전환 시점이므로 감정 태그 제외
                 "image": None,
                 "phase": 5,
                 "letter": letter,
+                "stamp_code": stamp_code,  # DIR-S-404: 우표 코드 반환
                 "buttons": ["별빛 우체국에 한번 더 입장하시겠습니까?"]
             }
         
         # Phase 5: 엔딩
         if session.phase == 5:
-            room_data = self.config.get('rooms', {}).get(session.selected_room, {})
-            stamp_symbol = room_data.get('stamp_symbol', '별')
+            # DIR-S-404: 우표 코드 반환
+            stamp_code = session.selected_drawer if session.selected_drawer else self._determine_stamp_code(session)
             
-            reply = f"편지는 찾았으니 볼일은 끝났군.\n\n여기, 이 편지에 찍혀있던 '인장(우표)'이다. '{stamp_symbol}'... 잃어버리지 말고.\n\n이만 가보라고. ...너무 늦기 전에 답장하러 오든가."
+            reply = f"편지는 찾았으니 볼일은 끝났군.\n\n이만 가보라고. ...너무 늦기 전에 답장하러 오든가."
             
             session.add_message("assistant", reply)
             
@@ -2911,7 +3036,7 @@ class ChatbotService:
                 "reply": reply,  # 전환 시점이므로 감정 태그 제외
                 "image": None,
                 "phase": session.phase,
-                "stamp_symbol": stamp_symbol,
+                "stamp_code": stamp_code,  # DIR-S-404: 우표 코드 반환
                 "ending": True
             }
         
