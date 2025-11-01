@@ -9,6 +9,8 @@ const sendBtn = document.getElementById("send-btn");
 const videoBtn = document.getElementById("videoBtn");
 const imageBtn = document.getElementById("imageBtn");
 
+const BOT_AVATAR_SRC = "/static/images/hateslop/owl1.png";
+
 // ============================================
 // 임시로 만든 버튼 기능, 나중에 수정 필요
 // ============================================
@@ -99,12 +101,57 @@ function setInputEnabled(enabled) {
     sendBtn.style.cursor = enabled ? 'pointer' : 'not-allowed';
   }
 }
+function showLetter(letterText) {
+  const letterContainer = document.getElementById("letterContainer");
+  const letterTextDiv = document.getElementById("letterText");
+  
+  // 편지 텍스트 표시
+  letterTextDiv.textContent = letterText;
+
+  // 챗 영역 안쪽에 편지 표시
+  letterContainer.style.display = "block";
+
+  // 기존 대화창 내용 숨기기
+  chatLog.style.display = "none";
+
+  // 스크롤 맨 아래로
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
 
 // ============================================
 // 임시 버튼 기능 끝
 // ============================================
 
 // 메시지 전송 함수
+function showEntranceMessage() {
+  if (!chatLog) return;
+
+  const container = document.createElement("div");
+  container.classList.add("entrance-message");
+
+  // 이미지
+  const img = document.createElement("img");
+  img.src = "/static/images/chatbot/main_background2.png"; 
+  img.alt = "별빛 우체국 로고";
+  img.classList.add("entrance-img");
+
+  // 텍스트
+  const text = document.createElement("div");
+  text.classList.add("entrance-text");
+  text.textContent = `${username}님이 별빛 우체국에 입장했습니다.`;
+
+  // DOM 연결
+  container.appendChild(img);
+  container.appendChild(text);
+  chatLog.appendChild(container);
+
+  // 부드럽게 나타나는 효과
+  setTimeout(() => {
+    container.style.opacity = "1";
+  }, 100);
+
+  chatLog.scrollTop = chatLog.scrollHeight;
+}
 
 async function sendMessage(isInitial = false) {
   let message;
@@ -120,7 +167,7 @@ async function sendMessage(isInitial = false) {
   }
 
   // 로딩 표시
-  const loadingId = appendMessage("bot", "생각 중...");
+  const loadingId = appendMessage("bot", "생각 중...", null, { showAvatar: false });
   console.log("로딩 메시지 ID:", loadingId);
 
   try {
@@ -154,9 +201,10 @@ async function sendMessage(isInitial = false) {
 
         splitMessages.forEach((msg, subIndex) => {
           setTimeout(() => {
-            // ✅ 첫 메시지 출력 후 로딩 제거
+            // 첫 메시지 출력 후 로딩 제거
             if (index === 0 && subIndex === 0) removeMessage(loadingId);
-            appendMessage("bot", msg, null, false);
+            const showAvatar = index === 0 && subIndex === 0;
+            appendMessage("bot", msg, null, { showAvatar });
             chatLog.scrollTop = chatLog.scrollHeight;
           }, (index * splitMessages.length + subIndex) * 800);
         });
@@ -183,9 +231,16 @@ async function sendMessage(isInitial = false) {
         replyText = data.reply;
         imagePath = data.image || null;
       }
+      if (replyText.startsWith("부엉:")) {
+        replyText = replyText.replace("부엉:", "").trim();
+      }
 
+      if (data.is_letter_end) {
+        removeMessage(loadingId); // 혹시 로딩 말풍선 제거
+        showLetter(replyText);
+        return; 
+      }
       appendMessage("bot", replyText, imagePath);
-      
       // 버튼이 있으면 렌더링하고 입력창 비활성화
       if (data.buttons && data.buttons.length > 0) {
         renderButtons(data.buttons);
@@ -204,66 +259,101 @@ async function sendMessage(isInitial = false) {
     appendMessage("bot", "죄송합니다. 오류가 발생했습니다. 다시 시도해주세요.");
   }
 }
+function scrollToBottomSmooth() {
+  if (!chatLog) return;
+  chatLog.scrollTo({
+    top: chatLog.scrollHeight,
+    behavior: "smooth"  
+  });
+}
 
 // 메시지 DOM에 추가
 // [수정된 appendMessage 함수 전체]
 // 메시지 DOM에 추가
 let messageIdCounter = 0; // 전역 카운터를 유지 (함수 밖에 있어야 함)
 
-function appendMessage(sender, text, imageSrc = null) {
-  const messageId = `msg-${messageIdCounter++}`; // 고유 ID 부여
-  const messages = splitLongMessage(text, 120); // ← 메시지를 분할합니다.
+function appendMessage(sender, text, imageSrc = null, options = {}) {
+  const { showAvatar = sender === "bot", avatarSrc = BOT_AVATAR_SRC } = options;
+  const messageId = `msg-${messageIdCounter++}`;
+  const messages = splitLongMessage(text, 120);
 
-  messages.forEach((msg, idx) => {
-    const messageElem = document.createElement("div");
-    messageElem.classList.add("message", sender);
-    // 분할된 메시지에도 고유 ID를 부여합니다.
-    messageElem.id = `${messageId}-${idx}`;
-    messageElem.style.opacity = "0"; // 초기 투명하게 설정 (fadeIn을 위해)
+  if (!chatLog) {
+    return messageId;
+  }
 
-    if (sender === "user") {
-      messageElem.textContent = msg;
-    } else {
-      // 이미지는 첫 번째 분할 메시지에만 추가
-      if (imageSrc && idx === 0) {
-        const botImg = document.createElement("img");
-        botImg.classList.add("bot-big-img");
-        botImg.src = imageSrc;
-        botImg.alt = "챗봇 이미지";
-        messageElem.appendChild(botImg);
-      }
+  if (sender === "bot") {
+    const groupElem = document.createElement("div");
+    groupElem.classList.add("message-group", "bot-group");
+    groupElem.id = messageId;
 
-      const textContainer = document.createElement("div");
-      textContainer.classList.add("bot-text-container");
-      textContainer.textContent = msg;
-      messageElem.appendChild(textContainer);
-    }
+    if (showAvatar) {
+      const avatarContainer = document.createElement("div");
+      avatarContainer.classList.add("bot-avatar");
+      const avatarImg = document.createElement("img");
+      avatarImg.src = avatarSrc;
+      avatarImg.alt = "부엉장 프로필";
+      avatarContainer.appendChild(avatarImg);
+      groupElem.appendChild(avatarContainer);
+    } else {
+      groupElem.classList.add("bot-group-no-avatar");
+    }
 
-    if (chatLog) {
-      chatLog.appendChild(messageElem);
-      
-      // 각 말풍선 사이 딜레이를 사용하여 순차적으로 표시합니다.
-      setTimeout(() => {
-        messageElem.style.opacity = "1";
-        chatLog.scrollTop = chatLog.scrollHeight;
-      }, idx * 500); // 0.5초 간격으로 표시
+    const bubbleContainer = document.createElement("div");
+    bubbleContainer.classList.add("bot-bubble-container");
+    groupElem.appendChild(bubbleContainer);
 
-      // 사용자 말풍선: 한 줄이면 오른쪽 정렬, 여러 줄이면 왼쪽 정렬로 전환
+    if (imageSrc) {
+      const botImg = document.createElement("img");
+      botImg.classList.add("bot-big-img");
+      botImg.src = imageSrc;
+      botImg.alt = "챗봇 이미지";
+      bubbleContainer.appendChild(botImg);
+    }
+
+    messages.forEach((msg, idx) => {
+      if (!msg) return;
+      const messageElem = document.createElement("div");
+      messageElem.classList.add("message", "bot");
+      messageElem.id = `${messageId}-${idx}`;
+      messageElem.style.opacity = "0";
+      messageElem.textContent = msg;
+      bubbleContainer.appendChild(messageElem);
+
+      setTimeout(() => {
+        messageElem.style.opacity = "1";
+        scrollToBottomSmooth();
+      }, idx * 500);
+    });
+
+    chatLog.appendChild(groupElem);
+    return messageId;
+  }
+
+  messages.forEach((msg, idx) => {
+    if (!msg) return;
+    const messageElem = document.createElement("div");
+    messageElem.classList.add("message", sender);
+    messageElem.id = `${messageId}-${idx}`;
+    messageElem.style.opacity = "0";
+    messageElem.textContent = msg;
+    chatLog.appendChild(messageElem);
+
+    setTimeout(() => {
+      messageElem.style.opacity = "1";
+      chatLog.scrollTop = chatLog.scrollHeight;
+
       if (sender === "user") {
-        setTimeout(() => {
-          const computed = window.getComputedStyle(messageElem);
-          const lineHeight = parseFloat(computed.lineHeight);
-          const height = messageElem.getBoundingClientRect().height;
-          if (lineHeight && height > lineHeight * 1.6) {
-            messageElem.classList.add("multi-line");
-          }
-        }, 0);
+        const computed = window.getComputedStyle(messageElem);
+        const lineHeight = parseFloat(computed.lineHeight);
+        const height = messageElem.getBoundingClientRect().height;
+        if (lineHeight && height > lineHeight * 1.6) {
+          messageElem.classList.add("multi-line");
+        }
       }
+    }, idx * 500);
+  });
 
-    }
-  });
-
-  return messageId;
+  return messageId;
 }
 
 function splitLongMessage(text, maxLen = 120) {
@@ -357,12 +447,11 @@ window.addEventListener("load", () => {
   console.log("페이지 로드 완료");
   
   // 임시: 초기에는 입력창 비활성화 (버튼 대기)
+  showEntranceMessage();
   setInputEnabled(false);
 
   setTimeout(() => {
-    if (chatLog && chatLog.childElementCount === 0) {
       console.log("초기 메시지 요청");
       sendMessage(true);
-    }
-  }, 500);
+    }, 1500);
 });
