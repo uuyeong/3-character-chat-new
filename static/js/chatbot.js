@@ -69,11 +69,34 @@ function renderButtons(buttons) {
     // onmouseover, onmouseout 이벤트 제거 (CSS :hover로 대체)
     
     button.onclick = () => {
-      // 버튼 종류에 따라 사용자 말풍선 테마 지정
-      if (button.classList.contains('regret-room')) setUserTheme('regret');
-      if (button.classList.contains('love-room')) setUserTheme('love');
-      if (button.classList.contains('anxiety-room')) setUserTheme('anxiety');
-      if (button.classList.contains('dream-room')) setUserTheme('dream');
+      // 방 버튼 확인 및 입장 메시지 표시
+      let roomName = null;
+      let roomImage = null;
+      
+      if (button.classList.contains('regret-room')) {
+        setUserTheme('regret');
+        roomName = '후회의 방';
+        roomImage = '/static/images/chatbot/regret_room.png';
+
+      } else if (button.classList.contains('love-room')) {
+        setUserTheme('love');
+        roomName = '사랑의 방';
+        roomImage = '/static/images/chatbot/love_room.png';
+      } else if (button.classList.contains('anxiety-room')) {
+        setUserTheme('anxiety');
+        roomName = '불안의 방';
+        roomImage = '/static/images/chatbot/anxiety_room.png';
+      } else if (button.classList.contains('dream-room')) {
+        setUserTheme('dream');
+        roomName = '꿈의 방';
+        roomImage = '/static/images/chatbot/dream_room.png';
+      }
+
+      // 방 입장 메시지 표시 (방 버튼일 경우만)
+      if (roomName && roomImage) {
+        showRoomEntrance(roomName, roomImage);
+      }
+      
       userMessageInput.value = buttonText;
       sendMessage();
       buttonContainer.remove();
@@ -102,7 +125,56 @@ function setInputEnabled(enabled) {
   }
 }
 
-function showEnvelopePreview(letterText, buttons = []) {
+// 방 입장 메시지 표시
+function showRoomEntrance(roomName, roomImageSrc) {
+  if (!chatLog) return;
+
+  const container = document.createElement("div");
+  container.classList.add("room-entrance-message");
+  container.style.cssText = `
+    text-align: center;
+    opacity: 0;
+    transition: opacity 0.8s ease-in;
+    margin: 30px 0;
+  `;
+
+  // 방 이미지
+  const img = document.createElement("img");
+  img.src = roomImageSrc;
+  img.alt = `${roomName} 이미지`;
+  img.style.cssText = `
+    width: 90%;
+    max-width: 500px;
+    height: auto;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    margin-bottom: 16px;
+  `;
+
+  // 텍스트
+  const text = document.createElement("div");
+  text.style.cssText = `
+    font-size: 1.1rem;
+    color: #555;
+    font-weight: 600;
+    margin-top: 12px;
+  `;
+  text.textContent = `${roomName}에 입장했습니다.`;
+
+  // DOM 연결
+  container.appendChild(img);
+  container.appendChild(text);
+  chatLog.appendChild(container);
+
+  // 부드럽게 나타나는 효과
+  setTimeout(() => {
+    container.style.opacity = "1";
+  }, 100);
+
+  scrollToBottomSmooth();
+}
+
+function showEnvelopePreview(letterText, buttons = [], stampImageSrc = null) {
   const previewContainer = document.createElement("div");
   previewContainer.classList.add("letter-preview-container");
   previewContainer.style.cssText = `
@@ -112,15 +184,44 @@ function showEnvelopePreview(letterText, buttons = []) {
     max-width: 600px;
   `;
 
+  // 봉투 + 우표를 담을 컨테이너 (position: relative)
+  const envelopeWrapper = document.createElement("div");
+  envelopeWrapper.style.cssText = `
+    position: relative;
+    display: inline-block;
+    width: 95%;
+    margin: 20px auto;
+  `;
+
   // 편지 봉투 이미지
   const envelopeImg = document.createElement("img");
   envelopeImg.src = "/static/images/chatbot/a_full_envelope.png";
   envelopeImg.alt = "편지 봉투";
   envelopeImg.style.cssText = `
-    width: 95%;
-    margin: 20px auto;
+    width: 110%;
     display: block;
   `;
+
+  // 우표 이미지 (오른쪽 상단에 겹치기)
+  if (stampImageSrc) {
+    const stampImg = document.createElement("img");
+    stampImg.src = stampImageSrc;
+    stampImg.alt = "우표";
+    stampImg.classList.add("envelope-stamp");
+    stampImg.style.cssText = `
+      position: absolute;
+      top: 15%;
+      right: 11%;
+      width: 13%;
+      height: auto;
+      z-index: 10;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      border-radius: 4px;
+    `;
+    envelopeWrapper.appendChild(stampImg);
+  }
+
+  envelopeWrapper.appendChild(envelopeImg);
 
   // 안내 메시지
   const messageDiv = document.createElement("p");
@@ -140,7 +241,7 @@ function showEnvelopePreview(letterText, buttons = []) {
   yesBtn.classList.add("reply-btn");
   yesBtn.onclick = () => {
     previewContainer.remove();
-    showLetter(letterText, buttons);
+    showLetter(letterText, buttons, stampImageSrc);
   };
 
   const noBtn = document.createElement("button");
@@ -156,7 +257,7 @@ function showEnvelopePreview(letterText, buttons = []) {
   btnContainer.appendChild(yesBtn);
   btnContainer.appendChild(noBtn);
 
-  previewContainer.appendChild(envelopeImg);
+  previewContainer.appendChild(envelopeWrapper);  // envelopeImg 대신 envelopeWrapper 추가
   previewContainer.appendChild(messageDiv);
   previewContainer.appendChild(btnContainer);
 
@@ -178,8 +279,8 @@ function backToChatEntrance() {
 }
 
 // showLetter 함수
-function showLetter(letterText, buttons = []) {
-  console.log("[showLetter] 시작 - 텍스트 길이:", letterText ? letterText.length : 0, "버튼 개수:", buttons ? buttons.length : 0);
+function showLetter(letterText, buttons = [], stampImageSrc = null) {
+  console.log("[showLetter] 시작 - 텍스트 길이:", letterText ? letterText.length : 0, "버튼 개수:", buttons ? buttons.length : 0, "우표:", stampImageSrc);
   
   const letterContainer = document.getElementById("letterContainer");
   const letterTextDiv = document.getElementById("letterText");
@@ -193,6 +294,21 @@ function showLetter(letterText, buttons = []) {
   // 편지 텍스트 표시
   letterTextDiv.textContent = letterText;
   console.log("[showLetter] 편지 텍스트 설정 완료");
+
+  // 우표 이미지 추가 (오른쪽 상단)
+  let stampImg = document.getElementById("letterStamp");
+  if (stampImageSrc) {
+    if (!stampImg) {
+      stampImg = document.createElement("img");
+      stampImg.id = "letterStamp";
+      stampImg.classList.add("letter-stamp");
+      letterContainer.appendChild(stampImg);
+    }
+    stampImg.src = stampImageSrc;
+    stampImg.style.display = "block";
+  } else {
+    if (stampImg) stampImg.style.display = "none";
+  }
 
   // 버튼 표시
   if (letterButtonsDiv) {
@@ -295,11 +411,13 @@ async function sendMessage(isInitial = false) {
         });
         // 그 다음 봉투 미리보기
         setTimeout(() => {
-          showEnvelopePreview(data.letter, data.buttons || []);
+          const stampSrc = data.stamp_image || (data.stamp_code ? `/static/images/chatbot/${data.stamp_code}.png` : null);
+          showEnvelopePreview(data.letter, data.buttons || [], stampSrc);
         }, stampReplies.length * 800 + 300);
       } else {
         // 설명이 없으면 즉시 봉투
-        showEnvelopePreview(data.letter, data.buttons || []);
+        const stampSrc = data.stamp_image || (data.stamp_code ? `/static/images/chatbot/${data.stamp_code}.png` : null);
+        showEnvelopePreview(data.letter, data.buttons || [], stampSrc);
       }
       return; 
     }
@@ -365,8 +483,13 @@ function scrollToBottomSmooth() {
     }, 80);
   });
 }
+/*function showStamp(stampCode) {
+  const stampImg = document.getElementById("stampImage");
+  stampImg.src = `/static/images/chatbot/${stampCode}.png`; 
+  stampImg.style.display = "block";
+}*/
 
-let messageIdCounter = 0; 
+let messageIdCounter = 0;
 
 function appendMessage(sender, text, imageSrc = null, options = {}) {
   const { showAvatar = sender === "bot", avatarSrc = BOT_AVATAR_SRC } = options;
