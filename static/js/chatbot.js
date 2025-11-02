@@ -83,7 +83,7 @@ function renderButtons(buttons) {
   });
 
   chatLog.appendChild(buttonContainer);
-  chatLog.scrollTop = chatLog.scrollHeight;
+  scrollToBottomSmooth();
 }
 
 // 입력창 활성화/비활성화 함수
@@ -101,22 +101,129 @@ function setInputEnabled(enabled) {
     sendBtn.style.cursor = enabled ? 'pointer' : 'not-allowed';
   }
 }
-function showLetter(letterText) {
+
+function showEnvelopePreview(letterText, buttons = []) {
+  const previewContainer = document.createElement("div");
+  previewContainer.classList.add("letter-preview-container");
+  previewContainer.style.cssText = `
+    text-align: center;
+    padding: 20px;
+    margin: 20px auto;
+    max-width: 600px;
+  `;
+
+  // 편지 봉투 이미지
+  const envelopeImg = document.createElement("img");
+  envelopeImg.src = "/static/images/chatbot/a_full_envelope.png";
+  envelopeImg.alt = "편지 봉투";
+  envelopeImg.style.cssText = `
+    width: 95%;
+    margin: 20px auto;
+    display: block;
+  `;
+
+  // 안내 메시지
+  const messageDiv = document.createElement("p");
+  messageDiv.textContent = "편지를 열어보겠나?";
+  messageDiv.style.cssText = `
+    margin: 15px 0;
+    font-size: 1.1em;
+  `;
+
+  // 버튼 컨테이너
+  const btnContainer = document.createElement("div");
+  btnContainer.style.marginTop = "20px";
+
+  // 예/아니오 버튼
+  const yesBtn = document.createElement("button");
+  yesBtn.textContent = "예";
+  yesBtn.classList.add("reply-btn");
+  yesBtn.onclick = () => {
+    previewContainer.remove();
+    showLetter(letterText, buttons);
+  };
+
+  const noBtn = document.createElement("button");
+  noBtn.textContent = "아니오";
+  noBtn.classList.add("reply-btn");
+  noBtn.onclick = () => {
+    previewContainer.remove();
+    appendMessage("bot", "알았어. 편지를 열고 싶을때 말해줘");
+    scrollToBottomSmooth();
+    setInputEnabled(true);
+  };
+
+  btnContainer.appendChild(yesBtn);
+  btnContainer.appendChild(noBtn);
+
+  previewContainer.appendChild(envelopeImg);
+  previewContainer.appendChild(messageDiv);
+  previewContainer.appendChild(btnContainer);
+
+  chatLog.appendChild(previewContainer);
+  scrollToBottomSmooth();
+}
+
+function backToChatEntrance() {
+  const letterContainer = document.getElementById("letterContainer");
+  const chatLog = document.getElementById("chat-log");
+
+  if (letterContainer) letterContainer.style.display = "none";
+  if (chatLog) chatLog.style.display = "block";
+
+  renderButtons(["별빛 우체국에 다시 한번 입장"]);
+
+  setInputEnabled(true);
+  scrollToBottomSmooth();
+}
+
+// showLetter 함수
+function showLetter(letterText, buttons = []) {
+  console.log("[showLetter] 시작 - 텍스트 길이:", letterText ? letterText.length : 0, "버튼 개수:", buttons ? buttons.length : 0);
+  
   const letterContainer = document.getElementById("letterContainer");
   const letterTextDiv = document.getElementById("letterText");
+  const letterButtonsDiv = document.getElementById("letterButtons");
+  
+  if (!letterContainer || !letterTextDiv) {
+    console.error("[showLetter] letterContainer 또는 letterText를 찾을 수 없습니다!");
+    return;
+  }
   
   // 편지 텍스트 표시
   letterTextDiv.textContent = letterText;
+  console.log("[showLetter] 편지 텍스트 설정 완료");
 
-  // 챗 영역 안쪽에 편지 표시
+  // 버튼 표시
+  if (letterButtonsDiv) {
+    letterButtonsDiv.innerHTML = ""; // 기존 버튼 제거
+
+    const closeBtn = document.createElement("button");
+    closeBtn.textContent = "편지 닫기";
+    closeBtn.classList.add("reply-btn", "dream-room"); // 색상 클래스는 취향대로
+
+    closeBtn.style.margin = "0 auto";
+    closeBtn.style.padding = "12px 24px";
+    closeBtn.style.borderRadius = "25px";
+
+    closeBtn.onclick = () => {
+      backToChatEntrance();
+    };
+
+    letterButtonsDiv.appendChild(closeBtn);
+
+  }
+
+  // 챗 영역 숨기고 편지 표시
   letterContainer.style.display = "block";
-
-  // 기존 대화창 내용 숨기기
   chatLog.style.display = "none";
 
-  // 스크롤 맨 아래로
+  // 스크롤 맨 위로
   window.scrollTo({ top: 0, behavior: "smooth" });
+  
+  console.log("[showLetter] 편지 표시 완료:", letterText.substring(0, 50) + "...");
 }
+
 
 // ============================================
 // 임시 버튼 기능 끝
@@ -150,127 +257,116 @@ function showEntranceMessage() {
     container.style.opacity = "1";
   }, 100);
 
-  chatLog.scrollTop = chatLog.scrollHeight;
+  scrollToBottomSmooth();
 }
 
 async function sendMessage(isInitial = false) {
-  let message;
-
-  if (isInitial) {
-    message = "init";
-  } else {
-    message = userMessageInput.value.trim();
+  let message = isInitial ? "init" : userMessageInput.value.trim();
+  if (!isInitial) {
     if (!message) return;
-
     appendMessage("user", message);
     userMessageInput.value = "";
   }
 
-  // 로딩 표시
   const loadingId = appendMessage("bot", "생각 중...", null, { showAvatar: false });
-  console.log("로딩 메시지 ID:", loadingId);
 
   try {
     const response = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        message: message,
-        username: username,
-      }),
+      body: JSON.stringify({ message, username }),
     });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
     const data = await response.json();
+    removeMessage(loadingId);
     console.log("응답 데이터:", data);
+    // 봉투 편지 메시지
+    if (data.is_letter_end && data.letter) {
+      const stampReplies = extractStampOnly(Array.isArray(data.replies) ? data.replies : []);
+      if (stampReplies.length) {
+        // 우표 설명 말풍선 먼저
+        stampReplies.forEach((replyText, index) => {
+          setTimeout(() => {
+            const showAvatar = index === 0;
+            appendMessage("bot", replyText, null, { showAvatar });
+            scrollToBottomSmooth();
+          }, index * 800);
+        });
+        // 그 다음 봉투 미리보기
+        setTimeout(() => {
+          showEnvelopePreview(data.letter, data.buttons || []);
+        }, stampReplies.length * 800 + 300);
+      } else {
+        // 설명이 없으면 즉시 봉투
+        showEnvelopePreview(data.letter, data.buttons || []);
+      }
+      return; 
+    }
 
-
-    // ============================================
-    // 임시로 만든 연속 메시지 처리, 나중에 수정 필요
-    // ============================================
-    
-    // 연속 메시지 처리 (replies 배열)
-    if (data.replies && Array.isArray(data.replies)) {
-      removeMessage(loadingId);
-      // 각 메시지를 순차적으로 렌더링
+    // 일반 연속 메시지
+    if (Array.isArray(data.replies)) {
       data.replies.forEach((replyText, index) => {
-        const splitMessages = splitLongMessage(replyText, 120); // ✅ 변수명 수정
-
+        const splitMessages = splitLongMessage(replyText, 120);
         splitMessages.forEach((msg, subIndex) => {
           setTimeout(() => {
-            // 첫 메시지 출력 후 로딩 제거
-            if (index === 0 && subIndex === 0) removeMessage(loadingId);
             const showAvatar = index === 0 && subIndex === 0;
             appendMessage("bot", msg, null, { showAvatar });
-            chatLog.scrollTop = chatLog.scrollHeight;
+            scrollToBottomSmooth();
           }, (index * splitMessages.length + subIndex) * 800);
         });
-
         if (index === data.replies.length - 1) {
           setTimeout(() => {
-            if (data.buttons && data.buttons.length > 0) {
+            if (data.buttons?.length) {
               renderButtons(data.buttons);
               setInputEnabled(false);
-            } else {
-              setInputEnabled(true);
-            }
+            } else setInputEnabled(true);
           }, (index + 1) * 1000);
         }
       });
-    } else {
-      // 기존 단일 메시지 처리
-      removeMessage(loadingId);
-      let replyText, imagePath;
-      if (typeof data.reply === "object" && data.reply !== null) {
-        replyText = data.reply.reply || data.reply;
-        imagePath = data.reply.image || null;
-      } else {
-        replyText = data.reply;
-        imagePath = data.image || null;
-      }
-      if (replyText.startsWith("부엉:")) {
-        replyText = replyText.replace("부엉:", "").trim();
-      }
-
-      if (data.is_letter_end) {
-        removeMessage(loadingId); // 혹시 로딩 말풍선 제거
-        showLetter(replyText);
-        return; 
-      }
-      appendMessage("bot", replyText, imagePath);
-      // 버튼이 있으면 렌더링하고 입력창 비활성화
-      if (data.buttons && data.buttons.length > 0) {
-        renderButtons(data.buttons);
-        setInputEnabled(false);
-      } else {
-        setInputEnabled(true);
-      }
+      return;
     }
-    
-    // ============================================
-    // 임시 처리 끝
-    // ============================================
+
+    // 기존 단일 메시지
+    let replyText, imagePath;
+    if (typeof data.reply === "object" && data.reply !== null) {
+      replyText = data.reply.reply || data.reply;
+      imagePath = data.reply.image || null;
+    } else {
+      replyText = data.reply;
+      imagePath = data.image || null;
+    }
+    if (replyText?.startsWith("부엉:")) replyText = replyText.replace("부엉:", "").trim();
+
+    appendMessage("bot", replyText, imagePath);
+    if (data.buttons?.length) {
+      renderButtons(data.buttons);
+      setInputEnabled(false);
+    } else setInputEnabled(true);
+
   } catch (err) {
     console.error("메시지 전송 에러:", err);
     removeMessage(loadingId);
     appendMessage("bot", "죄송합니다. 오류가 발생했습니다. 다시 시도해주세요.");
   }
 }
+
+function extractStampOnly(replies = []) {
+  return replies.filter(t => t && t.length <= 140 && !/^to[\s.:]/i.test(t.trim()));
+}
 function scrollToBottomSmooth() {
   if (!chatLog) return;
-  chatLog.scrollTo({
-    top: chatLog.scrollHeight,
-    behavior: "smooth"  
+  requestAnimationFrame(() => {
+    setTimeout(() => {
+      chatLog.scrollTo({
+        top: chatLog.scrollHeight,
+        behavior: "smooth"
+      });
+    }, 80);
   });
 }
 
-// 메시지 DOM에 추가
-// [수정된 appendMessage 함수 전체]
-// 메시지 DOM에 추가
-let messageIdCounter = 0; // 전역 카운터를 유지 (함수 밖에 있어야 함)
+let messageIdCounter = 0; 
 
 function appendMessage(sender, text, imageSrc = null, options = {}) {
   const { showAvatar = sender === "bot", avatarSrc = BOT_AVATAR_SRC } = options;
@@ -340,7 +436,7 @@ function appendMessage(sender, text, imageSrc = null, options = {}) {
 
     setTimeout(() => {
       messageElem.style.opacity = "1";
-      chatLog.scrollTop = chatLog.scrollHeight;
+      scrollToBottomSmooth();
 
       if (sender === "user") {
         const computed = window.getComputedStyle(messageElem);
@@ -380,7 +476,6 @@ function removeMessage(messageId) {
     elem.remove();
     return;
   }
-  // 분할 메시지(ID가 `${messageId}-0` 형태)까지 포함해서 제거
   const candidates = chatLog ? chatLog.querySelectorAll(`[id^="${messageId}-"]`) : [];
   if (candidates && candidates.length > 0) {
     candidates.forEach((el) => el.remove());
