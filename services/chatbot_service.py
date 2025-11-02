@@ -1492,6 +1492,10 @@ class ChatbotService:
                     "phase": 5,
                     "letter": letter,
                     "stamp_code": stamp_code,  # DIR-S-404: 우표 코드 반환
+<<<<<<< HEAD
+=======
+                    "is_letter_end": True,
+>>>>>>> yunjin
                     "buttons": ["별빛 우체국에 다시 한번 입장"]
                 }
             elif self._detect_letter_confirm_no(user_message):
@@ -2522,6 +2526,10 @@ class ChatbotService:
                     "phase": 5,
                     "letter": letter,
                     "stamp_code": stamp_code,  # DIR-S-404: 우표 코드 반환
+<<<<<<< HEAD
+=======
+                    "is_letter_end": True,
+>>>>>>> yunjin
                     "buttons": ["별빛 우체국에 다시 한번 입장"]
                 }
 
@@ -3000,29 +3008,72 @@ class ChatbotService:
             letter = self._generate_letter(session)
             session.letter_content = letter
             
+<<<<<<< HEAD
             # ✅ 우표 설명과 편지를 하나의 말풍선으로 합침
             combined_message = f"자 너의 편지에 붙어 있었던 우표는 {stamp_code}이다. 이 우표는 '{stamp_info['situation']}'을 의미하지.\n\n{letter}"
             
             session.phase = 5  # 편지 출력 완료 후 Phase 5로
             session.add_message("assistant", combined_message)
+=======
+            # ✅ 우표 설명만 먼저 보내고, 편지는 별도로 처리
+            stamp_message = f"자 너의 편지에 붙어 있었던 우표는 {stamp_code}이다. 이 우표는 '{stamp_info['situation']}'을 의미하지."
+            
+            session.phase = 5  # 편지 출력 완료 후 Phase 5로
+            session.add_message("assistant", stamp_message)
+>>>>>>> yunjin
             self._save_session(session)
             
             # ✅ 편지가 모두 출력된 후 재입장 버튼 표시
             return {
+<<<<<<< HEAD
                 "reply": combined_message,  # 우표 설명 + 편지 (하나의 말풍선)
+=======
+                "replies": [stamp_message],  # 우표 설명만 말풍선으로
+>>>>>>> yunjin
                 "image": None,
                 "phase": 5,
                 "letter": letter,
                 "stamp_code": stamp_code,
+<<<<<<< HEAD
+=======
+                "is_letter_end": True, 
+>>>>>>> yunjin
                 "buttons": ["별빛 우체국에 다시 한번 입장"]
             }
         
         # Phase 5: 엔딩
         if session.phase == 5:
+<<<<<<< HEAD
             # ✅ 재입장 버튼 클릭 시 바로 재입장 (이미 위에서 처리됨, 여기서는 기본 엔딩 메시지만)
             # DIR-S-404: 우표 코드 반환
             stamp_code = session.selected_drawer if session.selected_drawer else self._determine_stamp_code(session)
             
+=======
+            # 사용자가 편지를 다시 보고 싶어하는 경우 (아니오 버튼 후 재요청)
+            if any(keyword in user_message for keyword in ["편지", "열", "보여", "읽"]):
+                if session.letter_content:
+                    stamp_code = session.selected_drawer if session.selected_drawer else self._determine_stamp_code(session)
+                    stamp_info = self._get_stamp_info(stamp_code)
+                    stamp_message = f"좋아. 다시 한번 보여주지. 너의 편지에 붙어 있었던 우표는 {stamp_code}이다. 이 우표는 '{stamp_info['situation']}'을 의미하지."
+                    
+                    session.add_message("assistant", stamp_message)
+                    self._save_session(session)
+                    
+                    return {
+                        "replies": [stamp_message],
+                        "image": None,
+                        "phase": 5,
+                        "letter": session.letter_content,
+                        "stamp_code": stamp_code,
+                        "is_letter_end": True,
+                        "buttons": ["별빛 우체국에 다시 한번 입장"]
+                    }
+            
+            # ✅ 재입장 버튼 클릭 시 바로 재입장 (이미 위에서 처리됨, 여기서는 기본 엔딩 메시지만)
+            # DIR-S-404: 우표 코드 반환
+            stamp_code = session.selected_drawer if session.selected_drawer else self._determine_stamp_code(session)
+            
+>>>>>>> yunjin
             reply = f"편지는 찾았으니 볼일은 끝났군.\n\n이만 가보라고. ...너무 늦기 전에 답장하러 오든가."
             
             session.add_message("assistant", reply)

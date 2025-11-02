@@ -63,6 +63,7 @@
         padding: 20px;
         box-sizing: border-box;
         position: relative;
+        height: 100vh; 
       }
       #chat-log {
         flex: 1;
@@ -306,7 +307,6 @@
           /*background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); */
       }
 
-      /* 마우스 오버 효과 (JS 이벤트 대체) */
       .reply-btn:hover {
           transform: translateY(-2px);
           box-shadow: 0 6px 20px rgba(118, 75, 162, 0.4);
@@ -335,20 +335,25 @@
       /* 4. 꿈의 방 */
       .reply-btn.dream-room {
         background: #FFD700 !important; 
-        /*color: #333; 텍스트를 검은색으로 변경 */
         box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
       }
 
       .letter-container {
-        position: relative;
+        position: fixed;
+        top: 80px;
+        left: 50%;
+        transform: translateX(-50%);
         width: 600px;
-        height: 800px;
-        margin: 40px auto;
+        height: calc(100vh - 120px);
+        max-height: 800px;
         border-radius: 16px;
-        overflow: hidden;
+        overflow-y: auto;
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         justify-content: center;
+        background: white;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
       }
 
       .letter-bg {
@@ -372,6 +377,17 @@
         white-space: pre-wrap;
         text-align: left;
       }
+      .letter-preview {
+        display: block !important;
+        width: 100% !important;
+        max-width: 400px !important;
+        height: auto !important;
+        margin: 20px auto !important;
+        border-radius: 16px !important;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15) !important;
+        cursor: default !important;
+      }
+
 
     </style>
   </head>
@@ -443,6 +459,7 @@
     <div class="letter-container" id="letterContainer" style="display:none;">
       <img src="/static/images/chatbot/letter_test.png" class="letter-bg" alt="별빛 편지 배경" />
       <div class="letter-text" id="letterText"></div>
+      <div class="letter-buttons" id="letterButtons" style="position: absolute; bottom: 30px; width: 100%; text-align: center; z-index: 2;"></div>
     </div>
   </body>
 </html>
