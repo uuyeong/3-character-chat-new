@@ -133,6 +133,37 @@ class PostOfficeSession:
 class ChatbotService:
     """별빛 우체국 챗봇 서비스"""
     
+    # STAMP_CODES 정의 (클래스 변수로 통합 - 약 100줄 절약)
+    STAMP_CODES = {
+        'regret': {
+            'R_1': {'name': '후회_꿈', 'situation': '꿈/진로 포기, 기회 상실', 'keywords': ['꿈', '진로', '포기', '기회', '상실', '도전', '미래', '목표', '학자', '연구', '학문']},
+            'R_2': {'name': '후회_행동', 'situation': '잘못된 말/행동, 사과하지 못한 일', 'keywords': ['말', '행동', '사과', '잘못', '실수', '미안', '후회', '상처', '표현']},
+            'R_3': {'name': '후회_관계', 'situation': '관계 단절, 소중한 사람 놓친 후회', 'keywords': ['관계', '단절', '소중한', '사람', '놓친', '친구', '가족', '이별', '멀어', '연락']},
+            'R_4': {'name': '후회_자아', 'situation': '게으름, 자기 관리 실패 (시간 낭비 등)', 'keywords': ['게으름', '관리', '실패', '시간', '낭비', '자책', '노력', '건강', '외모']}
+        },
+        'love': {
+            'L_1': {'name': '사랑_놓친 인연', 'situation': '놓친 인연', 'keywords': ['놓친', '인연', '타이밍', '기회', '만남', '스쳐', '운명']},
+            'L_2': {'name': '사랑_짝사랑', 'situation': '짝사랑', 'keywords': ['짝사랑', '좋아', '고백', '못한', '혼자', '마음', '첫사랑', '썸']},
+            'L_3': {'name': '사랑_이별', 'situation': '이별', 'keywords': ['이별', '헤어', '끝', '떠나', '차', '버림', '작별', '무뚝뚝']},
+            'L_4': {'name': '사랑_신뢰', 'situation': '신뢰', 'keywords': ['신뢰', '믿음', '배신', '거짓말', '약속', '바람', '외도']},
+            'L_5': {'name': '사랑_오해', 'situation': '오해', 'keywords': ['오해', '갈등', '다툼', '싸움', '의견', '충돌']},
+            'L_6': {'name': '사랑_권태', 'situation': '권태', 'keywords': ['권태', '지루', '식', '무관심', '반복', '싫증']}
+        },
+        'dream': {
+            'D_1': {'name': '꿈_방향', 'situation': '꿈/방향성 상실, 무기력, 번아웃', 'keywords': ['방향', '상실', '무기력', '번아웃', '모르', '길', '목표', '없', '찾']},
+            'D_2': {'name': '꿈_현실', 'situation': '현실적 제약 (돈/시간), 주변의 반대', 'keywords': ['현실', '돈', '시간', '제약', '반대', '여건', '경제', '부모', '가난']},
+            'D_3': {'name': '꿈_두려움', 'situation': '실패/재능에 대한 두려움, 용기 부족', 'keywords': ['실패', '두려', '용기', '재능', '없', '못', '불안', '겁', '무서']},
+            'D_4': {'name': '꿈_권태', 'situation': '꿈 성취 후의 허무함, 목표 상실', 'keywords': ['성취', '허무', '권태', '목표', '잃', '이룬', '후', '달성', '공허']},
+            'D_5': {'name': '꿈_자아실현', 'situation': '자아실현, 내적 성장에 대한 꿈', 'keywords': ['자아', '성장', '내적', '의미', '가치', '진짜', '본질', '자기']}
+        },
+        'anxiety': {
+            'A_1': {'name': '불안_관계', 'situation': '인간 관계에 대한 불안', 'keywords': ['관계', '사람', '대인', '친구', '외로', '거부', '혼자']},
+            'A_2': {'name': '불안_선택', 'situation': '선택에 대한 불안', 'keywords': ['선택', '결정', '갈림', '고민', '어떻게', '판단', '길']},
+            'A_3': {'name': '불안_일', 'situation': '일(학업)에 대한 불안', 'keywords': ['일', '학업', '성적', '직장', '업무', '공부', '시험', '과제', '성과']},
+            'A_4': {'name': '불안_정체성', 'situation': '정체성(삶의 방향)에 대한 불안', 'keywords': ['정체성', '삶', '방향', '나', '존재', '의미', '누구', '어디']}
+        }
+    }
+    
     def __init__(self):
         """초기화"""
         print("[별빛 우체국] 초기화 중...")
@@ -303,7 +334,7 @@ class ChatbotService:
             best_match["activation"] = False
         
         if best_match["activation"]:
-            print(f"[RAG-P] 페르소나 활성화: {best_match['story_id']} (매칭 점수: {best_match['score']})")
+            pass  # 활성화 시 추가 작업 없음
         
         return best_match
 
@@ -808,7 +839,7 @@ class ChatbotService:
         
         return emotion_map.get(user_emotion, "기본")
     
-    def _should_show_emotion(self, current_emotion: str, last_emotion: str, session: PostOfficeSession) -> bool:
+    def _should_show_emotion(self, current_emotion: str, last_emotion: str, session: PostOfficeSession, is_crisis: bool = False) -> bool:
         """
         감정 태그를 출력할지 결정 (중요한 변화만 감지)
         
@@ -816,16 +847,21 @@ class ChatbotService:
             current_emotion: 현재 감정
             last_emotion: 이전 감정
             session: 현재 세션
+            is_crisis: 위기 상황 여부 (추가)
             
         Returns:
             bool: True면 감정 태그 출력, False면 출력 안 함
         """
         
+        # ✅ 위기 모드에서는 슬픔 감정 무조건 출력
+        if is_crisis and current_emotion == "슬픔":
+            print(f"[감정] 위기 모드 활성화 → 슬픔 감정 강제 출력 ✅")
+            return True
+        
         # Phase 전환 시점에는 감정 출력 안 함 (이미지 충돌 방지)
         # Phase 2 (방 선택), Phase 3.5 (서랍 선택), Phase 4/5 (편지)
         transition_phases = [2, 3.5, 4, 5]
         if session.phase in transition_phases:
-            print(f"[감정] Phase {session.phase} 전환 시점 - 감정 출력 제외")
             return False
         
         # 감정 우선순위 (강도)
@@ -853,14 +889,79 @@ class ChatbotService:
         # 감정 변화 강도 계산
         change = abs(current_priority - last_priority)
         
+        # ✅ threshold를 1로 낮춤 (슬픔→기쁨 같은 변화도 감지)
         threshold = 2
         
         if change >= threshold:
-            print(f"[감정] 매우 큰 변화 감지: {last_emotion}({last_priority}) → {current_emotion}({current_priority}), 변화량={change} ✅")
+            print(f"[감정] 감정 변화 감지: {last_emotion}({last_priority}) → {current_emotion}({current_priority}), 변화량={change} ✅")
             return True
         else:
-            print(f"[감정] 작은 변화: {last_emotion}({last_priority}) → {current_emotion}({current_priority}), 변화량={change} → 감정 출력 제외")
+            print(f"[감정] 변화 없음: {last_emotion}({last_priority}) → {current_emotion}({current_priority}), 변화량={change} → 감정 출력 제외")
             return False
+    
+    def _split_long_reply(self, text: str, max_length: int = 80) -> list:
+        """
+        긴 문장을 적당한 길이로 분할 (자연스러운 끊김)
+        
+        Args:
+            text: 원본 텍스트
+            max_length: 최대 길이 (기본 80자)
+            
+        Returns:
+            list: 분할된 문장들
+        """
+        if len(text) <= max_length:
+            return [text]
+        
+        result = []
+        current = ""
+        
+        # 1차: 문장 부호로 분할 (. ! ? 등)
+        sentences = []
+        temp = ""
+        for char in text:
+            temp += char
+            if char in ['.', '!', '?', '…'] and len(temp) > 5:  # 너무 짧은 문장은 합침
+                sentences.append(temp.strip())
+                temp = ""
+        if temp.strip():
+            sentences.append(temp.strip())
+        
+        # 2차: 각 문장이 max_length 초과하면 추가 분할
+        for sentence in sentences:
+            if len(current) + len(sentence) <= max_length:
+                current += sentence + " "
+            else:
+                if current:
+                    result.append(current.strip())
+                # 문장이 너무 길면 괄호, 쉼표 기준으로 분할
+                if len(sentence) > max_length:
+                    parts = sentence.split('(')
+                    for i, part in enumerate(parts):
+                        if i > 0:
+                            part = '(' + part
+                        if len(part) > max_length:
+                            # 쉼표 기준으로 한번 더 분할
+                            sub_parts = part.split(',')
+                            for j, sub in enumerate(sub_parts):
+                                if j > 0:
+                                    sub = ',' + sub
+                                if sub.strip():
+                                    result.append(sub.strip())
+                        else:
+                            if part.strip():
+                                result.append(part.strip())
+                    current = ""
+                else:
+                    current = sentence + " "
+        
+        if current.strip():
+            result.append(current.strip())
+        
+        # 빈 문자열 제거
+        result = [r for r in result if r]
+        
+        return result if result else [text]
     
     def _search_similar(self, query: str, top_k: int = 3, room_filter: str = None, similarity_threshold: float = 0.72) -> list:
         """RAG 검색 (방별 필터링 지원)"""
@@ -1031,38 +1132,8 @@ class ChatbotService:
     
     def _get_stamp_info(self, stamp_code: str) -> dict:
         """우표 코드의 정보 반환"""
-        STAMP_CODES = {
-            'regret': {
-                'R_1': {'name': '후회_꿈', 'situation': '꿈/진로 포기, 기회 상실'},
-                'R_2': {'name': '후회_행동', 'situation': '잘못된 말/행동, 사과하지 못한 일'},
-                'R_3': {'name': '후회_관계', 'situation': '관계 단절, 소중한 사람 놓친 후회'},
-                'R_4': {'name': '후회_자아', 'situation': '게으름, 자기 관리 실패 (시간 낭비 등)'}
-            },
-            'love': {
-                'L_1': {'name': '사랑_놓친 인연', 'situation': '놓친 인연'},
-                'L_2': {'name': '사랑_짝사랑', 'situation': '짝사랑'},
-                'L_3': {'name': '사랑_이별', 'situation': '이별'},
-                'L_4': {'name': '사랑_신뢰', 'situation': '신뢰'},
-                'L_5': {'name': '사랑_오해', 'situation': '오해'},
-                'L_6': {'name': '사랑_권태', 'situation': '권태'}
-            },
-            'dream': {
-                'D_1': {'name': '꿈_방향', 'situation': '꿈/방향성 상실, 무기력, 번아웃'},
-                'D_2': {'name': '꿈_현실', 'situation': '현실적 제약 (돈/시간), 주변의 반대'},
-                'D_3': {'name': '꿈_두려움', 'situation': '실패/재능에 대한 두려움, 용기 부족'},
-                'D_4': {'name': '꿈_권태', 'situation': '꿈 성취 후의 허무함, 목표 상실'},
-                'D_5': {'name': '꿈_자아실현', 'situation': '자아실현, 내적 성장에 대한 꿈'}
-            },
-            'anxiety': {
-                'A_1': {'name': '불안_관계', 'situation': '인간 관계에 대한 불안'},
-                'A_2': {'name': '불안_선택', 'situation': '선택에 대한 불안'},
-                'A_3': {'name': '불안_일', 'situation': '일(학업)에 대한 불안'},
-                'A_4': {'name': '불안_정체성', 'situation': '정체성(삶의 방향)에 대한 불안'}
-            }
-        }
-        
-        # 우표 정보 찾기
-        for room_codes in STAMP_CODES.values():
+        # 클래스 변수 STAMP_CODES 사용
+        for room_codes in self.STAMP_CODES.values():
             if stamp_code in room_codes:
                 return room_codes[stamp_code]
         
@@ -1071,48 +1142,18 @@ class ChatbotService:
     
     def _determine_stamp_code(self, session: PostOfficeSession) -> str:
         """DIR-S-401: 대화 내용을 분석하여 18개 우표 코드 중 하나를 선택"""
-        
-        # DIR-S-405: 18개 우표 코드 정의 (목록 외 코드는 출력 불가)
-        STAMP_CODES = {
-            'regret': {
-                'R_1': {'name': '후회_꿈', 'situation': '꿈/진로 포기, 기회 상실', 'keywords': ['꿈', '진로', '포기', '기회', '상실', '도전', '미래', '목표', '학자', '연구', '학문']},
-                'R_2': {'name': '후회_행동', 'situation': '잘못된 말/행동, 사과하지 못한 일', 'keywords': ['말', '행동', '사과', '잘못', '실수', '미안', '후회', '상처', '표현']},
-                'R_3': {'name': '후회_관계', 'situation': '관계 단절, 소중한 사람 놓친 후회', 'keywords': ['관계', '단절', '소중한', '사람', '놓친', '친구', '가족', '이별', '멀어', '연락']},
-                'R_4': {'name': '후회_자아', 'situation': '게으름, 자기 관리 실패 (시간 낭비 등)', 'keywords': ['게으름', '관리', '실패', '시간', '낭비', '자책', '노력', '건강', '외모']}
-            },
-            'love': {
-                'L_1': {'name': '사랑_놓친 인연', 'situation': '놓친 인연', 'keywords': ['놓친', '인연', '타이밍', '기회', '만남', '스쳐', '운명']},
-                'L_2': {'name': '사랑_짝사랑', 'situation': '짝사랑', 'keywords': ['짝사랑', '좋아', '고백', '못한', '혼자', '마음', '첫사랑', '썸']},
-                'L_3': {'name': '사랑_이별', 'situation': '이별', 'keywords': ['이별', '헤어', '끝', '떠나', '차', '버림', '작별', '무뚝뚝']},
-                'L_4': {'name': '사랑_신뢰', 'situation': '신뢰', 'keywords': ['신뢰', '믿음', '배신', '거짓말', '약속', '바람', '외도']},
-                'L_5': {'name': '사랑_오해', 'situation': '오해', 'keywords': ['오해', '갈등', '다툼', '싸움', '의견', '충돌']},
-                'L_6': {'name': '사랑_권태', 'situation': '권태', 'keywords': ['권태', '지루', '식', '무관심', '반복', '싫증']}
-            },
-            'dream': {
-                'D_1': {'name': '꿈_방향', 'situation': '꿈/방향성 상실, 무기력, 번아웃', 'keywords': ['방향', '상실', '무기력', '번아웃', '모르', '길', '목표', '없', '찾']},
-                'D_2': {'name': '꿈_현실', 'situation': '현실적 제약 (돈/시간), 주변의 반대', 'keywords': ['현실', '돈', '시간', '제약', '반대', '여건', '경제', '부모', '가난']},
-                'D_3': {'name': '꿈_두려움', 'situation': '실패/재능에 대한 두려움, 용기 부족', 'keywords': ['실패', '두려', '용기', '재능', '없', '못', '불안', '겁', '무서']},
-                'D_4': {'name': '꿈_권태', 'situation': '꿈 성취 후의 허무함, 목표 상실', 'keywords': ['성취', '허무', '권태', '목표', '잃', '이룬', '후', '달성', '공허']},
-                'D_5': {'name': '꿈_자아실현', 'situation': '자아실현, 내적 성장에 대한 꿈', 'keywords': ['자아', '성장', '내적', '의미', '가치', '진짜', '본질', '자기']}
-            },
-            'anxiety': {
-                'A_1': {'name': '불안_관계', 'situation': '인간 관계에 대한 불안', 'keywords': ['관계', '사람', '대인', '친구', '외로', '거부', '혼자']},
-                'A_2': {'name': '불안_선택', 'situation': '선택에 대한 불안', 'keywords': ['선택', '결정', '갈림', '고민', '어떻게', '판단', '길']},
-                'A_3': {'name': '불안_일', 'situation': '일(학업)에 대한 불안', 'keywords': ['일', '학업', '성적', '직장', '업무', '공부', '시험', '과제', '성과']},
-                'A_4': {'name': '불안_정체성', 'situation': '정체성(삶의 방향)에 대한 불안', 'keywords': ['정체성', '삶', '방향', '나', '존재', '의미', '누구', '어디']}
-            }
-        }
+        # 클래스 변수 STAMP_CODES 사용
         
         # 대화 요약
         conversation_summary = session.get_summary().lower()
         selected_room = session.selected_room
         
         # 현재 방의 우표 코드들만 필터링
-        if selected_room not in STAMP_CODES:
+        if selected_room not in self.STAMP_CODES:
             print(f"[우표] 알 수 없는 방: {selected_room}")
             return 'R_1'  # 기본값
         
-        room_stamps = STAMP_CODES[selected_room]
+        room_stamps = self.STAMP_CODES[selected_room]
         
         # DIR-S-402: 키워드 매칭으로 가장 적합한 우표 코드 찾기
         best_code = None
@@ -1127,15 +1168,10 @@ class ChatbotService:
         # 매칭 실패 시 방의 첫 번째 코드 반환
         if not best_code or max_score == 0:
             best_code = list(room_stamps.keys())[0]
-            print(f"[우표] 키워드 매칭 실패 → 기본 코드 선택: {best_code}")
-        else:
-            stamp_info = room_stamps[best_code]
-            print(f"[우표] 선택된 코드: {best_code} ({stamp_info['name']}) - 매칭 점수: {max_score}")
-            print(f"[우표] 상황: {stamp_info['situation']}")
         
         # DIR-S-405: 18개 목록 외 코드는 출력 불가 - 검증
         all_valid_codes = []
-        for room_codes in STAMP_CODES.values():
+        for room_codes in self.STAMP_CODES.values():
             all_valid_codes.extend(room_codes.keys())
         
         if best_code not in all_valid_codes:
@@ -1143,28 +1179,6 @@ class ChatbotService:
             best_code = 'R_1'
         
         return best_code
-    
-    def _build_system_prompt(self, session: PostOfficeSession) -> str:
-        """Phase별 시스템 프롬프트 생성"""
-        base_prompt = self.config.get('system_prompts', {}).get('base', '')
-        
-        phase_prompts = {
-            1: self.config.get('system_prompts', {}).get('phase_1_entrance', ''),
-            2: self.config.get('system_prompts', {}).get('phase_2_exploration', ''),
-            3: self.config.get('system_prompts', {}).get('phase_3_counseling', ''),
-            4: self.config.get('system_prompts', {}).get('phase_4_letter', ''),
-            5: self.config.get('system_prompts', {}).get('phase_5_ending', '')
-        }
-        
-        phase_specific = phase_prompts.get(session.phase, '')
-        
-        # 선택한 방 정보 추가
-        room_context = ""
-        if session.selected_room and session.phase >= 3:
-            room_data = self.config.get('rooms', {}).get(session.selected_room, {})
-            room_context = f"\n\n[현재 위치: {room_data.get('name', '')}]\n{room_data.get('description', '')}"
-        
-        return f"{base_prompt}\n\n[현재 Phase {session.phase}]\n{phase_specific}{room_context}"
     
     def _build_user_prompt(self, user_message: str, session: PostOfficeSession, rag_context: list = None) -> str:
         """사용자 프롬프트 구성"""
@@ -1203,50 +1217,14 @@ class ChatbotService:
         # 우표 코드 정보 가져오기
         stamp_code = session.selected_drawer  # 우표 코드가 저장되어 있음
         
-        # 우표 코드 데이터 (동일한 정의 재사용)
-        STAMP_CODES = {
-            'regret': {
-                'R_1': {'name': '후회_꿈', 'situation': '꿈/진로 포기, 기회 상실'},
-                'R_2': {'name': '후회_행동', 'situation': '잘못된 말/행동, 사과하지 못한 일'},
-                'R_3': {'name': '후회_관계', 'situation': '관계 단절, 소중한 사람 놓친 후회'},
-                'R_4': {'name': '후회_자아', 'situation': '게으름, 자기 관리 실패 (시간 낭비 등)'}
-            },
-            'love': {
-                'L_1': {'name': '사랑_놓친 인연', 'situation': '놓친 인연'},
-                'L_2': {'name': '사랑_짝사랑', 'situation': '짝사랑'},
-                'L_3': {'name': '사랑_이별', 'situation': '이별'},
-                'L_4': {'name': '사랑_신뢰', 'situation': '신뢰'},
-                'L_5': {'name': '사랑_오해', 'situation': '오해'},
-                'L_6': {'name': '사랑_권태', 'situation': '권태'}
-            },
-            'dream': {
-                'D_1': {'name': '꿈_방향', 'situation': '꿈/방향성 상실, 무기력, 번아웃'},
-                'D_2': {'name': '꿈_현실', 'situation': '현실적 제약 (돈/시간), 주변의 반대'},
-                'D_3': {'name': '꿈_두려움', 'situation': '실패/재능에 대한 두려움, 용기 부족'},
-                'D_4': {'name': '꿈_권태', 'situation': '꿈 성취 후의 허무함, 목표 상실'},
-                'D_5': {'name': '꿈_자아실현', 'situation': '자아실현, 내적 성장에 대한 꿈'}
-            },
-            'anxiety': {
-                'A_1': {'name': '불안_관계', 'situation': '인간 관계에 대한 불안'},
-                'A_2': {'name': '불안_선택', 'situation': '선택에 대한 불안'},
-                'A_3': {'name': '불안_일', 'situation': '일(학업)에 대한 불안'},
-                'A_4': {'name': '불안_정체성', 'situation': '정체성(삶의 방향)에 대한 불안'}
-            }
-        }
-        
-        # 우표 정보 추출
-        stamp_info = None
-        for room_codes in STAMP_CODES.values():
-            if stamp_code in room_codes:
-                stamp_info = room_codes[stamp_code]
-                break
+        # 클래스 변수 STAMP_CODES 사용
+        stamp_info = self._get_stamp_info(stamp_code)
         
         if not stamp_info:
             stamp_situation = "잃어버린 기억에 대한 성찰"
             print(f"[편지] 경고: 우표 코드 {stamp_code}를 찾을 수 없음 → 기본 상황 사용")
         else:
             stamp_situation = stamp_info['situation']
-            print(f"[편지] 우표 코드: {stamp_code} ({stamp_info['name']}) - 상황: {stamp_situation}")
         
         # 대화 요약
         conversation_summary = session.get_summary()
@@ -1302,9 +1280,6 @@ class ChatbotService:
         # 세션 가져오기
         session = self._get_session(username)
         
-        print(f"\n{'='*50}")
-        print(f"[Phase {session.phase}] {username}: {user_message}")
-        
         # Phase 1: 입장 (명시적 init으로만 시작)
         if user_message.strip().lower() == "init":
             # 세션 초기화 (새로운 대화 시작)
@@ -1318,7 +1293,6 @@ class ChatbotService:
             # 페르소나 사용 기록 초기화
             session.used_persona_stories.clear()
             session.used_persona_categories.clear()  # 하위 호환성
-            print("[RAG-P] 새 세션 시작으로 인한 페르소나 스토리 초기화 완료")
             
             # 첫 번째 메시지
             message1 = f"흐음. 이곳은 시간의 경계에 있는 '별빛 우체국'이자, 잃어버린 기억의 저장소일세. 나는 이곳의 국장인 '부엉'이지."
@@ -1365,7 +1339,6 @@ class ChatbotService:
                 # 페르소나 사용 기록 초기화
                 session.used_persona_stories.clear()
                 session.used_persona_categories.clear()
-                print("[재입장] 승인됨 - 페르소나 스토리 초기화 완료")
                 self._save_session(session)
 
                 message1 = "그렇군. (고개를 끄덕이며) 다시 입구로 가자."
@@ -1392,8 +1365,43 @@ class ChatbotService:
                     "phase": session.phase
                 }
         
-        # 재입장 의도 감지: 확인 버튼 띄우기
+        # ✅ 재입장 의도 감지
         if self._detect_reenter(user_message):
+            # Phase 5(편지 받은 후)에서는 확인 없이 바로 재입장
+            if session.phase == 5:
+                # 세션 초기화
+                session.conversation_history = []
+                session.phase = 1
+                session.intro_step = 1
+                session.selected_room = None
+                session.selected_drawer = None
+                session.room_conversation_count = 0
+                session.drawer_conversation_count = 0
+                session.letter_content = None
+                session.stamp_image = None
+                session.summary_text = ""
+                session.last_summary_messages_len = 0
+                session.awaiting_reenter_confirm = False
+                session.awaiting_room_change_confirm = False
+                session.awaiting_letter_confirm = False
+                session.requested_new_room = None
+                session.used_persona_stories.clear()
+                session.used_persona_categories.clear()
+                self._save_session(session)
+
+                message1 = "그렇군. (고개를 끄덕이며) 다시 입구로 가자."
+                message2 = "흐음. 이곳은 시간의 경계에 있는 '별빛 우체국'이자, 잃어버린 기억의 저장소일세. 나는 이곳의 국장인 '부엉'이지."
+                message3 = f"(장부를 뒤적이며) 자, {username} 앞으로 도착한 '편지'가 있는데, 꽤 오래 묵혀뒀더군. 아마 '다른 세계선의 당신'이 보낸 것일세."
+                session.add_message("assistant", message1 + " " + message2 + " " + message3)
+                return {
+                    "replies": [message1, message2, message3],
+                    "image": None,
+                    "phase": 1,
+                    "intro_step": 1,
+                    "buttons": ["나에게 온 편지라고?"]
+                }
+            
+            # Phase 5가 아닌 경우에만 확인 버튼 띄우기
             session.awaiting_reenter_confirm = True
             self._save_session(session)
             
@@ -1433,7 +1441,6 @@ class ChatbotService:
             session.requested_new_room = None
             session.used_persona_stories.clear()
             session.used_persona_categories.clear()  # 하위 호환성
-            print(f"[방 변경] {requested_room_name}으로 재입장 - 페르소나 스토리 초기화")
             self._save_session(session)
 
             message1 = "그렇군. (고개를 끄덕이며) 다시 입구로 가자."
@@ -1606,72 +1613,58 @@ class ChatbotService:
                     "buttons": ["응, 우체국에 재입장할래", "아니, 이 방에서 계속 할래"]
                 }
             
-            # 편지 즉시 요청: 충분 대화 전이면 확인 버튼 제공
+            # ✅ 조기 편지 요청 처리 (Phase 3)
             if intent_key == "ask_letter_now":
-                if session.room_conversation_count < MIN_ROOM_CONVERSATIONS:
-                    session.awaiting_letter_confirm = True
-                    self._save_session(session)
-                    
-                    reply = "아직 대화를 마무리하지 못했는데 편지를 먼저 꺼내줄까?"
-                    
-                    return {
-                        "reply": reply,  # 전환 확인이므로 감정 태그 제외
-                        "image": None,
-                        "phase": 3,
-                        "buttons": ["응 편지를 받을래", "아니, 더 대화할래"]
-                    }
-                # DIR-S-404: 편지 전달 (우표 코드 포함)
-                stamp_code = self._determine_stamp_code(session)
-                
-                # 우표 정보 가져오기
-                stamp_info = self._get_stamp_info(stamp_code)
-                stamp_msg = f"자 너의 편지에 붙어 있었던 우표는 {stamp_code}이다. 이 우표는 '{stamp_info['situation']}'을 의미하지."
-                
-                letter = self._generate_letter(session)
-                session.letter_content = letter
-                letter_bubble = f"{letter}"  # 편지 내용만
-                
-                session.phase = 5
-                session.add_message("assistant", stamp_msg)
-                session.add_message("assistant", letter_bubble)
+                session.awaiting_letter_confirm = True
                 self._save_session(session)
+                
+                reply = "아직 대화를 마무리하지 못했는데 편지를 먼저 꺼내줄까?"
+                
                 return {
-                    "replies": [stamp_msg, letter_bubble],  # 전환 시점이므로 감정 태그 제외
+                    "reply": reply,
                     "image": None,
-                    "phase": 5,
-                    "letter": letter,
-                    "stamp_code": stamp_code,  # DIR-S-404: 우표 코드 반환
-                    "buttons": ["별빛 우체국에 다시 한번 입장"]
+                    "phase": 3,
+                    "buttons": ["응 편지를 받을래", "아니, 더 대화할래"]
                 }
-
-            # 반복 스로틀: 동일 의도 3회 이상이면 확인(충분 대화 전) 또는 편지 바로 전달
-            if session.repeated_intent_count >= 3:
-                if session.room_conversation_count < MIN_ROOM_CONVERSATIONS:
-                    session.awaiting_letter_confirm = True
+            
+            # ✅ 조기 편지 확인 후 처리 (Phase 3)
+            if session.awaiting_letter_confirm:
+                if "편지" in user_message and "받" in user_message:
+                    # 편지 받기로 선택
+                    session.awaiting_letter_confirm = False
+                    session.phase = 4
                     self._save_session(session)
+                    # Phase 4에서 편지 생성하도록 아래로 계속 진행
+                    pass  # Phase 4로 자연스럽게 이어짐
+                elif "대화" in user_message or "아니" in user_message:
+                    # 대화 계속하기로 선택
+                    session.awaiting_letter_confirm = False
+                    self._save_session(session)
+                    
+                    reply = "알겠어. 천천히 이야기해봐."
                     return {
-                        "reply": "아직 대화를 마무리하지 못했는데 편지를 먼저 꺼내줄까?",
+                        "reply": reply,
+                        "image": None,
+                        "phase": 3
+                    }
+                else:
+                    # 다른 말을 하면 다시 확인
+                    return {
+                        "reply": "편지를 먼저 받고 싶은가? 아니면 더 이야기하고 싶은가?",
                         "image": None,
                         "phase": 3,
                         "buttons": ["응 편지를 받을래", "아니, 더 대화할래"]
                     }
-                # DIR-S-404: 편지 전달 (우표 코드 포함)
-                stamp_code = self._determine_stamp_code(session)
-                stamp_msg = f"여기, 이 편지에 찍혀있던 '인장(우표)'이다. 잃어버리지 말고."
-                letter = self._generate_letter(session)
-                session.letter_content = letter
-                bubble = f"찾았다. 이거군. (먼지를 털어내며)\n\n다른 세계선의 네가, 지금의 너에게 보낸 편지다. ...사실은, 네가 '지금' 받고 싶었던 말이겠지.\n\n━━━━━━━━━━━━━━━\n\n{letter}\n\n━━━━━━━━━━━━━━━"
-                session.phase = 5
-                session.add_message("assistant", stamp_msg)
-                session.add_message("assistant", bubble)
+
+            # ✅ 반복 스로틀: 동일 의도 3회 이상이면 확인 버튼 제공
+            if session.repeated_intent_count >= 3:
+                session.awaiting_letter_confirm = True
                 self._save_session(session)
                 return {
-                    "replies": [stamp_msg, bubble],
+                    "reply": "아직 대화를 마무리하지 못했는데 편지를 먼저 꺼내줄까?",
                     "image": None,
-                    "phase": 5,
-                    "letter": letter,
-                    "stamp_code": stamp_code,  # DIR-S-404: 우표 코드 반환
-                    "buttons": ["별빛 우체국에 다시 한번 입장"]
+                    "phase": 3,
+                    "buttons": ["응 편지를 받을래", "아니, 더 대화할래"]
                 }
             # 로딩 중이더라도, 이미 인덱스가 만들어졌다면 바로 진행
             if getattr(self, "loading_embeddings", False) and self.collection and self.collection.count() == 0:
@@ -1717,15 +1710,11 @@ class ChatbotService:
                              "죽고", "자해", "자살", "극단", "아프", "괴롭", "지쳐", "버티", "견디", "잠"]
             needs_counseling = is_crisis or any(k in user_message for k in crisis_keywords)
             
-            print(f"[RAG-D] 상담 필요 여부: {needs_counseling} (is_crisis={is_crisis}, 키워드 매칭={any(k in user_message for k in crisis_keywords)})")
             
             if needs_counseling and self.counseling_vectordb:
                 counseling_knowledge = self._search_counseling_knowledge(user_message, top_k=3)
             else:
-                if not needs_counseling:
-                    print(f"[RAG-D] 상담 가이드 미사용 (일반 대화)")
-                if not self.counseling_vectordb:
-                    print(f"[RAG-D] 상담 가이드 미사용 (벡터 DB 없음)")
+                counseling_knowledge = []
             
             # RAG-P: 페르소나 검색 (상황에 맞는 부엉이의 자기 공개)
             conversation_context = session.get_summary()
@@ -1737,8 +1726,6 @@ class ChatbotService:
                 persona_guidance = persona_match["guidance"]
                 # 사용한 스토리 ID 기록 (세밀한 중복 방지!)
                 session.used_persona_stories.add(persona_match["story_id"])
-                print(f"[RAG-P] 페르소나 스토리 '{persona_match['story_id']}' 사용됨. (카테고리: {persona_match['category']})")
-                print(f"[RAG-P] 사용된 스토리: {session.used_persona_stories}")
                 self._save_session(session)
             
             # 시스템 프롬프트 (심층 질문 유도)
@@ -1774,7 +1761,7 @@ class ChatbotService:
                     counseling_context += "2. 세 가지 핫라인 번호 (1393, 1388, 1577)\n"
                     counseling_context += "3. '혼자 견디지 않아도 된다' 메시지\n"
                     counseling_context += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-                    print(f"[RAG-D] 위기 대응 모드 활성화! counseling_context 길이: {len(counseling_context)}자")
+                    print(f"[RAG-D] 위기 대응 모드 활성화")
                 else:
                     # 일반 상담: PDF 가이드 기반 체크리스트 방식 (실질적 활용)
                     counseling_context = "\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
@@ -1787,13 +1774,7 @@ class ChatbotService:
                         counseling_context += f"━ [원칙 {i}] ━━━━━━━━━━━━━━━━\n"
                         counseling_context += f"{knowledge}\n"  # ✅ 전체 내용!
                         counseling_context += f"━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-                    
-                    # 디버그 로그 (확인용)
-                    print(f"[RAG-D] 일반 상담 모드 활성화!")
-                    print(f"[RAG-D] 검색된 가이드 수: {len(counseling_knowledge)}개")
-                    for i, knowledge in enumerate(counseling_knowledge[:2], 1):
-                        print(f"[RAG-D] 가이드 {i}: {knowledge[:100]}... (총 {len(knowledge)}자)")
-                    print(f"[RAG-D] 최종 counseling_context 길이: {len(counseling_context)}자")
+                    print(f"[RAG-D] 일반 상담 모드 활성화 ({len(counseling_knowledge)}개 가이드)")
                     
                     # 구체적 적용 방법 (3단계 프로토콜)
                     counseling_context += "**위 원칙을 다음 3단계로 적용하세요:**\n\n"
@@ -2067,17 +2048,14 @@ class ChatbotService:
                     max_tokens=600  # 전문 지식 포함 답변을 위해 증가
                 )
                 
-                if is_crisis and self.debug_rag:
-                    print(f"[RAG-D] 위기 모드 응답 (temp={temp})")
-                
                 raw_response = response.choices[0].message.content.strip()
                 
                 # LLM이 큰따옴표로 감싸는 경우 제거
                 if raw_response.startswith('"') and raw_response.endswith('"'):
                     raw_response = raw_response[1:-1].strip()
                 
-                # 프론트엔드에서 분할 처리
-                replies = [raw_response] if raw_response else ["흐음... 다시 말해주겠나."]
+                # ✅ 긴 문장 자동 분할
+                replies = self._split_long_reply(raw_response, max_length=80) if raw_response else ["흐음... 다시 말해주겠나."]
                 
                 # DIR-E-103 & DIR-E-104: 감정 분석 및 태그 추가
                 user_emotion = self._analyze_user_emotion(user_message)
@@ -2090,13 +2068,11 @@ class ChatbotService:
                 )
                 
                 # DIR-M-305: 감정 태그를 마지막 말풍선에만 추가 (조건부)
-                show_emotion = self._should_show_emotion(owl_emotion, session.last_emotion, session)
+                show_emotion = self._should_show_emotion(owl_emotion, session.last_emotion, session, is_crisis=is_crisis)
                 if show_emotion:
                     replies[-1] = f"{replies[-1]}\n##감정 : {owl_emotion}"
                     session.last_emotion = owl_emotion  # 감정 업데이트
                     print(f"[감정] 감정 태그 출력: {owl_emotion}")
-                else:
-                    print(f"[감정] 감정 태그 출력 제외 (변화 작음 또는 전환 시점)")
                 
                 # 세션에는 원본 응답 저장 (감정 태그 제외)
                 session.add_message("assistant", raw_response)
@@ -2105,7 +2081,7 @@ class ChatbotService:
                 if session.room_conversation_count >= MIN_ROOM_CONVERSATIONS:
                     # 다음 턴에서 서랍 선택으로 전환
                     session.phase = 3.5
-                    print(f"[Phase 전환] Phase 3 → 3.5 (대화 {session.room_conversation_count}/{MIN_ROOM_CONVERSATIONS}회 완료)")
+                    print(f"[Phase 전환] Phase 3 → 3.5")
                     self._save_session(session)
                 
                 # DIR-M-306: 출력 형식 통일 (항상 replies)
@@ -2167,7 +2143,6 @@ class ChatbotService:
                 # 프론트엔드에서 분할 처리
                 closing_parts = [closing_response] if closing_response else ["그랬군."]
                 
-                print(f"[Phase 3.5] 마무리 응답 생성: {closing_parts}")
                 
             except Exception as e:
                 print(f"[에러] Phase 3.5 마무리 응답 생성 실패: {e}")
@@ -2179,17 +2154,18 @@ class ChatbotService:
             session.phase = 3.6
             
             # 3단계: 응답 구성 (마무리 응답 + 서랍 열림)
-            drawer_message = "(고개를 끄덕이며) 이쯤이면 알겠군."
-            transition_and_opening = "...네 기억이 여기 있어. 좀 더 자세히 이야기해봐."
+            # ✅ 서랍은 우표 코드 없이 단순 표현 (우표는 편지 발견 시 표시)
+            drawer_opening = "(서랍으로 걸어가며) 흐음..."
+            drawer_action = "(서랍을 연다)"
+            drawer_look_inside = "...네 기억이 여기 있어. 좀 더 자세히 이야기해봐."
             
-            # replies 구성: [유저 말에 대한 응답들] + [서랍 전환 메시지] + [서랍 열림]
-            # 유저 응답과 서랍 열기를 자연스럽게 연결
-            replies = closing_parts + [drawer_message, transition_and_opening]
+            # replies 구성: [유저 말에 대한 응답들] + [서랍 열림 과정]
+            replies = closing_parts + [drawer_opening, drawer_action, drawer_look_inside]
             
             # 전환 시점이므로 감정 태그 제외
             
             # 세션 기록
-            full_response = '\n\n'.join(closing_parts + [drawer_message, transition_and_opening])
+            full_response = '\n\n'.join(closing_parts + [drawer_opening, drawer_action, drawer_look_inside])
             session.add_message("assistant", full_response)
             
             return {
@@ -2259,44 +2235,48 @@ class ChatbotService:
                     "buttons": ["응, 우체국에 재입장할래", "아니, 이 방에서 계속 할래"]
                 }
             
-            # 조기 편지 요청: 명령/거부 키워드로만 식별
+            # ✅ 조기 편지 요청 처리 (유저가 같은 말 반복, 빨리 받고 싶어함, 그만 말하고 싶어함)
             if self._is_early_letter_request(user_message):
-                if session.drawer_conversation_count < MIN_DRAWER_CONVERSATIONS:
-                    session.awaiting_letter_confirm = True
+                session.awaiting_letter_confirm = True
+                self._save_session(session)
+                
+                reply = "아직 대화를 마무리하지 못했는데 편지를 먼저 꺼내줄까?"
+                
+                return {
+                    "reply": reply,
+                    "image": None,
+                    "phase": 3.6,
+                    "buttons": ["응 편지를 받을래", "아니, 더 대화할래"]
+                }
+            
+            # ✅ 조기 편지 확인 후 처리
+            if session.awaiting_letter_confirm:
+                if "편지" in user_message and "받" in user_message:
+                    # 편지 받기로 선택
+                    session.awaiting_letter_confirm = False
+                    session.phase = 4
+                    self._save_session(session)
+                    # Phase 4에서 편지 생성하도록 아래로 계속 진행
+                    pass  # Phase 4로 자연스럽게 이어짐
+                elif "대화" in user_message or "아니" in user_message:
+                    # 대화 계속하기로 선택
+                    session.awaiting_letter_confirm = False
                     self._save_session(session)
                     
-                    reply = "아직 대화를 마무리하지 못했는데 편지를 먼저 꺼내줄까?"
-                    reply_with_emotion = f"{reply}\n##감정 : 의문"
-                    
+                    reply = "알겠어. 천천히 이야기해봐."
                     return {
-                        "reply": reply_with_emotion,
+                        "reply": reply,
+                        "image": None,
+                        "phase": 3.6
+                    }
+                else:
+                    # 다른 말을 하면 다시 확인
+                    return {
+                        "reply": "편지를 먼저 받고 싶은가? 아니면 더 이야기하고 싶은가?",
                         "image": None,
                         "phase": 3.6,
                         "buttons": ["응 편지를 받을래", "아니, 더 대화할래"]
                     }
-                # DIR-S-404: 즉시 편지 단계 (우표 코드 포함)
-                stamp_code = self._determine_stamp_code(session)
-                
-                # 우표 정보 가져오기
-                stamp_info = self._get_stamp_info(stamp_code)
-                stamp_msg = f"자 너의 편지에 붙어 있었던 우표는 {stamp_code}이다. 이 우표는 '{stamp_info['situation']}'을 의미하지."
-                
-                letter = self._generate_letter(session)
-                session.letter_content = letter
-                letter_bubble = f"{letter}"  # 편지 내용만
-                
-                session.phase = 5
-                session.add_message("assistant", stamp_msg)
-                session.add_message("assistant", letter_bubble)
-                self._save_session(session)
-                return {
-                    "replies": [stamp_msg, letter_bubble],  # 전환 시점이므로 감정 태그 제외
-                    "image": None,
-                    "phase": 5,
-                    "letter": letter,
-                    "stamp_code": stamp_code,  # DIR-S-404: 우표 코드 반환
-                    "buttons": ["별빛 우체국에 다시 한번 입장"]
-                }
             
             # 의문문(왜~?/무슨~/어째서~/?)이면 대화 이어가기
             if self._is_question(user_message):
@@ -2471,8 +2451,8 @@ class ChatbotService:
                     if raw_response.startswith('"') and raw_response.endswith('"'):
                         raw_response = raw_response[1:-1].strip()
                     
-                    # 프론트엔드에서 분할 처리
-                    replies = [raw_response] if raw_response else ["궁금한 점이 있구나. 더 알고 싶은 게 있다면 편하게 물어봐도 돼."]
+                    # ✅ 긴 문장 자동 분할
+                    replies = self._split_long_reply(raw_response, max_length=80) if raw_response else ["궁금한 점이 있구나. 더 알고 싶은 게 있다면 편하게 물어봐도 돼."]
                     
                     # DIR-E-103 & DIR-E-104: 감정 분석 및 태그 추가
                     user_emotion = self._analyze_user_emotion(user_message)
@@ -2489,7 +2469,7 @@ class ChatbotService:
                     )
                     
                     # DIR-M-305: 감정 태그를 마지막 말풍선에만 추가 (조건부)
-                    show_emotion = self._should_show_emotion(owl_emotion, session.last_emotion, session)
+                    show_emotion = self._should_show_emotion(owl_emotion, session.last_emotion, session, is_crisis=is_crisis_q)
                     if show_emotion:
                         replies[-1] = f"{replies[-1]}\n##감정 : {owl_emotion}"
                         session.last_emotion = owl_emotion
@@ -2604,15 +2584,11 @@ class ChatbotService:
                                      "죽", "자해", "자살", "극단", "아프", "괴롭", "지쳐", "버티", "견디", "잠"]
             needs_counseling_drawer = is_crisis_drawer or any(k in user_message for k in crisis_keywords_drawer)
             
-            print(f"[RAG-D Phase 3.6] 상담 필요 여부: {needs_counseling_drawer} (is_crisis={is_crisis_drawer}, 키워드 매칭={any(k in user_message for k in crisis_keywords_drawer)})")
             
             if needs_counseling_drawer and self.counseling_vectordb:
                 counseling_knowledge_drawer = self._search_counseling_knowledge(user_message, top_k=3)
             else:
-                if not needs_counseling_drawer:
-                    print(f"[RAG-D Phase 3.6] 상담 가이드 미사용 (일반 대화)")
-                if not self.counseling_vectordb:
-                    print(f"[RAG-D Phase 3.6] 상담 가이드 미사용 (벡터 DB 없음)")
+                counseling_knowledge_drawer = []
             
             # RAG-P: 페르소나 검색 (상황에 맞는 부엉이의 자기 공개) - Phase 3.6
             conversation_context_drawer = session.get_summary()
@@ -2624,8 +2600,6 @@ class ChatbotService:
                 persona_guidance_drawer = persona_match_drawer["guidance"]
                 # 사용한 스토리 ID 기록 (세밀한 중복 방지!)
                 session.used_persona_stories.add(persona_match_drawer["story_id"])
-                print(f"[RAG-P] Phase 3.6 페르소나 스토리 '{persona_match_drawer['story_id']}' 사용됨. (카테고리: {persona_match_drawer['category']})")
-                print(f"[RAG-P] 사용된 스토리: {session.used_persona_stories}")
                 self._save_session(session)
             
             # 시스템 프롬프트 (더 깊은 질문)
@@ -2676,11 +2650,7 @@ class ChatbotService:
                         counseling_context_drawer += f"━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
                     
                     # 디버그 로그 (확인용) - Phase 3.6
-                    print(f"[RAG-D Phase 3.6] 일반 상담 모드 활성화!")
-                    print(f"[RAG-D Phase 3.6] 검색된 가이드 수: {len(counseling_knowledge_drawer)}개")
-                    for i, knowledge in enumerate(counseling_knowledge_drawer[:2], 1):
-                        print(f"[RAG-D Phase 3.6] 가이드 {i}: {knowledge[:100]}... (총 {len(knowledge)}자)")
-                    print(f"[RAG-D Phase 3.6] 최종 counseling_context 길이: {len(counseling_context_drawer)}자")
+                    print(f"[RAG-D Phase 3.6] 일반 상담 모드 활성화 ({len(counseling_knowledge_drawer)}개 가이드)")
                     
                     # 구체적 적용 방법 (3단계 프로토콜)
                     counseling_context_drawer += "**위 원칙을 다음 3단계로 적용하세요:**\n\n"
@@ -2939,8 +2909,8 @@ class ChatbotService:
                 if raw_response.startswith('"') and raw_response.endswith('"'):
                     raw_response = raw_response[1:-1].strip()
                 
-                # 프론트엔드에서 분할 처리
-                replies = [raw_response] if raw_response else ["흐음... 다시 말해주겠나."]
+                # ✅ 긴 문장 자동 분할
+                replies = self._split_long_reply(raw_response, max_length=80) if raw_response else ["흐음... 다시 말해주겠나."]
                 
                 # DIR-E-103 & DIR-E-104: 감정 분석 및 태그 추가
                 user_emotion = self._analyze_user_emotion(user_message)
@@ -2957,7 +2927,7 @@ class ChatbotService:
                 )
                 
                 # DIR-M-305: 감정 태그를 마지막 말풍선에만 추가 (조건부)
-                show_emotion = self._should_show_emotion(owl_emotion, session.last_emotion, session)
+                show_emotion = self._should_show_emotion(owl_emotion, session.last_emotion, session, is_crisis=is_crisis_drawer)
                 if show_emotion:
                     replies[-1] = f"{replies[-1]}\n##감정 : {owl_emotion}"
                     session.last_emotion = owl_emotion
@@ -2970,10 +2940,20 @@ class ChatbotService:
                 
                 # DIR-C-201: LLM 응답 후 Phase 전환 체크 (유저 질문에 먼저 답변한 후)
                 if session.drawer_conversation_count >= MIN_DRAWER_CONVERSATIONS:
-                    # 다음 턴에서 편지 생성으로 전환
-                    session.phase = 4
-                    print(f"[Phase 전환] Phase 3.6 → 4 (대화 {session.drawer_conversation_count}/{MIN_DRAWER_CONVERSATIONS}회 완료)")
+                    # ✅ 편지 발견 확인 단계로 전환
+                    session.phase = 3.9  # 편지 발견 확인 단계
+                    print(f"[Phase 전환] Phase 3.6 → 3.9 (편지 발견 확인)")
                     self._save_session(session)
+                    
+                    # ✅ 편지 발견 안내 (의문문 OK - 기본 상태)
+                    letter_found_msg = "흐음... (먼지를 털어내며) 너의 편지를 찾았어. 편지를 받아볼래?"
+                    
+                    return {
+                        "replies": replies + [letter_found_msg],
+                        "image": None,
+                        "phase": 3.9,
+                        "buttons": ["응 편지를 받을래"]
+                    }
                 
                 # DIR-M-306: 출력 형식 통일
                 resp = {
@@ -2991,7 +2971,23 @@ class ChatbotService:
                 replies = ["흐음... (먼지를 털어내며) 잠깐만.\n##감정 : 기본"]
                 return {"replies": replies, "image": None, "phase": 3.6}
         
-        # Phase 4: 편지 발견 (자동 전환)
+        # Phase 3.9: 편지 발견 확인 (버튼 클릭 대기)
+        if session.phase == 3.9:
+            # 유저가 "응 편지를 받을래" 버튼 클릭 시 Phase 4로 전환
+            if "편지" in user_message and ("받" in user_message or "응" in user_message):
+                session.phase = 4
+                self._save_session(session)
+                # Phase 4에서 처리하도록 아래로 계속 진행
+            else:
+                # 다른 말을 하면 다시 확인
+                return {
+                    "reply": "편지를 받고 싶지 않은가? 받아볼래?",
+                    "image": None,
+                    "phase": 3.9,
+                    "buttons": ["응 편지를 받을래"]
+                }
+        
+        # Phase 4: 편지 생성 및 출력
         if session.phase == 4:
             print(f"[편지 생성] 방 대화: {session.room_conversation_count}회, 서랍 대화: {session.drawer_conversation_count}회")
             
@@ -3000,37 +2996,36 @@ class ChatbotService:
             
             # 우표 정보 가져오기
             stamp_info = self._get_stamp_info(stamp_code)
-            stamp_msg = f"자 너의 편지에 붙어 있었던 우표는 {stamp_code}이다. 이 우표는 '{stamp_info['situation']}'을 의미하지."
             
             letter = self._generate_letter(session)
             session.letter_content = letter
-            letter_bubble = f"{letter}"  # 편지 내용만
             
-            session.phase = 5
-            session.add_message("assistant", stamp_msg)
-            session.add_message("assistant", letter_bubble)
+            # ✅ 우표 설명과 편지를 하나의 말풍선으로 합침
+            combined_message = f"자 너의 편지에 붙어 있었던 우표는 {stamp_code}이다. 이 우표는 '{stamp_info['situation']}'을 의미하지.\n\n{letter}"
+            
+            session.phase = 5  # 편지 출력 완료 후 Phase 5로
+            session.add_message("assistant", combined_message)
             self._save_session(session)
             
+            # ✅ 편지가 모두 출력된 후 재입장 버튼 표시
             return {
-                "replies": [stamp_msg, letter_bubble],  # 전환 시점이므로 감정 태그 제외
+                "reply": combined_message,  # 우표 설명 + 편지 (하나의 말풍선)
                 "image": None,
                 "phase": 5,
                 "letter": letter,
-                "stamp_code": stamp_code,  # DIR-S-404: 우표 코드 반환
-                "buttons": ["별빛 우체국에 한번 더 입장하시겠습니까?"]
+                "stamp_code": stamp_code,
+                "buttons": ["별빛 우체국에 다시 한번 입장"]
             }
         
         # Phase 5: 엔딩
         if session.phase == 5:
+            # ✅ 재입장 버튼 클릭 시 바로 재입장 (이미 위에서 처리됨, 여기서는 기본 엔딩 메시지만)
             # DIR-S-404: 우표 코드 반환
             stamp_code = session.selected_drawer if session.selected_drawer else self._determine_stamp_code(session)
             
             reply = f"편지는 찾았으니 볼일은 끝났군.\n\n이만 가보라고. ...너무 늦기 전에 답장하러 오든가."
             
             session.add_message("assistant", reply)
-            
-            # 세션 초기화 (다음 방문을 위해)
-            # self.sessions[username] = PostOfficeSession(username)
             
             return {
                 "reply": reply,  # 전환 시점이므로 감정 태그 제외
