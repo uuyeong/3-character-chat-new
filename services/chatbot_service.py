@@ -37,7 +37,7 @@ class PostOfficeSession:
         self.phase = 1  # 현재 Phase (1-5)
         self.intro_step = 0  # 입장 단계 (0: 첫 인사, 1: 편지 소개)
         self.selected_room = None  # 선택한 방
-        self.selected_drawer = None  # 선택한 서랍
+        self.selected_drawer = None  # 우표 코드 (내부 저장용)
         self.conversation_history = []  # 대화 기록
         self.room_conversation_count = 0  # 방에서의 대화 횟수
         self.drawer_conversation_count = 0  # 서랍에서의 대화 횟수
@@ -73,7 +73,7 @@ class PostOfficeSession:
         })
     
     def get_summary(self) -> str:
-        """전체 대화 요약 (서랍 선택 및 편지 생성용)"""
+        """전체 대화 요약 (편지 생성용)"""
         messages = [msg['content'] for msg in self.conversation_history if msg['role'] == 'user']
         # 전체 대화 내용 사용 - 방에서의 대화 + 서랍에서의 대화 모두 포함
         # 나중에 대화가 너무 길어지면 (50개 이상) AI 요약 기능 추가 필요
@@ -862,7 +862,7 @@ class ChatbotService:
             return True
         
         # Phase 전환 시점에는 감정 출력 안 함 (이미지 충돌 방지)
-        # Phase 2 (방 선택), Phase 3.5 (서랍 선택), Phase 4/5 (편지)
+        # Phase 2 (방 선택), Phase 3.5 (서랍 열기), Phase 4/5 (편지)
         transition_phases = [2, 3.5, 4, 5]
         if session.phase in transition_phases:
             return False
@@ -2148,7 +2148,7 @@ class ChatbotService:
                 
                 # DIR-C-201: LLM 응답 후 Phase 전환 체크 (유저 질문에 먼저 답변한 후)
                 if session.room_conversation_count >= MIN_ROOM_CONVERSATIONS:
-                    # 다음 턴에서 서랍 선택으로 전환
+                    # 다음 턴에서 서랍 열기로 전환
                     session.phase = 3.5
                     print(f"[Phase 전환] Phase 3 → 3.5")
                     self._save_session(session)
@@ -2169,7 +2169,7 @@ class ChatbotService:
                 replies = ["흐음... (먼지를 털어내며) 잠깐만.\n##감정 : 기본"]
                 return {"replies": replies, "image": None, "phase": 3}
         
-        # Phase 3.5: 서랍 선택 직전 - 유저의 마지막 말에 응답
+        # Phase 3.5: 서랍 열기 - 유저의 마지막 말에 응답 후 서랍 열기
         if session.phase == 3.5:
             # 1단계: 유저의 마지막 말에 짧게 응답 (의문문 금지!)
             closing_prompt = f"""당신은 별빛 우체국의 부엉이 우체국장입니다.
@@ -2934,7 +2934,7 @@ class ChatbotService:
 [현재 상황 - 당신이 알고 있는 세션 정보]
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 - **Phase**: 3.6 (서랍에서의 대화 단계)
-- **현재 위치**: '{room_data.get('name', '')}' 안에서 더 깊은 대화 중 (서랍을 열었음!)
+- **현재 위치**: '{room_data.get('name', '')}' 안에서 더 깊은 대화 중
 - **대화 진행**: {session.drawer_conversation_count}/{MIN_DRAWER_CONVERSATIONS}회 (최소)
 - **목표**: 유저의 핵심 감정과 진실에 다가가기
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -3193,7 +3193,6 @@ class ChatbotService:
                         "is_letter_end": True,
                         "buttons": ["별빛 우체국에 다시 한번 입장"],
                         "is_letter_end": True
-
                     }
             
             # ✅ 재입장 버튼 클릭 시 바로 재입장 (이미 위에서 처리됨, 여기서는 기본 엔딩 메시지만)
