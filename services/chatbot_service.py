@@ -20,12 +20,12 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # ============================================
-# 대화 횟수 설정 (테스트/프로덕션 전환용)
+# 대화 횟수 설정 (배포용 - 긴 대화 지원)
 # ============================================
-MIN_ROOM_CONVERSATIONS = 5    # 방에서의 최소 대화 횟수
-MAX_ROOM_CONVERSATIONS = 10   # 방에서의 최대 대화 횟수 
-MIN_DRAWER_CONVERSATIONS = 5  # 서랍에서의 최소 대화 횟수
-MAX_DRAWER_CONVERSATIONS = 10 # 서랍에서의 최대 대화 횟수
+MIN_ROOM_CONVERSATIONS = 20    # 방에서의 최소 대화 횟수
+MAX_ROOM_CONVERSATIONS = 30   # 방에서의 최대 대화 횟수 
+MIN_DRAWER_CONVERSATIONS = 20  # 서랍에서의 최소 대화 횟수
+MAX_DRAWER_CONVERSATIONS = 30 # 서랍에서의 최대 대화 횟수
 # ============================================
 
 
@@ -79,11 +79,20 @@ class PostOfficeSession:
         })
     
     def get_summary(self) -> str:
-        """전체 대화 요약 (편지 생성용)"""
-        messages = [msg['content'] for msg in self.conversation_history if msg['role'] == 'user']
-        # 전체 대화 내용 사용 - 방에서의 대화 + 서랍에서의 대화 모두 포함
-        # 나중에 대화가 너무 길어지면 (50개 이상) AI 요약 기능 추가 필요
-        return " ".join(messages)
+        """전체 대화 요약 (편지 생성용) - 배포용: 긴 대화 지원"""
+        # 요약이 있으면 요약을 우선 사용하고, 최근 대화만 추가
+        if self.summary_text:
+            # 최근 30개 사용자 메시지만 추가 (맥락 보존, 긴 대화 대응)
+            recent_messages = [
+                msg['content'] for msg in self.conversation_history[-30:] 
+                if msg['role'] == 'user'
+            ]
+            recent_text = " ".join(recent_messages)
+            return f"{self.summary_text}\n\n[최근 대화]\n{recent_text}"
+        else:
+            # 요약이 없으면 전체 사용자 메시지 사용 (초기 대화)
+            messages = [msg['content'] for msg in self.conversation_history if msg['role'] == 'user']
+            return " ".join(messages)
 
     def to_dict(self) -> dict:
         return {
@@ -1167,17 +1176,17 @@ class ChatbotService:
             return []
 
     def _summarize_if_needed(self, session: PostOfficeSession):
-        """대화가 길어지면 자동 요약을 수행하여 프롬프트 컨텍스트를 경량화"""
+        """대화가 길어지면 자동 요약을 수행하여 프롬프트 컨텍스트를 경량화 (배포용 - 긴 대화 지원)"""
         total_msgs = len(session.conversation_history)
-        # 일정 간격(예: 30개 메시지 증가)마다 요약
+        # 일정 간격(30개 메시지 증가)마다 요약
         if total_msgs - session.last_summary_messages_len < 30:
             return
-        # 최근 사용자 메시지 중심으로 축약 요약
+        # 최근 사용자 메시지 중심으로 축약 요약 (최근 60개로 설정 - 긴 대화 대응)
         user_messages = [m['content'] for m in session.conversation_history if m['role'] == 'user']
-        recent_slice = "\n".join(user_messages[-30:])
+        recent_slice = "\n".join(user_messages[-60:])  # 최근 60개 사용자 메시지
         system = (
-            "아래 대화를 5문장 이내의 핵심 요약으로 압축하세요. "
-            "인물/사건/감정/목표를 포함하고 불필요한 세부는 제거하세요."
+            "아래 대화를 8-10문장의 핵심 요약으로 압축하세요. "
+            "인물/사건/감정/목표/주요 고민을 포함하고 불필요한 세부는 제거하세요."
         )
         try:
             response = self._chat_completion(
@@ -1187,7 +1196,7 @@ class ChatbotService:
                     {"role": "user", "content": recent_slice}
                 ],
                 temperature=0.2,
-                max_tokens=220
+                max_tokens=350  # 토큰 수 증가 (긴 대화 요약 대응)
             )
             summary = response.choices[0].message.content.strip()
             # 누적 요약 방식: 기존 요약과 결합 후 다시 한 줄 정리
@@ -1196,16 +1205,17 @@ class ChatbotService:
                 response2 = self._chat_completion(
                     model="gpt-4o-mini",
                     messages=[
-                        {"role": "system", "content": "두 요약을 6문장 이내 하나로 통합 요약하세요."},
+                        {"role": "system", "content": "두 요약을 10-12문장으로 통합 요약하세요. 중복을 제거하고 핵심만 남기세요."},
                         {"role": "user", "content": merged}
                     ],
                     temperature=0.2,
-                    max_tokens=220
+                    max_tokens=350  # 토큰 수 증가
                 )
                 session.summary_text = response2.choices[0].message.content.strip()
             else:
                 session.summary_text = summary
             session.last_summary_messages_len = total_msgs
+            print(f"[요약 완료] 총 {total_msgs}개 메시지, 요약 길이: {len(session.summary_text)}자")
         except Exception as e:
             print(f"[경고] 요약 실패: {e}")
     
@@ -1346,25 +1356,36 @@ class ChatbotService:
             context_str = "\n".join([f"- {doc}" for doc in rag_context])
             prompt_parts.append(f"[참고 정보]\n{context_str}\n")
 
-        # 장기 요약(있다면 상단에 제공)
+        # 장기 요약(있다면 상단에 제공)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      
         if session.summary_text:
             prompt_parts.append(f"[대화 장기 요약]\n{session.summary_text}\n")
         
-        # 대화 기록 (현재 세션의 전체 대화)
+        # 대화 기록 (최적화: 긴 대화 지원 - 요약이 있으면 최근 대화만, 없으면 전체)
         if len(session.conversation_history) > 0:
-            # 현재 판의 모든 대화 (이전 편지 작성 판은 제외)
-            recent_history = session.conversation_history  # 전체 대화!
+            # 긴 대화 최적화: 요약이 있으면 최근 25개만 포함 (토큰 절약), 없으면 최근 40개
+            if session.summary_text:
+                # 요약이 있으면 최근 25개 대화만 포함 (이전 내용은 요약으로 대체)
+                recent_history = session.conversation_history[-25:]
+                history_label = "[대화 맥락 - 최근 대화 (이전 내용은 위 요약 참고)]"
+            else:
+                # 요약이 없으면 최근 40개 대화 포함 (초기 대화)
+                recent_history = session.conversation_history[-40:]
+                history_label = "[대화 맥락 - 최근 대화]"
+            
             history_str = "\n".join([
                 f"{session.username if msg['role'] == 'user' else '부엉'}: {msg['content']}"
                 for msg in recent_history
             ])
-            prompt_parts.append(f"[대화 맥락 - 현재 세션의 전체 대화]\n{history_str}\n")
+            prompt_parts.append(f"{history_label}\n{history_str}\n")
         
         # 현재 메시지
         prompt_parts.append(f"\n[현재 유저 입력]\n{session.username}: {user_message}")
         
         # 지침
-        prompt_parts.append(f"\n[지침]\n위 대화 맥락(현재 세션의 모든 대화)을 고려하여, 유저의 현재 메시지에 자연스럽게 이어지는 공감과 질문을 해주세요. 이전에 했던 질문을 절대 반복하지 마세요.")
+        if session.summary_text:
+            prompt_parts.append(f"\n[지침]\n위 대화 맥락(요약 및 최근 대화)을 고려하여, 유저의 현재 메시지에 자연스럽게 이어지는 공감과 질문을 해주세요. 이전에 했던 질문을 절대 반복하지 마세요.")
+        else:
+            prompt_parts.append(f"\n[지침]\n위 대화 맥락(최근 대화)을 고려하여, 유저의 현재 메시지에 자연스럽게 이어지는 공감과 질문을 해주세요. 이전에 했던 질문을 절대 반복하지 마세요.")
         
         return "\n".join(prompt_parts)
     
@@ -2269,6 +2290,7 @@ class ChatbotService:
 "그렇군. 그때 어땠지?" (단순 반복)
 "흐음, [유저말] 했다니. 왜 [유저말]했지?" (앵무새)
 같은 패턴의 질문 반복
+**⚠️ 중요: "부엉: ", "부엉이: " 같은 접두사는 절대 사용하지 마세요!** 응답은 바로 시작하세요.
 
 [부엉이의 상담 지식 기반]
 당신은 다음의 상담 원칙을 충분히 학습했으며, 이를 바탕으로 유저와 대화합니다:
@@ -2334,6 +2356,14 @@ class ChatbotService:
                 # LLM이 큰따옴표로 감싸는 경우 제거
                 if raw_response.startswith('"') and raw_response.endswith('"'):
                     raw_response = raw_response[1:-1].strip()
+                
+                # ✅ "부엉: ", "부엉이: " 등의 접두사 제거 (LLM이 대화 형식을 잘못 이해한 경우)
+                prefixes_to_remove = ["부엉: ", "부엉이: ", "부엉:", "부엉이:"]
+                for prefix in prefixes_to_remove:
+                    if raw_response.startswith(prefix):
+                        raw_response = raw_response[len(prefix):].strip()
+                        print(f"[접두사 제거] '{prefix}' 제거됨")
+                        break
                 
                 # ✅ 긴 문장 자동 분할 (위기 모드에서는 분할 안 함 - 응답 일관성 유지)
                 if is_crisis:
@@ -2722,6 +2752,7 @@ class ChatbotService:
 3. **마지막 부분**: 유저에게 돌리는 질문/생각 유도 (선택)
 4. 예: "나? 흐음. 나는 '리그오브레전드'를 해봤지. 자네는 무엇을 할 때 시간 가는 줄 모르는가?"
 5. **감정 태그는 절대 출력하지 마세요** (시스템이 추가)
+6. **⚠️ 중요: "부엉: ", "부엉이: " 같은 접두사는 절대 사용하지 마세요!** 응답은 바로 시작하세요.
 
 [대화 예시]
 ❌ 나쁜 예: "불안한 감정은 누구나 경험할 수 있는 것이죠. 사람들은 여러 상황에서..."
@@ -2754,6 +2785,14 @@ class ChatbotService:
                     # LLM이 큰따옴표로 감싸는 경우 제거
                     if raw_response.startswith('"') and raw_response.endswith('"'):
                         raw_response = raw_response[1:-1].strip()
+                    
+                    # ✅ "부엉: ", "부엉이: " 등의 접두사 제거 (LLM이 대화 형식을 잘못 이해한 경우)
+                    prefixes_to_remove = ["부엉: ", "부엉이: ", "부엉:", "부엉이:"]
+                    for prefix in prefixes_to_remove:
+                        if raw_response.startswith(prefix):
+                            raw_response = raw_response[len(prefix):].strip()
+                            print(f"[접두사 제거] '{prefix}' 제거됨")
+                            break
                     
                     # ✅ 긴 문장 자동 분할
                     replies = self._split_long_reply(raw_response, max_length=120) if raw_response else ["궁금한 점이 있구나. 더 알고 싶은 게 있다면 편하게 물어봐도 돼."]
@@ -3217,6 +3256,7 @@ class ChatbotService:
 **[응답 작성 규칙]**
 
 - 감정 태그 (예: '##감정 : 기본')를 응답에 포함하지 마세요 - 시스템이 자동으로 추가합니다
+- **⚠️ 중요: "부엉: ", "부엉이: " 같은 접두사는 절대 사용하지 마세요!** 응답은 바로 시작하세요.
 
 [부엉이의 상담 지식 기반]
 당신은 다음의 상담 원칙을 충분히 학습했으며, 이를 바탕으로 유저와 대화합니다:
@@ -3275,6 +3315,14 @@ class ChatbotService:
                 # LLM이 큰따옴표로 감싸는 경우 제거
                 if raw_response.startswith('"') and raw_response.endswith('"'):
                     raw_response = raw_response[1:-1].strip()
+                
+                # ✅ "부엉: ", "부엉이: " 등의 접두사 제거 (LLM이 대화 형식을 잘못 이해한 경우)
+                prefixes_to_remove = ["부엉: ", "부엉이: ", "부엉:", "부엉이:"]
+                for prefix in prefixes_to_remove:
+                    if raw_response.startswith(prefix):
+                        raw_response = raw_response[len(prefix):].strip()
+                        print(f"[접두사 제거] '{prefix}' 제거됨")
+                        break
                 
                 # ✅ 문제 1 해결: 최소 대화 횟수 충족 시 의문문 방지
                 if session.drawer_conversation_count >= MIN_DRAWER_CONVERSATIONS:
