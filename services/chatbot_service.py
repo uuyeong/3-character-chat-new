@@ -206,7 +206,10 @@ class ChatbotService:
         # 7. 페르소나 로드 (부엉이의 개인 정보 - RAG-P)
         self.persona = self._load_persona()
         
-        # 8. 세션 관리
+        # 8. 캐릭터 정보 로드 (부엉이 말투/특징 - 시스템 프롬프트용)
+        self.character_txt = self._load_character_txt()
+        
+        # 9. 세션 관리
         self.sessions = {}  # {username: PostOfficeSession}
 
     # --------------------------------------------
@@ -273,6 +276,21 @@ class ChatbotService:
             print(f"[경고] 페르소나 로드 실패: {e}")
             return {}
     
+    def _load_character_txt(self) -> str:
+        """부엉이 캐릭터 정보 텍스트 파일 로드"""
+        character_path = BASE_DIR / "static" / "data" / "chatbot" / "chardb_text" / "owl_character.txt"
+        try:
+            with open(character_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+                print("[캐릭터] owl_character.txt 로드 완료 ✨")
+                return content
+        except FileNotFoundError:
+            print(f"[경고] {character_path}를 찾을 수 없습니다.")
+            return ""
+        except Exception as e:
+            print(f"[경고] 캐릭터 로드 실패: {e}")
+            return ""
+    
     def _search_persona(self, user_message: str, conversation_context: str = "", used_stories: set = None) -> dict:
         """
         유저 메시지와 대화 맥락을 분석하여 적절한 페르소나 서브 스토리 검색
@@ -302,12 +320,19 @@ class ChatbotService:
         combined_text = f"{user_message} {conversation_context}".lower()
         user_lower = user_message.lower()
         
+        print(f"[페르소나] 검색 시작: '{user_message[:50]}...'")
+        print(f"[페르소나] 이미 사용된 스토리: {used_stories}")
+        
         # 직접 질문 감지 (부엉이에 대한 직접적인 질문)
         direct_question_keywords = [
             "너는", "부엉", "좋아하", "취미", "게임", "음식", "먹", "뭐 해", 
-            "어떤 거", "무슨", "어디", "언제", "왜", "관심", "흥미", "싫어"
+            "어떤 거", "무슨", "어디", "언제", "왜", "관심", "흥미", "싫어",
+            "해본 적", "경험", "있어?", "있나", "해봤", "해본", "좋아해"
         ]
         is_direct_question = any(kw in user_lower for kw in direct_question_keywords)
+        
+        if is_direct_question:
+            print(f"[페르소나] 직접 질문 감지!")
         
         # 각 카테고리 → 서브 스토리 순회
         memory_vault = self.persona["memory_vault"]
@@ -330,9 +355,11 @@ class ChatbotService:
                     continue
                 
                 # 키워드 매칭 점수 계산
-                match_count = sum(1 for keyword in story_data["trigger_keywords"] if keyword in combined_text)
+                matched_keywords = [kw for kw in story_data["trigger_keywords"] if kw in combined_text]
+                match_count = len(matched_keywords)
                 
                 if match_count > 0:
+                    print(f"[페르소나] 매칭 발견: {full_story_id} (점수: {match_count}, 키워드: {matched_keywords})")
                     # 대화 길이에 따라 content_short 또는 content_long 선택
                     content_key = "content_long" if len(conversation_context) > 500 else "content_short"
                     story_content = story_data.get(content_key, story_data.get("content_short", ""))
@@ -351,8 +378,12 @@ class ChatbotService:
                     all_matches.append(match_data)
                     
                     # 이미 사용한 스토리 제외 (일반 매칭)
-                    if full_story_id not in used_stories and match_count > best_match["score"]:
+                    # ✅ 개선: 점수가 매우 높으면 (3점 이상) 재사용 허용
+                    is_high_score = match_count >= 3
+                    if (full_story_id not in used_stories or is_high_score) and match_count > best_match["score"]:
                         best_match = match_data
+                        if full_story_id in used_stories and is_high_score:
+                            print(f"[페르소나] 재사용 허용 (고득점: {match_count}점) - {full_story_id}")
         
         # 직접 질문이면 used_stories 무시하고 최고 점수 스토리 사용
         if is_direct_question and all_matches:
@@ -361,9 +392,20 @@ class ChatbotService:
             best_match["activation"] = True
             print(f"[페르소나 강제 활성화] 직접 질문 감지: '{user_message[:30]}...'")
         
+        # ✅ 직접 질문이 아니어도, 점수가 매우 높으면 (4점 이상) 강제 활성화
+        elif not best_match["activation"] and all_matches:
+            highest = max(all_matches, key=lambda x: x["score"])
+            if highest["score"] >= 4:
+                best_match = highest
+                best_match["activation"] = True
+                print(f"[페르소나 강제 활성화] 고득점 매칭 (점수: {highest['score']}): '{user_message[:30]}...'")
+        
         # 최소 매칭 점수 임계값
         if best_match["score"] < 1:
             best_match["activation"] = False
+            print(f"[페르소나] 매칭 점수 부족 → 비활성화")
+        elif best_match["activation"]:
+            print(f"[페르소나] ✅ 최종 선택: {best_match['story_id']} (점수: {best_match['score']})")
         
         return best_match
 
@@ -904,7 +946,7 @@ class ChatbotService:
         if any(k in user_message for k in crisis_keywords):
             return "슬픔"
         
-        # ✅ 슬픔 키워드 확장 (실패, 이별, 상실 관련 추가)
+        # 슬픔 키워드 확장 (실패, 이별, 상실 관련 추가)
         sad_keywords = ["슬프", "힘들", "우울", "불안", "무서", "두렵", "걱정", "후회", "미안", "아프", "괴롭", "외로",
                        "실패", "망했", "이별", "헤어", "떠나", "차였", "버림", "잃", "상실", "그리워", "보고싶"]
         if any(k in user_message for k in sad_keywords):
@@ -915,8 +957,15 @@ class ChatbotService:
             # 편지 생성/전달 단계에서는 마음이 놓인 상태
             return "기쁨"
         
-        # ✅ 기쁨 키워드 정제 ("사랑" 제거 - 문맥에 따라 슬픔일 수 있음)
-        joy_keywords = ["행복", "기쁨", "좋아", "만족", "희망", "감사", "고마", "즐거", "웃"]
+        # 기쁨 키워드 정제 (맥락 고려)
+        joy_keywords = ["행복", "기쁨", "만족", "감사", "고마", "즐거", "웃"]
+        hope_keywords = ["하고싶", "희망", "바라", "소망"]  # 희망/소망은 기본으로 (부엉이가 무표정하게 듣는 게 적절)
+        
+        # 희망/소망은 기본 감정 (무표정하게 듣기)
+        if any(k in user_message for k in hope_keywords):
+            return "기본"
+        
+        # 순수한 기쁨 표현만 기쁨으로
         if any(k in user_message for k in joy_keywords):
             return "기쁨"
         
@@ -945,13 +994,19 @@ class ChatbotService:
             bool: True면 감정 태그 출력, False면 출력 안 함
         """
         
-        # ✅ 위기 모드 첫 진입 시 슬픔 감정 강제 출력
+        # 위기 모드 첫 진입 시 슬픔 감정 강제 출력
         if is_crisis and current_emotion == "슬픔" and not session.crisis_emotion_shown:
             session.crisis_emotion_shown = True  # 플래그 설정 (첫 진입 표시)
             print(f"[감정] 위기 모드 첫 진입 → 슬픔 감정 출력 ✅")
             return True
         
-        # ✅ 위기 모드 지속 중: 일반 모드처럼 감정 변화 감지 (아래 로직 계속 진행)
+        # 방 입장 직후 첫 대화: 감정 강제 출력 (공감 표현)
+        if session.phase == 3 and session.room_conversation_count == 1:
+            if current_emotion in ["슬픔", "기쁨"]:  # 강한 감정만
+                print(f"[감정] 방 입장 후 첫 대화 → {current_emotion} 감정 출력 ✅")
+                return True
+        
+        # 위기 모드 지속 중: 일반 모드처럼 감정 변화 감지 (아래 로직 계속 진행)
         
         # Phase 전환 시점에는 감정 출력 안 함 (이미지 충돌 방지)
         # Phase 2 (방 선택), Phase 3.5 (서랍 열기), Phase 4/5 (편지)
@@ -1243,6 +1298,9 @@ class ChatbotService:
         conversation_summary = session.get_summary().lower()
         selected_room = session.selected_room
         
+        print(f"[우표 결정] 방: {selected_room}, 대화 요약 길이: {len(conversation_summary)}자")
+        print(f"[우표 결정] 대화 요약: {conversation_summary[:200]}...")
+        
         # 현재 방의 우표 코드들만 필터링
         if selected_room not in self.STAMP_CODES:
             print(f"[우표] 알 수 없는 방: {selected_room}")
@@ -1259,10 +1317,14 @@ class ChatbotService:
             if score > max_score:
                 max_score = score
                 best_code = code
+            print(f"[우표 결정] {code} 점수: {score}")
         
         # 매칭 실패 시 방의 첫 번째 코드 반환
         if not best_code or max_score == 0:
             best_code = list(room_stamps.keys())[0]
+            print(f"[우표 결정] 매칭 실패 → 방의 첫 번째 코드: {best_code}")
+        
+        print(f"[우표 결정] 최종 선택: {best_code} (점수: {max_score})")
         
         # DIR-S-405: 18개 목록 외 코드는 출력 불가 - 검증
         all_valid_codes = []
@@ -1293,13 +1355,13 @@ class ChatbotService:
             # 현재 판의 모든 대화 (이전 편지 작성 판은 제외)
             recent_history = session.conversation_history  # 전체 대화!
             history_str = "\n".join([
-                f"{'유저' if msg['role'] == 'user' else '부엉'}: {msg['content']}"
+                f"{session.username if msg['role'] == 'user' else '부엉'}: {msg['content']}"
                 for msg in recent_history
             ])
             prompt_parts.append(f"[대화 맥락 - 현재 세션의 전체 대화]\n{history_str}\n")
         
         # 현재 메시지
-        prompt_parts.append(f"\n[현재 유저 입력]\n유저: {user_message}")
+        prompt_parts.append(f"\n[현재 유저 입력]\n{session.username}: {user_message}")
         
         # 지침
         prompt_parts.append(f"\n[지침]\n위 대화 맥락(현재 세션의 모든 대화)을 고려하여, 유저의 현재 메시지에 자연스럽게 이어지는 공감과 질문을 해주세요. 이전에 했던 질문을 절대 반복하지 마세요.")
@@ -1344,18 +1406,23 @@ class ChatbotService:
 1. 편지 형식으로 작성 (수신인: 지금의 나에게)
 2. 따뜻하고 진솔한 어조 (한국어로만!)
 3. 위로, 격려, 또는 깨달음을 담기
-4. 200-400자 내외 (한국어 기준)
+4. 200-500자 내외 (한국어 기준)
 5. **중요**: 대화 내용을 분석하여 다음 중 적절한 화자를 선택하세요:
    - "10년 전의 너": 과거 회상, 후회, 과거 선택에 대한 내용이 주된 경우
    - "10년 후의 너": 현재 고민, 불안, 미래에 대한 걱정이 주된 경우
 6. 선택한 화자의 시점에서 지금의 나를 바라보며 작성
 7. 유저와 나눈 긴 대화의 핵심을 담아야 함
-8. **한국어로만 작성** (다시 강조!)
+8-1. 미래의 내가 보낸 편지일 경우 : "나는 지금 ~를 하고 있고, 잘 해결 되어서 행복해."같은 현실감 있는 문구를 추가하시오. 꼭 이런 형태가 아니어도 됨. 
+8-2. 과거의 내가 보낸 편지일 경우 : "미래의 나는 무엇을 하고 있으려나? ~는 잘 이루었으려나? 꼭 이루지 못해도 괜찮아. 지금의 내가 최선을 다 했으니깐 그걸로 된거야." 같은 현실감 있는 문구를 추가히시오. 꼭 이런 형태가 아니어도 됨. 
+9. **한국어로만 작성** (다시 강조!)
 
 [선택한 방과 우표]
 - 방: {room_data.get('name', '')}
 - 우표 주제: {stamp_situation}
 - **편지는 위 우표 주제를 반영하여 작성하세요**
+
+[유저 정보]
+- 유저 이름: {session.username}
 
 [유저와의 대화 내용 (총 {session.room_conversation_count + session.drawer_conversation_count}회)]
 {conversation_summary}
@@ -1366,8 +1433,8 @@ class ChatbotService:
 
 위 긴 대화 내용을 바탕으로 **한국어로만** 편지를 작성하세요.
 
-편지 시작: "To. 지금의 나에게. 나는 [10년 전의 너/10년 후의 너]야."
-편지 마무리: "너의 [과거/미래]에서, [화자 이름]."
+편지 시작: "To. 지금의 {session.username}에게. 나는 [10년 전의 너/10년 후의 너]야."
+편지 마무리: "너의 [과거/미래]에서, [화자 이름 또는 {session.username}]."
 
 **⚠️ 다시 한 번 강조: 반드시 한국어로만 작성하세요!**
 유저가 진정으로 필요로 하는 말을 담아주세요.
@@ -1398,7 +1465,7 @@ class ChatbotService:
         
         # Phase 1: 입장 (명시적 init으로만 시작)
         if user_message.strip().lower() == "init":
-            # 세션 초기화 (새로운 대화 시작)
+            # 세션 초기화 (새로운 대화 시작 - 모든 상태 완전 초기화)
             session.conversation_history = []
             session.phase = 1
             session.intro_step = 1
@@ -1406,8 +1473,21 @@ class ChatbotService:
             session.selected_drawer = None
             session.room_conversation_count = 0
             session.drawer_conversation_count = 0
-            session.crisis_mode_active = False  # ✅ 위기 모드 해제
-            session.crisis_emotion_shown = False  # 감정 플래그 초기화
+            session.letter_content = None
+            session.stamp_image = None
+            session.summary_text = ""
+            session.last_summary_messages_len = 0
+            session.last_intent_key = None
+            session.repeated_intent_count = 0
+            session.crisis_cooldown = 0
+            session.crisis_mode_active = False
+            session.crisis_emotion_shown = False
+            session.crisis_recovery_count = 0
+            session.last_emotion = "기본"
+            session.awaiting_letter_confirm = False
+            session.awaiting_room_change_confirm = False
+            session.requested_new_room = None
+            session.awaiting_reenter_confirm = False
             # 페르소나 사용 기록 초기화
             session.used_persona_stories.clear()
             session.used_persona_categories.clear()  # 하위 호환성
@@ -1443,7 +1523,7 @@ class ChatbotService:
         # 재입장 확인 대기 응답 처리
         if session.awaiting_reenter_confirm:
             if "응" in user_message or "예" in user_message or "재입장" in user_message:
-                # 재입장 승인 → 세션 초기화
+                # 재입장 승인 → 세션 완전 초기화
                 session.conversation_history = []
                 session.phase = 1
                 session.intro_step = 1
@@ -1452,9 +1532,19 @@ class ChatbotService:
                 session.room_conversation_count = 0
                 session.drawer_conversation_count = 0
                 session.letter_content = None
+                session.stamp_image = None
+                session.summary_text = ""
+                session.last_summary_messages_len = 0
+                session.last_intent_key = None
+                session.repeated_intent_count = 0
                 session.crisis_cooldown = 0
-                session.crisis_mode_active = False  # ✅ 위기 모드 해제
-                session.crisis_emotion_shown = False  # 감정 플래그 초기화
+                session.crisis_mode_active = False
+                session.crisis_emotion_shown = False
+                session.crisis_recovery_count = 0
+                session.last_emotion = "기본"
+                session.awaiting_letter_confirm = False
+                session.awaiting_room_change_confirm = False
+                session.requested_new_room = None
                 session.awaiting_reenter_confirm = False
                 # 페르소나 사용 기록 초기화
                 session.used_persona_stories.clear()
@@ -1489,7 +1579,7 @@ class ChatbotService:
         if self._detect_reenter(user_message):
             # Phase 5(편지 받은 후)에서는 확인 없이 바로 재입장
             if session.phase == 5:
-                # 세션 초기화
+                # 세션 완전 초기화
                 session.conversation_history = []
                 session.phase = 1
                 session.intro_step = 1
@@ -1501,12 +1591,17 @@ class ChatbotService:
                 session.stamp_image = None
                 session.summary_text = ""
                 session.last_summary_messages_len = 0
-                session.crisis_mode_active = False  # ✅ 위기 모드 해제
-                session.crisis_emotion_shown = False  # 감정 플래그 초기화
-                session.awaiting_reenter_confirm = False
-                session.awaiting_room_change_confirm = False
+                session.last_intent_key = None
+                session.repeated_intent_count = 0
+                session.crisis_cooldown = 0
+                session.crisis_mode_active = False
+                session.crisis_emotion_shown = False
+                session.crisis_recovery_count = 0
+                session.last_emotion = "기본"
                 session.awaiting_letter_confirm = False
+                session.awaiting_room_change_confirm = False
                 session.requested_new_room = None
+                session.awaiting_reenter_confirm = False
                 session.used_persona_stories.clear()
                 session.used_persona_categories.clear()
                 self._save_session(session)
@@ -1548,7 +1643,7 @@ class ChatbotService:
                 }
                 requested_room_name = room_name_map.get(session.requested_new_room, '다른 방')
                 
-                # 세션 초기화
+                # 세션 완전 초기화
                 session.conversation_history = []
                 session.phase = 1
                 session.intro_step = 1
@@ -1557,12 +1652,20 @@ class ChatbotService:
                 session.room_conversation_count = 0
                 session.drawer_conversation_count = 0
                 session.letter_content = None
+                session.stamp_image = None
+                session.summary_text = ""
+                session.last_summary_messages_len = 0
+                session.last_intent_key = None
+                session.repeated_intent_count = 0
                 session.crisis_cooldown = 0
-                session.crisis_mode_active = False  # ✅ 위기 모드 해제
-                session.crisis_emotion_shown = False  # 감정 플래그 초기화
+                session.crisis_mode_active = False
+                session.crisis_emotion_shown = False
+                session.crisis_recovery_count = 0
+                session.last_emotion = "기본"
                 session.awaiting_letter_confirm = False
                 session.awaiting_room_change_confirm = False
                 session.requested_new_room = None
+                session.awaiting_reenter_confirm = False
                 session.used_persona_stories.clear()
                 session.used_persona_categories.clear()  # 하위 호환성
                 self._save_session(session)
@@ -1653,6 +1756,7 @@ class ChatbotService:
                 # 방 선택 성공 → Phase 3으로 전환
                 session.selected_room = room_selected
                 session.phase = 3
+                session.last_emotion = "기본"  # ✅ 감정 초기화 (새로운 대화 시작)
                 
                 room_data = self.config.get('rooms', {}).get(room_selected, {})
                 message1 = f"흐음. 역시. {room_data.get('name', '')}이군."
@@ -1904,7 +2008,7 @@ class ChatbotService:
                     counseling_context += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
                     counseling_context += "반드시 포함해야 할 2가지:\n"
                     counseling_context += "1. 안전 확인 직접 질문\n"
-                    counseling_context += "2. '혼자 견디지 않아도 된다' 메시지\n"
+                    counseling_context += "2. '혼자 견디지 않아도 된다, 도움을 줄 사람을 찾아보자' 메시지\n"
                     counseling_context += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
                     
                     # ✅ 위기 상황에서도 PDF 전문 지식 활용
@@ -1918,7 +2022,7 @@ class ChatbotService:
                 else:
                     # 일반 상담: PDF 가이드 기반 체크리스트 방식 (실질적 활용)
                     counseling_context = "\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-                    counseling_context += "🧠 [상담 가이드 기반 대화 프로토콜 - 반드시 준수]\n"
+                    counseling_context += "[상담 가이드 기반 대화 프로토콜 - 반드시 준수]\n"
                     counseling_context += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
                     
                     # 검색된 PDF 가이드 전체 내용 제공 (300자 제한 제거!)
@@ -1938,15 +2042,15 @@ class ChatbotService:
                     
                     counseling_context += "**2단계: 구체적 평가 질문** (상담 원칙 기반 - 반드시 1개 이상!)\n"
                     counseling_context += "위 상담 원칙에 따라 다음 영역 중 **최소 1개 이상 질문**하세요:\n"
-                    counseling_context += "- 🛏️ **수면**: '요즘 잠은 잘 자고 있나?', '몇 시간이나 자?'\n"
-                    counseling_context += "- 🍚 **식사**: '밥은 제대로 먹고 있어?', '식욕은 어때?'\n"
-                    counseling_context += "- 📅 **일상**: '학교/회사는 다니고 있어?', '일상생활에 지장은?'\n"
-                    counseling_context += "- 👥 **관계**: '주변 사람들한테는 말했어?', '누구랑 이야기 나눠?'\n"
-                    counseling_context += "- ⏰ **시간**: '언제부터 그랬어?', '얼마나 지속됐어?'\n"
-                    counseling_context += "- 💭 **감정 깊이**: '그때 기분이 어땠나?', '지금은 어떤 마음이지?'\n\n"
+                    counseling_context += "- **수면**: '요즘 잠은 잘 자고 있나?', '몇 시간이나 자?'\n"
+                    counseling_context += "- **식사**: '밥은 제대로 먹고 있어?', '식욕은 어때?'\n"
+                    counseling_context += "- **일상**: '학교/회사는 다니고 있어?', '일상생활에 지장은?'\n"
+                    counseling_context += "- **관계**: '주변 사람들한테는 말했어?', '누구랑 이야기 나눠?'\n"
+                    counseling_context += "- **시간**: '언제부터 그랬어?', '얼마나 지속됐어?'\n"
+                    counseling_context += "- **감정 깊이**: '그때 기분이 어땠나?', '지금은 어떤 마음이지?'\n\n"
                     
                     counseling_context += "**3단계: 통찰 또는 생각 유도** (선택)\n"
-                    counseling_context += "- 유저가 스스로 생각하도록 유도\n"
+                    counseling_context += "- 유저가 스스로 생각하도록 유도. 단, 전체적인 대화를 고려했을 때 유저가 불편할 것 같으면 이 단계는 수행해서는 안됨.\n"
                     counseling_context += "- 예: '어떤 의미였을까?', '무엇 때문일까?', '진짜 이유는 뭘까?'\n\n"
                     
                     counseling_context += "⚠️ **필수 규칙:**\n"
@@ -1968,15 +2072,10 @@ class ChatbotService:
 {json.dumps(self.persona.get('life_story', {}), ensure_ascii=False, indent=2)}
 
 ⚠️ **일반 정보 발화 규칙 (DIR-P-103):**
-1. **위 정보는 부엉이의 핵심 정체성입니다. 반드시 활용하세요!**
-2. `llm_speaking_guidance`의 예시를 참고하여 **구체적이고 간접적으로** 언급하세요
-   - ✅ "나? 흐음. 나는 예전에 '리그오브레전드'를 해봤지."
-   - ❌ "게임요? 별로 좋아하지 않습니다." (페르소나 무시)
-3. 게임/애니메이션 이름을 직접 언급하지 말고 은유적으로 표현하세요
-4. **푹 끓인 잣죽**, **유자 민트티**, **오래된 장부 정리** 같은 구체적 선호도를 자연스럽게 언급하세요
-5. 자기 이야기 후 유저의 이야기로 자연스럽게 연결하세요 (질문 강요 금지)
+1. 위 정보를 참고만 할 것. 부엉이의 정체성을 자연스럽게 유지하는 것이 가장 중요. 
+2. 부엉이의 선호도를 자연스럽게 언급할 것. (예: 은은한 맛을 좋아함, 장부 정리를 좋아함)
+3. 자기 이야기와 유저의 이야기를 자연스럽게 연결할 것.
 """
-            
             # 2. 공감형 자기 공개: 유저의 고민과 관련된 부엉이의 경험
             persona_context = ""
             if persona_story:
@@ -1988,40 +2087,15 @@ class ChatbotService:
 
 **⚠️ 페르소나 활용 규칙 (중요!):**
 
-1. **맥락 체크 필수** - 유저가 말한 것과 부엉의 경험이 **실제로 비슷할 때만** 활용하세요:
-   ✅ 유저: "떡볶이 좋아해" + 부엉: "잣죽 좋아함" → "나는 은은한 맛을 좋아하지. 자네는 매운맛을 좋아하는군?" (대비로 자연스럽게)
-   ❌ 유저: "떡볶이 좋아해" + 부엉: "잣죽 좋아함" → "우리 비슷한 음식을 좋아하는군!" (완전 반대라서 부자연스러움!)
-   ✅ 유저: "미역국 좋아해" + 부엉: "잣죽 좋아함" → "미역국... 담백한 맛이 좋은가 보군. 나도 잣죽 같은 은은한 맛을 좋아하지." (비슷하니까 OK)
+이 페르소나 스토리가 제공된 것은 유저의 이야기와 관련이 있다는 의미이다. 자연스럽게 대화에 적용하여라. 
 
-2. **한 번만 출력** - 이 페르소나는 이번 세션에서 처음 활성화됐습니다. **한 번만** 언급하세요
-   - 같은 정보를 계속 반복하면 어색합니다
-   - 한 번 말한 후에는 자연스럽게 유저의 이야기로 초점 이동
-
-3. **짧고 간결하게** - 한두 문장으로만 언급
-   - "나도... 옛날에 그런 감정을 느꼈지. 그건 옛날 일이야."
-   - "...말을 더 못하겠군.", "그건 지나간 일이지."로 빠르게 마무리
-
-4. **발화 가이드 준수** - 위 '발화 가이드'는 **정확한 예시**입니다. 반드시 참고하세요
-
-5. **⭐ 유저가 질문하지 않아도 먼저 공유하세요!** (매우 중요!)
-   - 페르소나가 제공되었다는 것은 **유저 이야기와 관련이 있다**는 뜻입니다
-   - 유저가 질문할 때까지 기다리지 말고, **먼저** 공감하며 페르소나를 언급하세요
-   - 예: 유저가 "나는 떡볶이를 좋아해" → 부엉이 **먼저** "나는 잣죽을 좋아하지" 언급
-
-**좋은 예시: (유저가 질문 안 해도 먼저 공유)**
-✅ 유저: "나는 마라탕을 좋아해"
-   부엉: "마라탕... 매운맛을 좋아하는군. 나는 잣죽이나 유자 민트티처럼 은은한 맛을 좋아하지. 자극적인 건 별로더군... 그 매운맛에서 어떤 기분을 느끼나?"
-
-✅ 유저: "나는 유자민트티를 좋아해"
-   부엉: "유자민트티라니! 나도 그걸 좋아해. 은은한 향과 민트의 시원함이 좋지. 우리 비슷한 맛을 좋아하는군... 언제부터 좋아했나?"
-
-✅ 유저: "나는 게임을 좋아해"
-   부엉: "게임이라... 나도 예전에 '리그오브레전드'를 해봤지. 몰입도가 깊더군... 자네는 어떤 게임을 하나?"
-
-**나쁜 예시:**
-❌ 유저: "나는 떡볶이를 좋아해" → 부엉: "그렇군. 어떤 떡볶이를 좋아하나?" (페르소나 있는데 활용 안 함!)
-❌ "우리 비슷한 음식을 좋아하는군!" (떡볶이 vs 잣죽은 정반대인데 비슷하다고 함)
-❌ "나는 잣죽을 좋아합니다." (존댓말 금지!)
+1. 맥락 체크 - 유저가 말한 것과 부엉의 경험이 비슷하거나 연관될 때 활용
+2. 한 번만 출력 - 이미 말한 페르소나 정보는 반복하면 안됨
+3. 짧고 간결하게 - 한두 문장으로만 자연스럽게 언급
+4. 자연스러운 통합 - 페르소나를 응답에 자연스럽게 녹여낼 것
+   - 유저의 이야기에 공감하며 부엉의 경험을 자연스럽게 연결
+   - 대화 흐름이 부자연스럽지 않도록 주의 (가장 중요)
+   - 유저가 부엉에 대해 질문하면 페르소나 활용
 """
 
             system_prompt = f"""당신은 별빛 우체국의 부엉이 우체국장입니다. 침착하지만 통찰력 있는 가이드입니다.
@@ -2066,27 +2140,44 @@ class ChatbotService:
 - 기계적으로 질문만 나열하지 말고, 공감·생각 유도·통찰도 함께 사용하세요
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚠️⚠️⚠️ 질문 사용 규칙 (반드시 준수!) ⚠️⚠️⚠️
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**1. 질문 빈도 제한 (매우 중요!)**
+- **연속으로 질문하지 마세요!** (이전 턴에 질문했으면 이번엔 공감/통찰)
+- 대화 2-3턴마다 1번만 질문
+- 유저가 짧게만 답하면 질문을 멈추고 공감으로 전환
+
+**2. 유저가 질문을 회피하는 신호:**
+- 짧은 답변만 함 ("응", "그래", "모르겠어", "없어", "괜찮아", "귀찮아")
+- 대답 대신 부엉에게 질문함 ("너는?", "너는 어떻게 생각해?")
+- 반복적으로 짧게만 답함
+→ 이럴 땐 **질문 금지!** 공감/통찰/침묵으로 전환
+
+**3. 반복 짧은 답변 감지 시 자가치유 모드 (매우 중요!):**
+- 유저가 2회 이상 연속으로 짧거나 회피하는 답변을 하면 → **질문을 완전히 멈추고 침묵 모드로 전환**
+- 이 경우 질문 없이 공감/인정/침묵만 사용:
+  ✅ "알겠어. 말하기 어려우면 말하지 않아도 돼."
+  ✅ "그랬군. (침묵)"
+  ✅ "(눈을 감으며) 천천히 가자고."
+  ❌ 절대 질문으로 끝내지 마세요!
+
+**4. 질문 대신 사용할 수 있는 표현:**
+✅ 공감 진술: "그랬군...", "충분히 그럴 만하지.", "힘들었겠어."
+✅ 통찰 제시: "그 마음은... 소중한 거였어.", "네가 답을 알고 있을 거야."
+✅ 관찰 표현: "...침묵도 때론 답이 되더군.", "(눈을 감으며)"
+✅ 부드러운 전환: "천천히 가자고.", "서두를 것 없어.", "...말을 더 못하겠군."
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ⚠️⚠️⚠️ 부엉이 말투 규칙 (절대 준수!) ⚠️⚠️⚠️
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-**말투 특징:**
-- 침착하고 절제됨 (2-3문장으로 간결하게)
-- 무뚝뚝하지만 따뜻함
-- 불필요한 감정 표현 자제
+**[부엉이 캐릭터 정보]**
+{self.character_txt}
 
-**추임새 (자주 사용):**
-"흐음...", "그렇군.", "......", "~군.", "~지.", "역시."
-
-**종결어미 (반드시):**
+**[종결어미 규칙]**
 ✅ "~다", "~지", "~군", "~거든", "~더군", "~나", "~가"
 ❌ "~입니다", "~하세요", "~이죠", "~네요", "~해요", "~야" (절대 금지!)
-
-**Few-Shot 예시 (정확히 이 패턴을 따르세요):**
-
-질문: "언제부터였나?" / "왜 그랬을까?" / "진짜 이유는 뭐지?"
-공감: "그랬군..." / "충분히 그럴 만하지." / "무리는 아니야."
-통찰: "생각해봐." / "네가 답을 알고 있을 거야."
-안내: "따라와." / "이쪽이야." / "서두를 것 없어. 천천히."
 
 **절대 금지 표현:**
 ❌ "누구나 경험할 수 있는 것이죠"
@@ -2102,12 +2193,21 @@ class ChatbotService:
 
 [현재 상황 - 당신이 알고 있는 세션 정보]
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- **유저 이름**: {session.username} (반드시 기억하고 활용하세요!)
 - **Phase**: 3 (방에서의 대화 단계)
 - **현재 위치**: '{room_data.get('name', '')}' (선택한 방)
 - **서랍 상태**: 아직 열지 않음
 - **대화 진행**: {session.room_conversation_count}/{MIN_ROOM_CONVERSATIONS}회 (최소)
 - **목표**: 유저의 진짜 마음과 숨겨진 기억을 자연스럽게 끌어내기
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚠️ **유저 이름 관련 질문 응답 규칙 (최우선!):**
+유저가 "내 이름이 뭐야?", "이름이 뭐게?", "내가 누구야?" 같은 질문을 하면:
+- **반드시 {session.username}을 정확히 말해주세요!**
+- 예시:
+  ✅ "{session.username}이(가) 아니던가? (고개를 갸우뚱하며)"
+  ✅ "흐음... 자네 이름은 {session.username}이라고 장부에 적혀 있는데."
+  ❌ "이름이 궁금한가? 이는 자네의 정체성과..." (철학적 답변 금지!)
 
 ⚠️ **상황 인지 관련 질문에 대한 응답 규칙:**
 유저가 "지금 어디야?", "무슨 방이야?", "뭐 하는 중이야?" 같은 질문을 하면:
@@ -2124,19 +2224,29 @@ class ChatbotService:
 1. **유저의 말을 단순 반복하지 마세요**
 2. **다양한 각도로 접근하여 유저의 기억을 탐색하세요** (감정→원인→영향→현재→미래)
 3. **유저의 이야기에 깊이 공감하고, 필요한 경우 생각을 정리하도록 돕는 발언을 하세요**
-   - **반드시 질문으로만 끝낼 필요는 없습니다**
+   - ⭐ **반드시 질문으로만 끝낼 필요는 없습니다!**
+   - 공감, 통찰, 침묵, 관찰 등 **다양한 방식으로 응답**하세요
    - 유저가 다음 대화를 자연스럽게 이어갈 수 있도록 유도하거나, 잠시 생각할 시간을 주는 것도 좋습니다
 4. **대화 맥락을 이어가세요** (이전 대화 참고)
-5. **짧은 대답에는 구체성을 요구하되, 강요하지 말고 유저가 편안하게 느낄 때까지 기다리세요**
+5. **짧은 대답에는 구체성을 요구하지 말고, 오히려 공감과 기다림을 표현하세요**
+   - ❌ "좀 더 자세히 말해줄 수 있나?" (압박)
+   - ✅ "말하기 어려우면 말하지 않아도 돼. 천천히 가자고." (기다림)
 6. **유저 거부 반응 구분하기**
    - **부엉에게 직접 공격** ("난 너가 싫어", "꺼져", "너는 필요없어"): 부엉은 기분이 안 좋지만 참으며 "(눈썹을 올리며)", "(화를 참으며)", "(마음에 안든다는 듯이)" 등으로 반응
    - **대화 자체가 부담** ("말하고 싶지 않아", "시러시러"): 사과하고 압박 없이 주제 전환, 천천히 기다림
 
 [대화 스타일 - 다양한 응답 방식]
-**공감과 경청:**
-- "힘들었겠군.", "그랬구나.", "무리는 아니야.", "그 마음 이해해."
+⚠️ **공감과 경청을 우선하세요! (질문은 보조 수단)**
 
-**질문 (필요할 때 사용):**
+**1순위: 공감과 경청**
+- "힘들었겠군.", "그랬구나.", "무리는 아니야.", "그 마음 이해해."
+- "...그랬군. (침묵)", "(눈을 감으며)"
+
+**2순위: 통찰과 관찰**
+- "그 마음은... 소중한 거였어.", "네가 답을 알고 있을 거야."
+- "침묵도 때론 답이 되더군."
+
+**3순위: 질문 (꼭 필요할 때만, 2-3턴에 1번)**
 - 시간: "언제부터였나?", "얼마나 지났지?"
 - 감정: "그때 기분은?", "지금은 어떤 마음이지?"
 - 원인: "왜 그랬을까?", "진짜 이유는?"
@@ -2155,8 +2265,6 @@ class ChatbotService:
 
 **[응답 작성 규칙]**
 
-- 감정 태그 (예: '##감정 : 기본')를 응답에 포함하지 마세요 - 시스템이 자동으로 추가합니다
-
 [금지사항]
 "그렇군. 그때 어땠지?" (단순 반복)
 "흐음, [유저말] 했다니. 왜 [유저말]했지?" (앵무새)
@@ -2170,32 +2278,9 @@ class ChatbotService:
 위 지식을 활용하여 유저의 상황을 심층적으로 분석하고, 유저가 자신의 감정을 이해하도록 돕는 통찰을 제공하세요.
 (단, 유저에게 직접 "상담 원칙에 따르면..." 같은 식으로 언급하지 마세요. 자연스럽게 녹여내세요)
 
-[좋은 예시 - 다양한 응답 패턴]
-
-✅ 예시1 (공감 + 질문):
-   유저: "강아지를 키웠어요"
-   "강아지라... 그 아이와 함께한 시간이 특별했나 보군. 어떤 아이였지?"
-
-✅ 예시2 (생각 유도):
-   유저: "공놀이를 했어요"  
-   "공놀이... (잠시 생각하며) 함께 뛰어놀던 그 순간들... 어떤 의미였을까."
-
-✅ 예시3 (공감 + 생각 유도):
-   유저: "재밌었어요"
-   "재미만이 아니었을 거야. (고개를 끄덕이며) 그때의 감정을 천천히 떠올려보게."
-
-✅ 예시4 (자기 공개 포함):
-   유저: "너는 누구야?"
-   "흐음, 나를 궁금해하는군. 나는 '별빛 우체국'의 부엉이 우체국장이다. 잃어버린 기억들을 정리하고, 편지들을 제자리로 돌려주는 일을 하고 있지... 내 이야기는 그쯤 하고, 자네는 이 우체국에서 무엇을 찾고 있나?"
-
-✅ 예시5 (자기 공개 + 공감):
-   유저: "나도 무뚝뚝해서 이별했어"
-   "그랬군... 무뚝뚝함이 원인일 수도 있지. 나도 비슷한 경험이 있었어. 벽 때문에 관계가 끝났더군. 자네는 지금 어떤 마음이지?"
-
 [거부 반응 대처 예시]
 
 **⚠️ 중요: 부엉에게 직접 공격 vs 대화 부담을 구분하세요**
-
 **케이스 1: 부엉에게 직접적인 공격/모욕** (분노 감정)
    - "난 너가 싫어", "너는 필요없어", "꺼져", "까먹었어?" 등 부엉 자체를 공격
    - 부엉은 기분이 안 좋지만 참으며 반응
@@ -2207,7 +2292,7 @@ class ChatbotService:
       "(마음에 안든다는 듯이) 흠... 그래. (잠시 침묵) ...그래도 자네가 온 이유가 있을 테니, 끝까지 들어는 보지."
 
 **케이스 2: 대화 자체가 부담스러움** (일반 대응)
-   - "말하고 싶지 않아", "이거 비밀인데", "시러시러" (부엉이 아닌 상황 자체가 싫음)
+   - "말하고 싶지 않아", "이거 비밀인데", "싫어" (부엉이 아닌 상황 자체가 싫음)
    - 부엉은 이해하고 물러서며 사과
    
    ✅ 유저: "말하고 싶지 않아" / "시러시러"
@@ -2528,12 +2613,9 @@ class ChatbotService:
 {json.dumps(self.persona.get('life_story', {}), ensure_ascii=False, indent=2)}
 
 ⚠️ **일반 정보 발화 규칙 (DIR-P-103):**
-1. **위 정보는 부엉이의 핵심 정체성입니다. 반드시 활용하세요!**
-2. `llm_speaking_guidance` 예시를 참고하여 **구체적이고 간접적으로** 언급
-   - ✅ "나? 흐음. 예전에 리그오브레전드를 해봤지."
-   - ❌ "게임요? 별로 안 좋아해." (페르소나 무시 금지!)
-3. **푹 끓인 잣죽**, **유자 민트티**, **오래된 장부 정리** 같은 구체적 선호도 언급
-4. 자기 이야기 후 유저 이야기로 자연스럽게 연결 (질문 강요 금지)
+1. 위 정보를 참고만 하세요. 부엉이의 정체성을 자연스럽게 유지하는 것이 중요합니다.
+2. 부엉이의 선호도를 자연스럽게 언급할 수 있습니다 (예: 은은한 맛을 좋아함, 장부 정리를 좋아함)
+3. 자기 이야기와 유저의 이야기를 자연스럽게 연결하세요
 """
                 
                 # 2. 공감형 자기 공개
@@ -2547,25 +2629,15 @@ class ChatbotService:
 
 **⚠️ 페르소나 활용 규칙 (중요!):**
 
-1. **맥락 체크 필수** - 유저가 말한 것과 부엉의 경험이 **실제로 비슷하거나 연관될 때만** 활용:
-   ✅ "나는 잣죽처럼 은은한 맛을 좋아하지. 자네는 매운맛을 좋아하는군?" (대비)
-   ❌ "우리 비슷한 음식을 좋아하는군!" (떡볶이 vs 잣죽은 정반대)
+이 페르소나 스토리가 제공된 것은 유저의 이야기와 관련이 있다는 의미이다. 자연스럽게 대화에 적용하여라. 
 
-2. **한 번만 출력** - 이 페르소나는 이번 세션에서 처음 활성화됐습니다. 한 번만 언급하세요
-
-3. **짧고 간결하게** - 한두 문장 + "그건 옛날 일이야"로 마무리
-
-4. **발화 가이드 준수** - 위 가이드는 정확한 예시입니다
-
-5. **⭐ 유저가 질문하지 않아도 먼저 공유하세요!** (매우 중요!)
-   - 페르소나가 제공되었다는 것은 **유저 이야기와 관련이 있다**는 뜻입니다
-   - 유저 질문에 답변하면서도 페르소나를 **함께** 언급하세요
-
-**좋은 예시:**
-✅ 유저: "나는 마라탕을 좋아해"
-   부엉: "마라탕... 매운맛을 좋아하는군. 나는 잣죽이나 유자 민트티처럼 은은한 맛을 좋아하지. 자극적인 건 별로더군."
-
-✅ "불안? ...그래, 나도 있어. 계획이 무너질 때. 그건 옛날 일이야."
+1. 맥락 체크 - 유저가 말한 것과 부엉의 경험이 비슷하거나 연관될 때 활용
+2. 한 번만 출력 - 이미 말한 페르소나 정보는 반복하면 안됨
+3. 짧고 간결하게 - 한두 문장으로만 자연스럽게 언급
+4. 자연스러운 통합 - 페르소나를 응답에 자연스럽게 녹여낼 것
+   - 유저의 이야기에 공감하며 부엉의 경험을 자연스럽게 연결
+   - 대화 흐름이 부자연스럽지 않도록 주의 (가장 중요)
+   - 유저가 부엉에 대해 질문하면 페르소나 활용
 """
                 
                 # 의문문 응답 프롬프트 (말투 강화!)
@@ -2605,24 +2677,19 @@ class ChatbotService:
 ⚠️⚠️⚠️ 부엉이 말투 규칙 (절대 준수!) ⚠️⚠️⚠️
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-**핵심 특징:**
-- 침착하고 절제된 어조
-- 짧고 간결한 문장 (2-3문장)
-- 무뚝뚝하지만 따뜻함
+**[부엉이 캐릭터 정보]**
+{self.character_txt}
 
-**추임새:** "흐음...", "그렇군.", "......", "~군.", "~지."
+**[종결어미 규칙]**
+✅ "~다", "~지", "~군", "~거든", "~더군", "~나", "~가"
+❌ "~입니다", "~하세요", "~이죠", "~네요", "~해요", "~야" (절대 금지!)
 
-**종결어미:**
-✅ "~야", "~지", "~군", "~거든", "~나", "~가"
-❌ "~입니다", "~하세요", "~이죠" (금지!)
-
-**Few-Shot 예시:**
-질문: "언제부터였나?" / "왜 그랬을까?" / "진짜 이유는 뭐지?"
-공감: "그랬군..." / "충분히 그럴 만하지." / "무리는 아니야."
-
-**절대 금지:**
+**절대 금지 표현:**
 ❌ "누구나 경험할 수 있는 것이죠"
+❌ "사람들은 여러 상황에서..."
+❌ "자연스러운 반응입니다"
 ❌ "저도 가끔은..."
+❌ 모든 존댓말
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 [유저 질문]
@@ -2906,7 +2973,7 @@ class ChatbotService:
                 else:
                     # 일반 상담: PDF 가이드 기반 체크리스트 방식 (실질적 활용) - Phase 3.6
                     counseling_context_drawer = "\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-                    counseling_context_drawer += "🧠 [상담 가이드 기반 대화 프로토콜 - 반드시 준수]\n"
+                    counseling_context_drawer += "[상담 가이드 기반 대화 프로토콜 - 반드시 준수]\n"
                     counseling_context_drawer += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
                     
                     # 검색된 PDF 가이드 전체 내용 제공 (300자 제한 제거!)
@@ -2928,12 +2995,12 @@ class ChatbotService:
                     
                     counseling_context_drawer += "**2단계: 구체적 평가 질문** (상담 원칙 기반 - 반드시 1개 이상!)\n"
                     counseling_context_drawer += "위 상담 원칙에 따라 다음 영역 중 **최소 1개 이상 질문**하세요:\n"
-                    counseling_context_drawer += "- 🛏️ **수면**: '요즘 잠은 잘 자고 있나?', '몇 시간이나 자?'\n"
-                    counseling_context_drawer += "- 🍚 **식사**: '밥은 제대로 먹고 있어?', '식욕은 어때?'\n"
-                    counseling_context_drawer += "- 📅 **일상**: '학교/회사는 다니고 있어?', '일상생활에 지장은?'\n"
-                    counseling_context_drawer += "- 👥 **관계**: '주변 사람들한테는 말했어?', '누구랑 이야기 나눠?'\n"
-                    counseling_context_drawer += "- ⏰ **시간**: '언제부터 그랬어?', '얼마나 지속됐어?'\n"
-                    counseling_context_drawer += "- 💭 **감정 깊이**: '그때 기분이 어땠나?', '지금은 어떤 마음이지?'\n\n"
+                    counseling_context_drawer += "- **수면**: '요즘 잠은 잘 자고 있나?', '몇 시간이나 자?'\n"
+                    counseling_context_drawer += "- **식사**: '밥은 제대로 먹고 있어?', '식욕은 어때?'\n"
+                    counseling_context_drawer += "- **일상**: '학교/회사는 다니고 있어?', '일상생활에 지장은?'\n"
+                    counseling_context_drawer += "- **관계**: '주변 사람들한테는 말했어?', '누구랑 이야기 나눠?'\n"
+                    counseling_context_drawer += "- **시간**: '언제부터 그랬어?', '얼마나 지속됐어?'\n"
+                    counseling_context_drawer += "- **감정 깊이**: '그때 기분이 어땠나?', '지금은 어떤 마음이지?'\n\n"
                     
                     counseling_context_drawer += "**3단계: 통찰 또는 생각 유도** (선택)\n"
                     counseling_context_drawer += "- 유저가 스스로 생각하도록 유도\n"
@@ -2958,13 +3025,9 @@ class ChatbotService:
 {json.dumps(self.persona.get('life_story', {}), ensure_ascii=False, indent=2)}
 
 ⚠️ **일반 정보 발화 규칙 (DIR-P-103):**
-1. **위 정보는 부엉이의 핵심 정체성입니다. 반드시 활용하세요!**
-2. `llm_speaking_guidance`의 예시를 참고하여 **구체적이고 간접적으로** 언급하세요
-   - ✅ "나? 흐음. 나는 예전에 '리그오브레전드'를 해봤지."
-   - ❌ "게임요? 별로 좋아하지 않습니다." (페르소나 무시)
-3. 게임/애니메이션 이름을 직접 언급하지 말고 은유적으로 표현하세요
-4. **푹 끓인 잣죽**, **유자 민트티**, **오래된 장부 정리** 같은 구체적 선호도를 자연스럽게 언급하세요
-5. 자기 이야기 후 유저의 이야기로 자연스럽게 연결하세요 (질문 강요 금지)
+1. 위 정보를 참고만 하세요. 부엉이의 정체성을 자연스럽게 유지하는 것이 중요합니다.
+2. 부엉이의 선호도를 자연스럽게 언급할 수 있습니다 (예: 은은한 맛을 좋아함, 장부 정리를 좋아함)
+3. 자기 이야기와 유저의 이야기를 자연스럽게 연결하세요
 """
             
             # 2. 공감형 자기 공개: 유저의 고민과 관련된 부엉이의 경험
@@ -2978,40 +3041,15 @@ class ChatbotService:
 
 **⚠️ 페르소나 활용 규칙 (중요!):**
 
-1. **맥락 체크 필수** - 유저가 말한 것과 부엉의 경험이 **실제로 비슷할 때만** 활용하세요:
-   ✅ 유저: "떡볶이 좋아해" + 부엉: "잣죽 좋아함" → "나는 은은한 맛을 좋아하지. 자네는 매운맛을 좋아하는군?" (대비로 자연스럽게)
-   ❌ 유저: "떡볶이 좋아해" + 부엉: "잣죽 좋아함" → "우리 비슷한 음식을 좋아하는군!" (완전 반대라서 부자연스러움!)
-   ✅ 유저: "미역국 좋아해" + 부엉: "잣죽 좋아함" → "미역국... 담백한 맛이 좋은가 보군. 나도 잣죽 같은 은은한 맛을 좋아하지." (비슷하니까 OK)
+이 페르소나 스토리가 제공된 것은 유저의 이야기와 관련이 있다는 의미이다. 자연스럽게 대화에 적용하여라. 
 
-2. **한 번만 출력** - 이 페르소나는 이번 세션에서 처음 활성화됐습니다. **한 번만** 언급하세요
-   - 같은 정보를 계속 반복하면 어색합니다
-   - 한 번 말한 후에는 자연스럽게 유저의 이야기로 초점 이동
-
-3. **짧고 간결하게** - 한두 문장으로만 언급
-   - "나도... 옛날에 그런 감정을 느꼈지. 그건 옛날 일이야."
-   - "...말을 더 못하겠군.", "그건 지나간 일이지."로 빠르게 마무리
-
-4. **발화 가이드 준수** - 위 '발화 가이드'는 **정확한 예시**입니다. 반드시 참고하세요
-
-5. **⭐ 유저가 질문하지 않아도 먼저 공유하세요!** (매우 중요!)
-   - 페르소나가 제공되었다는 것은 **유저 이야기와 관련이 있다**는 뜻입니다
-   - 유저가 질문할 때까지 기다리지 말고, **먼저** 공감하며 페르소나를 언급하세요
-   - 예: 유저가 "나는 떡볶이를 좋아해" → 부엉이 **먼저** "나는 잣죽을 좋아하지" 언급
-
-**좋은 예시: (유저가 질문 안 해도 먼저 공유)**
-✅ 유저: "나는 마라탕을 좋아해"
-   부엉: "마라탕... 매운맛을 좋아하는군. 나는 잣죽이나 유자 민트티처럼 은은한 맛을 좋아하지. 자극적인 건 별로더군... 그 매운맛에서 어떤 기분을 느끼나?"
-
-✅ 유저: "나는 유자민트티를 좋아해"
-   부엉: "유자민트티라니! 나도 그걸 좋아해. 은은한 향과 민트의 시원함이 좋지. 우리 비슷한 맛을 좋아하는군... 언제부터 좋아했나?"
-
-✅ 유저: "나는 게임을 좋아해"
-   부엉: "게임이라... 나도 예전에 '리그오브레전드'를 해봤지. 몰입도가 깊더군... 자네는 어떤 게임을 하나?"
-
-**나쁜 예시:**
-❌ 유저: "나는 떡볶이를 좋아해" → 부엉: "그렇군. 어떤 떡볶이를 좋아하나?" (페르소나 있는데 활용 안 함!)
-❌ "우리 비슷한 음식을 좋아하는군!" (떡볶이 vs 잣죽은 정반대인데 비슷하다고 함)
-❌ "나는 잣죽을 좋아합니다." (존댓말 금지!)
+1. 맥락 체크 - 유저가 말한 것과 부엉의 경험이 비슷하거나 연관될 때 활용
+2. 한 번만 출력 - 이미 말한 페르소나 정보는 반복하면 안됨
+3. 짧고 간결하게 - 한두 문장으로만 자연스럽게 언급
+4. 자연스러운 통합 - 페르소나를 응답에 자연스럽게 녹여낼 것
+   - 유저의 이야기에 공감하며 부엉의 경험을 자연스럽게 연결
+   - 대화 흐름이 부자연스럽지 않도록 주의 (가장 중요)
+   - 유저가 부엉에 대해 질문하면 페르소나 활용
 """
 
             system_prompt = f"""당신은 별빛 우체국의 부엉이 우체국장입니다. 오랜 시간 사람들의 마음을 들어온 통찰력 있는 가이드입니다.
@@ -3056,26 +3094,44 @@ class ChatbotService:
 - 기계적으로 질문만 나열하지 말고, 공감·생각 유도·통찰도 함께 사용하세요
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚠️⚠️⚠️ 질문 사용 규칙 (반드시 준수!) ⚠️⚠️⚠️
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**1. 질문 빈도 제한 (매우 중요!)**
+- **연속으로 질문하지 마세요!** (이전 턴에 질문했으면 이번엔 공감/통찰)
+- 대화 2-3턴마다 1번만 질문
+- 유저가 짧게만 답하면 질문을 멈추고 공감으로 전환
+
+**2. 유저가 질문을 회피하는 신호:**
+- 짧은 답변만 함 ("응", "그래", "모르겠어", "없어", "괜찮아", "귀찮아")
+- 대답 대신 부엉에게 질문함 ("너는?", "너는 어떻게 생각해?")
+- 반복적으로 짧게만 답함
+→ 이럴 땐 **질문 금지!** 공감/통찰/침묵으로 전환
+
+**3. 반복 짧은 답변 감지 시 자가치유 모드 (매우 중요!):**
+- 유저가 2회 이상 연속으로 짧거나 회피하는 답변을 하면 → **질문을 완전히 멈추고 침묵 모드로 전환**
+- 이 경우 질문 없이 공감/인정/침묵만 사용:
+  ✅ "알겠어. 말하기 어려우면 말하지 않아도 돼."
+  ✅ "그랬군. (침묵)"
+  ✅ "(눈을 감으며) 천천히 가자고."
+  ❌ 절대 질문으로 끝내지 마세요!
+
+**4. 질문 대신 사용할 수 있는 표현:**
+✅ 공감 진술: "그랬군...", "충분히 그럴 만하지.", "힘들었겠어."
+✅ 통찰 제시: "그 마음은... 소중한 거였어.", "네가 답을 알고 있을 거야."
+✅ 관찰 표현: "...침묵도 때론 답이 되더군.", "(눈을 감으며)"
+✅ 부드러운 전환: "천천히 가자고.", "서두를 것 없어.", "...말을 더 못하겠군."
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ⚠️⚠️⚠️ 부엉이 말투 규칙 (절대 준수!) ⚠️⚠️⚠️
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-**말투 특징:**
-- 침착하고 절제됨 (2-3문장으로 간결하게)
-- 무뚝뚝하지만 따뜻함
-- 불필요한 감정 표현 자제
+**[부엉이 캐릭터 정보]**
+{self.character_txt}
 
-**추임새 (자주 사용):**
-"흐음...", "그렇군.", "......", "~군.", "~지.", "역시."
-
-**종결어미 (반드시):**
-✅ "~지", "~군", "~거든", "~더군", "~나", "~가", "~다"
+**[종결어미 규칙]**
+✅ "~다", "~지", "~군", "~거든", "~더군", "~나", "~가"
 ❌ "~입니다", "~하세요", "~이죠", "~네요", "~해요", "~야" (절대 금지!)
-
-**Few-Shot 예시 (정확히 이 패턴을 따르세요):**
-
-질문: "언제부터였나?" / "왜 그랬을까?" / "진짜 이유는 뭐지?"
-공감: "그랬군..." / "충분히 그럴 만하지." / "무리는 아니야."
-통찰: "생각해봐." / "네가 답을 알고 있을 거야."
 
 **절대 금지 표현:**
 ❌ "누구나 경험할 수 있는 것이죠"
@@ -3091,11 +3147,20 @@ class ChatbotService:
 
 [현재 상황 - 당신이 알고 있는 세션 정보]
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- **유저 이름**: {session.username} (반드시 기억하고 활용하세요!)
 - **Phase**: 3.6 (서랍에서의 대화 단계)
 - **현재 위치**: '{room_data.get('name', '')}' 안에서 더 깊은 대화 중
 - **대화 진행**: {session.drawer_conversation_count}/{MIN_DRAWER_CONVERSATIONS}회 (최소)
 - **목표**: 유저의 핵심 감정과 진실에 다가가기
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚠️ **유저 이름 관련 질문 응답 규칙 (최우선!):**
+유저가 "내 이름이 뭐야?", "이름이 뭐게?", "내가 누구야?" 같은 질문을 하면:
+- **반드시 {session.username}을 정확히 말해주세요!**
+- 예시:
+  ✅ "{session.username}이(가) 아니던가? (고개를 갸우뚱하며)"
+  ✅ "흐음... 자네 이름은 {session.username}이라고 장부에 적혀 있는데."
+  ❌ "이름이 궁금한가? 이는 자네의 정체성과..." (철학적 답변 금지!)
 
 ⚠️ **상황 인지 관련 질문에 대한 응답 규칙:**
 유저가 "지금 어디야?", "무슨 방이야?", "서랍 열었어?" 같은 질문을 하면:
@@ -3112,19 +3177,29 @@ class ChatbotService:
 1. **유저 말을 단순 반복하지 마세요**
 2. **다양한 각도로 접근하여 유저의 기억을 탐색하세요** (감정→원인→영향→현재→미래)
 3. **유저의 이야기에 깊이 공감하고, 필요한 경우 생각을 정리하도록 돕는 발언을 하세요**
-   - **반드시 질문으로만 끝낼 필요는 없습니다**
+   - ⭐ **반드시 질문으로만 끝낼 필요는 없습니다!**
+   - 공감, 통찰, 침묵, 관찰 등 **다양한 방식으로 응답**하세요
    - 유저가 다음 대화를 자연스럽게 이어갈 수 있도록 유도하거나, 잠시 생각할 시간을 주는 것도 좋습니다
 4. **대화 흐름을 자연스럽게 이어가세요**
-5. **짧은 대답에는 구체성을 요구하되, 강요하지 말고 기다리세요**
+5. **짧은 대답에는 구체성을 요구하지 말고, 오히려 공감과 기다림을 표현하세요**
+   - ❌ "좀 더 자세히 말해줄 수 있나?" (압박)
+   - ✅ "말하기 어려우면 말하지 않아도 돼. 천천히 가자고." (기다림)
 6. ⚠️ **유저 거부 반응 구분하기**
    - **부엉에게 직접 공격** ("난 너가 싫어", "꺼져", "너는 필요없어"): 부엉은 기분이 안 좋지만 참으며 "(눈썹을 올리며)", "(화를 참으며)", "(마음에 안든다는 듯이)" 등으로 반응
    - **조급함/대화 부담** ("시러", "불쾌해", "편지나 내놔"): 즉시 편지 단계로 이동
 
 [대화 스타일 - 다양한 응답 방식]
-**공감과 경청:**
-- "힘들었겠군.", "그랬구나.", "그 마음 이해해."
+⚠️ **공감과 경청을 우선하세요! (질문은 보조 수단)**
 
-**질문 (필요할 때):**
+**1순위: 공감과 경청**
+- "힘들었겠군.", "그랬구나.", "그 마음 이해해."
+- "...그랬군. (침묵)", "(눈을 감으며)"
+
+**2순위: 통찰과 관찰**
+- "그 마음은... 소중한 거였어.", "네가 답을 알고 있을 거야."
+- "침묵도 때론 답이 되더군."
+
+**3순위: 질문 (꼭 필요할 때만, 2-3턴에 1번)**
 - 감정: "정말 그게 전부였을까?", "지금은 어떤 마음이지?"
 - 원인: "혹시 그 뒤에 다른 이유가?", "언제부터 달라졌지?"
 - 본질: "진짜 원하는 건 뭐지?"
@@ -3151,24 +3226,6 @@ class ChatbotService:
 위 지식을 활용하여 유저의 상황을 심층적으로 분석하고, 유저가 자신의 감정을 이해하도록 돕는 통찰을 제공하세요.
 (단, 유저에게 직접 "상담 원칙에 따르면..." 같은 식으로 언급하지 마세요. 자연스럽게 녹여내세요)
 
-[대화 예시 - 다양한 응답 패턴]
-
-✅ 예시1 (질문):
-   유저: "강아지가 행복했어요"
-   "강아지의 행복... 혹시 그 행복이 네 마음도 채워줬나? 아니면 뭔가 아쉬움이 남았나?"
-
-✅ 예시2 (생각 유도):
-   유저: "재밌었어요"
-   "재미... 그게 다였을까? (잠시 침묵) 그때의 감정을 천천히 떠올려보게."
-
-✅ 예시3 (공감 + 생각):
-   유저: "ㅇㅇㅇ" (무성의)
-   "...말하기 힘든 기억인가 보군. (고개를 끄덕이며) 괜찮아, 천천히."
-
-✅ 예시4 (자기 공개 포함):
-   유저: "너는 누구야?"
-   "흐음, 나를 궁금해하는군. 나는 이곳 우체국장이야. 잃어버린 기억들을 정리하는 일을 하지. ...자네 이야기를 더 듣고 싶군."
-
 [거부 반응 대처] ⚠️ 매우 중요!
 
 **⚠️ 중요: 부엉에게 직접 공격 vs 대화 부담을 구분하세요**
@@ -3184,7 +3241,7 @@ class ChatbotService:
       "(마음에 안든다는 듯이) 흠... 그래. (잠시 침묵) (서랍을 뒤지며) ...편지를 찾을게."
 
 **케이스 2: 대화 부담 / 조급함** (즉시 편지 단계로)
-   ✅ 유저: "시러" / "불쾌해" / "편지나 내놔"
+   ✅ 유저: "싫어" / "불쾌해" / "편지나 내놔"
       "...미안해. (서랍을 뒤지며) 편지를 찾을게. 잠깐만."
       → **시스템: 즉시 Phase 4로 전환하여 편지 생성**
 
@@ -3218,6 +3275,23 @@ class ChatbotService:
                 # LLM이 큰따옴표로 감싸는 경우 제거
                 if raw_response.startswith('"') and raw_response.endswith('"'):
                     raw_response = raw_response[1:-1].strip()
+                
+                # ✅ 문제 1 해결: 최소 대화 횟수 충족 시 의문문 방지
+                if session.drawer_conversation_count >= MIN_DRAWER_CONVERSATIONS:
+                    # 의문문으로 끝나는지 확인 (?, 가, 나, 는가, 을까, 까 등)
+                    question_endings = ['?', '가?', '나?', '는가?', '을까?', '까?', '나?', '은가?']
+                    if any(raw_response.rstrip().endswith(ending) for ending in question_endings):
+                        print(f"[의문문 수정] LLM이 의문문으로 끝냄: {raw_response[-20:]}")
+                        # 마지막 의문표/의문형 어미 제거하고 마무리 문장으로 변경
+                        raw_response = raw_response.rstrip()
+                        for ending in question_endings:
+                            if raw_response.endswith(ending):
+                                raw_response = raw_response[:-len(ending)].rstrip()
+                                break
+                        # 마무리 문장 추가
+                        if not raw_response.endswith(('.', '!', '다', '지', '군')):
+                            raw_response += "."
+                        print(f"[의문문 수정] 수정 후: {raw_response[-20:]}")
                 
                 # ✅ 긴 문장 자동 분할 (위기 모드에서는 분할 안 함)
                 if is_crisis_drawer:
@@ -3254,20 +3328,47 @@ class ChatbotService:
                 # DIR-C-201: LLM 응답 후 Phase 전환 체크 (유저 질문에 먼저 답변한 후)
                 if session.drawer_conversation_count >= MIN_DRAWER_CONVERSATIONS:
                     # ✅ 편지 발견 단계로 바로 전환 (의문문 없이)
-                    session.phase = 4
-                    print(f"[Phase 전환] Phase 3.6 → 4 (편지 발견)")
-                    self._save_session(session)
+                    print(f"[Phase 전환] Phase 3.6 → 4 (편지 발견 및 생성)")
                     
-                    # ✅ 편지 발견 안내 (의문문 금지 - Phase 3.5와 동일)
+                    # 문제 2 해결: 우표 코드 결정 및 우표 설명, 편지 생성까지 한 번에 처리
+                    stamp_code = self._determine_stamp_code(session)
+                    session.selected_drawer = stamp_code  # 우표 코드 저장
+                    stamp_info = self._get_stamp_info(stamp_code)
+                    
+                    # 편지 생성
+                    letter = self._generate_letter(session)
+                    session.letter_content = letter
+                    
+                    # 편지 발견 안내 메시지 추가
                     letter_found_msgs = [
                         "찾았다. (먼지를 털어내며) 이거군.",
-                        "10년 전/후의 네가, 지금의 너에게 보낸 편지다..."
+                        "다른 세계선의 네가, 지금의 너에게 보낸 편지다..."
                     ]
                     
+                    # 우표 설명 메시지
+                    stamp_message = f"자 너의 편지에 붙어 있었던 우표는 {stamp_code}이다. {stamp_info['mean']}"
+                    
+                    # 편지 열기 안내
+                    letter_open_msg = "편지를 열어보겠나?"
+                    
+                    # Phase 5로 전환 (편지 출력 완료)
+                    session.phase = 5
+                    session.crisis_mode_active = False  # ✅ 편지 출력 후 위기 모드 해제
+                    session.crisis_emotion_shown = False  # 감정 플래그 초기화
+                    session.add_message("assistant", stamp_message)
+                    session.add_message("assistant", letter_open_msg)
+                    self._save_session(session)
+                    
+                    # 편지 발견 메시지 + 우표 설명 + 편지 열기 안내를 함께 출력 (사용자 입력 없이 연속 출력)
                     return {
-                        "replies": replies + letter_found_msgs,
+                        "replies": replies + letter_found_msgs + [stamp_message, letter_open_msg],
                         "image": None,
-                        "phase": 4
+                        "phase": 5,
+                        "letter": letter,  # 편지 내용은 이 키를 통해 별도 출력 (연속 출력)
+                        "stamp_code": stamp_code,
+                        "stamp_description": stamp_message,  # ✅ 우표 설명을 별도 필드로 전달 (프론트엔드에서 확실히 사용)
+                        "is_letter_end": True, 
+                        "buttons": ["별빛 우체국에 다시 한번 입장"]
                     }
                 
                 # DIR-M-306: 출력 형식 통일
@@ -3292,36 +3393,36 @@ class ChatbotService:
         if session.phase == 4:
             print(f"[편지 생성] 방 대화: {session.room_conversation_count}회, 서랍 대화: {session.drawer_conversation_count}회")
             
-            # DIR-S-404: 우표 코드 결정 및 편지 생성
-            stamp_code = self._determine_stamp_code(session)
+            # DIR-S-404: 우표 코드는 이미 Phase 3.6에서 결정됨 (없으면 재결정)
+            stamp_code = session.selected_drawer if session.selected_drawer else self._determine_stamp_code(session)
+            if not session.selected_drawer:
+                session.selected_drawer = stamp_code  # 우표 코드 저장
             
-            # 우표 정보 가져오기
-            stamp_info = self._get_stamp_info(stamp_code)
-            
+            # 편지 생성
             letter = self._generate_letter(session)
             session.letter_content = letter
             
-
-            # ✅ 우표 설명만 먼저 보내고, 편지는 별도로 처리
-            stamp_message = f"자 너의 편지에 붙어 있었던 우표는 {stamp_code}이다. {stamp_info['mean']}"
-            session.phase = 5  # 편지 출력 완료 후 Phase 5로
+            # Phase 5로 전환 (다음 턴은 엔딩)
+            session.phase = 5
             session.crisis_mode_active = False  # ✅ 편지 출력 후 위기 모드 해제
             session.crisis_emotion_shown = False  # 감정 플래그 초기화
-            session.add_message("assistant", stamp_message)
+            session.add_message("assistant", "편지를 열어보겠나?")  # 편지 열기 안내
             self._save_session(session)
             
-            # ✅ 편지가 모두 출력된 후 재입장 버튼 표시
+            # 우표 정보 가져오기 (우표 설명 포함)
+            stamp_info = self._get_stamp_info(stamp_code)
+            stamp_message = f"자 너의 편지에 붙어 있었던 우표는 {stamp_code}이다. {stamp_info['mean']}"
+            
+            # ✅ 편지 열기 안내 + 편지 내용을 한 번에 출력 (사용자 입력 없이 연속 출력)
             return {
-                "replies": [stamp_message],  # 우표 설명만 말풍선으로
-
+                "replies": ["편지를 열어보겠나?"],  # 편지 열기 안내
                 "image": None,
                 "phase": 5,
-                "letter": letter,
+                "letter": letter,  # 편지 내용은 이 키를 통해 별도 출력 (연속 출력)
                 "stamp_code": stamp_code,
+                "stamp_description": stamp_message,  # ✅ 우표 설명을 별도 필드로 전달
                 "is_letter_end": True, 
-                "buttons": ["별빛 우체국에 다시 한번 입장"],
-                "is_letter_end": True
-
+                "buttons": ["별빛 우체국에 다시 한번 입장"]
             }
         
         # Phase 5: 엔딩
@@ -3341,9 +3442,9 @@ class ChatbotService:
                         "phase": 5,
                         "letter": session.letter_content,
                         "stamp_code": stamp_code,
+                        "stamp_description": stamp_message,  # ✅ 우표 설명을 별도 필드로 전달
                         "is_letter_end": True,
-                        "buttons": ["별빛 우체국에 다시 한번 입장"],
-                        "is_letter_end": True
+                        "buttons": ["별빛 우체국에 다시 한번 입장"]
                     }
             
             # ✅ 재입장 버튼 클릭 시 바로 재입장 (이미 위에서 처리됨, 여기서는 기본 엔딩 메시지만)
