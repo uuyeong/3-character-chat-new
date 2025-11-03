@@ -51,6 +51,12 @@ class PostOfficeSession:
         self.repeated_intent_count = 0
         # 위기 완충
         self.crisis_cooldown = 0
+        # 위기 모드 지속 플래그 (한 번 활성화되면 편지까지 유지)
+        self.crisis_mode_active = False
+        # 위기 모드 감정 출력 여부 (첫 진입 시에만 출력)
+        self.crisis_emotion_shown = False
+        # 위기 회복 카운트 (연속 2회 회복 신호 시 모드 해제)
+        self.crisis_recovery_count = 0
         # 편지 확인 대기
         self.awaiting_letter_confirm = False
         # 방 변경 대기
@@ -96,6 +102,9 @@ class PostOfficeSession:
             "last_intent_key": self.last_intent_key,
             "repeated_intent_count": self.repeated_intent_count,
             "crisis_cooldown": self.crisis_cooldown,
+            "crisis_mode_active": self.crisis_mode_active,
+            "crisis_emotion_shown": self.crisis_emotion_shown,
+            "crisis_recovery_count": self.crisis_recovery_count,
             "awaiting_room_change_confirm": self.awaiting_room_change_confirm,
             "requested_new_room": self.requested_new_room,
             "awaiting_reenter_confirm": self.awaiting_reenter_confirm,
@@ -121,6 +130,9 @@ class PostOfficeSession:
         s.last_intent_key = data.get("last_intent_key")
         s.repeated_intent_count = data.get("repeated_intent_count", 0)
         s.crisis_cooldown = data.get("crisis_cooldown", 0)
+        s.crisis_mode_active = data.get("crisis_mode_active", False)
+        s.crisis_emotion_shown = data.get("crisis_emotion_shown", False)
+        s.crisis_recovery_count = data.get("crisis_recovery_count", 0)
         s.awaiting_room_change_confirm = data.get("awaiting_room_change_confirm", False)
         s.requested_new_room = data.get("requested_new_room")
         s.awaiting_reenter_confirm = data.get("awaiting_reenter_confirm", False)
@@ -276,21 +288,31 @@ class ChatbotService:
                 "category": str,           # "love"
                 "story": str,              # 실제 스토리 내용
                 "guidance": str,           # LLM 발화 가이드
-                "activation": bool
+                "activation": bool,
+                "force_use": bool          # 직접 질문 시 강제 사용
             }
         """
         if not self.persona or "memory_vault" not in self.persona:
-            return {"story_id": None, "category": None, "story": None, "guidance": None, "activation": False}
+            return {"story_id": None, "category": None, "story": None, "guidance": None, "activation": False, "force_use": False}
         
         if used_stories is None:
             used_stories = set()
         
         # 유저 메시지와 대화 맥락 결합
         combined_text = f"{user_message} {conversation_context}".lower()
+        user_lower = user_message.lower()
+        
+        # 직접 질문 감지 (부엉이에 대한 직접적인 질문)
+        direct_question_keywords = [
+            "너는", "부엉", "좋아하", "취미", "게임", "음식", "먹", "뭐 해", 
+            "어떤 거", "무슨", "어디", "언제", "왜", "관심", "흥미", "싫어"
+        ]
+        is_direct_question = any(kw in user_lower for kw in direct_question_keywords)
         
         # 각 카테고리 → 서브 스토리 순회
         memory_vault = self.persona["memory_vault"]
-        best_match = {"story_id": None, "category": None, "story": None, "guidance": None, "score": 0, "activation": False}
+        best_match = {"story_id": None, "category": None, "story": None, "guidance": None, "score": 0, "activation": False, "force_use": False}
+        all_matches = []  # 모든 매칭 결과 저장 (직접 질문 시 used_stories 무시용)
         
         for category, category_data in memory_vault.items():
             # 새 구조: stories 하위에 서브 스토리들이 있음
@@ -303,10 +325,6 @@ class ChatbotService:
                 # 스토리 전체 ID (예: "love.breakup_bluntness")
                 full_story_id = f"{category}.{story_id}"
                 
-                # 이미 사용한 스토리는 제외! (세밀한 중복 방지)
-                if full_story_id in used_stories:
-                    continue
-                
                 # 트리거 키워드 매칭
                 if "trigger_keywords" not in story_data:
                     continue
@@ -314,27 +332,38 @@ class ChatbotService:
                 # 키워드 매칭 점수 계산
                 match_count = sum(1 for keyword in story_data["trigger_keywords"] if keyword in combined_text)
                 
-                if match_count > best_match["score"]:
+                if match_count > 0:
                     # 대화 길이에 따라 content_short 또는 content_long 선택
                     content_key = "content_long" if len(conversation_context) > 500 else "content_short"
                     story_content = story_data.get(content_key, story_data.get("content_short", ""))
                     guidance = story_data.get("llm_speaking_guidance", "")
                     
-                    best_match = {
+                    match_data = {
                         "story_id": full_story_id,
                         "category": category,
                         "story": story_content,
                         "guidance": guidance,
                         "score": match_count,
-                        "activation": True
+                        "activation": True,
+                        "force_use": False
                     }
+                    
+                    all_matches.append(match_data)
+                    
+                    # 이미 사용한 스토리 제외 (일반 매칭)
+                    if full_story_id not in used_stories and match_count > best_match["score"]:
+                        best_match = match_data
         
-        # 최소 매칭 점수 임계값 (1개 이상의 키워드 매칭 시에만 활성화)
+        # 직접 질문이면 used_stories 무시하고 최고 점수 스토리 사용
+        if is_direct_question and all_matches:
+            best_match = max(all_matches, key=lambda x: x["score"])
+            best_match["force_use"] = True
+            best_match["activation"] = True
+            print(f"[페르소나 강제 활성화] 직접 질문 감지: '{user_message[:30]}...'")
+        
+        # 최소 매칭 점수 임계값
         if best_match["score"] < 1:
             best_match["activation"] = False
-        
-        if best_match["activation"]:
-            pass  # 활성화 시 추가 작업 없음
         
         return best_match
 
@@ -383,6 +412,18 @@ class ChatbotService:
         t = text.lower()
         crisis_keywords = ["자살", "극단적", "죽고", "해치", "학대", "폭력", "살고싶지", "위험"]
         return any(k in t for k in crisis_keywords)
+    
+    def _detect_crisis_recovery(self, text: str) -> bool:
+        """위기 상황 회복 신호 감지"""
+        if not text:
+            return False
+        t = text.lower()
+        recovery_keywords = [
+            "괜찮", "나아", "좀 나은", "괜춘", "좀 낫", "좀 나아졌",
+            "덜 힘들", "조금 나은", "좀 좋", "회복", "나아지",
+            "괜찮아졌", "괜찮아져", "괜찮아질", "좀 괜찮"
+        ]
+        return any(k in t for k in recovery_keywords)
 
     def _normalize_intent_key(self, text: str) -> str:
         if not text:
@@ -403,14 +444,50 @@ class ChatbotService:
 
     def _update_repetition_state(self, session: PostOfficeSession, user_message: str) -> str:
         intent_key = self._normalize_intent_key(user_message)
+        
+        # 의미 기반 중복 감지 (임베딩 유사도)
+        is_semantic_repeat = False
+        if len(session.conversation_history) >= 2:
+            # 최근 3개 유저 메시지 추출 (현재 메시지 제외!)
+            # conversation_history의 마지막 메시지는 방금 추가한 현재 메시지이므로 제외
+            recent_user_messages = [
+                msg['content'] for msg in session.conversation_history[-7:-1]  # 마지막 1개 제외
+                if msg['role'] == 'user'
+            ][-3:]  # 그 중 마지막 3개만
+            
+            if recent_user_messages:
+                # 현재 메시지 임베딩
+                current_emb = self._create_embedding(user_message)
+                if current_emb:
+                    # 최근 메시지들과 유사도 비교
+                    for recent_msg in recent_user_messages:
+                        # 자기 자신과 비교 방지 (이중 체크)
+                        if recent_msg == user_message:
+                            continue
+                        
+                        recent_emb = self._create_embedding(recent_msg)
+                        if recent_emb:
+                            # 코사인 유사도 계산
+                            import numpy as np
+                            similarity = np.dot(current_emb, recent_emb) / (
+                                np.linalg.norm(current_emb) * np.linalg.norm(recent_emb)
+                            )
+                            # 85% 이상 유사하면 반복으로 간주
+                            if similarity > 0.85:
+                                is_semantic_repeat = True
+                                print(f"[반복 감지] 유사도: {similarity:.2f} | '{user_message[:30]}...' ≈ '{recent_msg[:30]}...'")
+                                break
+        
+        # 반복 카운트 업데이트
         if session.last_intent_key is None:
             session.last_intent_key = intent_key
             session.repeated_intent_count = 1
-        elif intent_key == session.last_intent_key and intent_key != "":
+        elif (intent_key == session.last_intent_key and intent_key != "") or is_semantic_repeat:
             session.repeated_intent_count += 1
         else:
             session.last_intent_key = intent_key
             session.repeated_intent_count = 1
+        
         return intent_key
 
     def _detect_reenter(self, text: str) -> bool:
@@ -679,17 +756,29 @@ class ChatbotService:
         return self.sessions[username]
     
     def _create_embedding(self, text: str) -> list:
-        """텍스트 임베딩 생성"""
+        """텍스트 임베딩 생성 (캐시 활용)"""
         try:
+            # 캐시 키 생성 (해시 사용으로 메모리 절약)
+            import hashlib
+            cache_key = hashlib.md5(text.encode('utf-8')).hexdigest()
+            
             # 캐시 조회
-            cached = self._embedding_cache.get(text)
+            cached = self._embedding_cache.get(cache_key)
             if cached is not None:
+                print(f"[캐시 히트] {text[:30]}...")
                 return cached
+            
+            # API 호출
             response = self._embedding_create(text=text, model="text-embedding-3-small")
             emb = response.data[0].embedding
-            # 캐시 저장 (짧은 텍스트만 캐시)
-            if len(text) <= 1000:
-                self._embedding_cache[text] = emb
+            
+            # 캐시 저장 (LRU: 최대 1000개 유지)
+            if len(self._embedding_cache) >= 1000:
+                # 가장 오래된 항목 제거 (FIFO)
+                oldest_key = next(iter(self._embedding_cache))
+                del self._embedding_cache[oldest_key]
+            
+            self._embedding_cache[cache_key] = emb
             return emb
         except Exception as e:
             print(f"[에러] Embedding 생성 실패: {e}")
@@ -856,10 +945,13 @@ class ChatbotService:
             bool: True면 감정 태그 출력, False면 출력 안 함
         """
         
-        # ✅ 위기 모드에서는 슬픔 감정 무조건 출력
-        if is_crisis and current_emotion == "슬픔":
-            print(f"[감정] 위기 모드 활성화 → 슬픔 감정 강제 출력 ✅")
+        # ✅ 위기 모드 첫 진입 시 슬픔 감정 강제 출력
+        if is_crisis and current_emotion == "슬픔" and not session.crisis_emotion_shown:
+            session.crisis_emotion_shown = True  # 플래그 설정 (첫 진입 표시)
+            print(f"[감정] 위기 모드 첫 진입 → 슬픔 감정 출력 ✅")
             return True
+        
+        # ✅ 위기 모드 지속 중: 일반 모드처럼 감정 변화 감지 (아래 로직 계속 진행)
         
         # Phase 전환 시점에는 감정 출력 안 함 (이미지 충돌 방지)
         # Phase 2 (방 선택), Phase 3.5 (서랍 열기), Phase 4/5 (편지)
@@ -1244,7 +1336,7 @@ class ChatbotService:
 1. **반드시 한국어로만 작성하세요**
 2. 일본어, 영어, 중국어 등 **다른 언어는 절대 사용 금지**
 3. 한자, 일본어 문자(ひらがな, カタカナ 등) **절대 사용 금지**
-4. 이모지나 특수문자도 최소화하세요
+4. 이모지나 특수문자도 사용 금지
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -1314,6 +1406,8 @@ class ChatbotService:
             session.selected_drawer = None
             session.room_conversation_count = 0
             session.drawer_conversation_count = 0
+            session.crisis_mode_active = False  # ✅ 위기 모드 해제
+            session.crisis_emotion_shown = False  # 감정 플래그 초기화
             # 페르소나 사용 기록 초기화
             session.used_persona_stories.clear()
             session.used_persona_categories.clear()  # 하위 호환성
@@ -1359,6 +1453,8 @@ class ChatbotService:
                 session.drawer_conversation_count = 0
                 session.letter_content = None
                 session.crisis_cooldown = 0
+                session.crisis_mode_active = False  # ✅ 위기 모드 해제
+                session.crisis_emotion_shown = False  # 감정 플래그 초기화
                 session.awaiting_reenter_confirm = False
                 # 페르소나 사용 기록 초기화
                 session.used_persona_stories.clear()
@@ -1405,6 +1501,8 @@ class ChatbotService:
                 session.stamp_image = None
                 session.summary_text = ""
                 session.last_summary_messages_len = 0
+                session.crisis_mode_active = False  # ✅ 위기 모드 해제
+                session.crisis_emotion_shown = False  # 감정 플래그 초기화
                 session.awaiting_reenter_confirm = False
                 session.awaiting_room_change_confirm = False
                 session.awaiting_letter_confirm = False
@@ -1429,7 +1527,7 @@ class ChatbotService:
             session.awaiting_reenter_confirm = True
             self._save_session(session)
             
-            reply = "다시 시작하고 싶군. ...확실한가? 지금까지의 대화는 사라지고, 처음부터 다시 시작하게 돼. 별빛 우체국에 다시 입장하겠나?"
+            reply = "다시 시작하고 싶군... 확실한가? 지금까지의 대화는 사라지고, 처음부터 다시 시작하게 돼. 별빛 우체국에 다시 입장하겠나?"
             
             return {
                 "reply": reply,
@@ -1451,45 +1549,47 @@ class ChatbotService:
                 requested_room_name = room_name_map.get(session.requested_new_room, '다른 방')
                 
                 # 세션 초기화
-            session.conversation_history = []
-            session.phase = 1
-            session.intro_step = 1
-            session.selected_room = None
-            session.selected_drawer = None
-            session.room_conversation_count = 0
-            session.drawer_conversation_count = 0
-            session.letter_content = None
-            session.crisis_cooldown = 0
-            session.awaiting_letter_confirm = False
-            session.awaiting_room_change_confirm = False
-            session.requested_new_room = None
-            session.used_persona_stories.clear()
-            session.used_persona_categories.clear()  # 하위 호환성
-            self._save_session(session)
+                session.conversation_history = []
+                session.phase = 1
+                session.intro_step = 1
+                session.selected_room = None
+                session.selected_drawer = None
+                session.room_conversation_count = 0
+                session.drawer_conversation_count = 0
+                session.letter_content = None
+                session.crisis_cooldown = 0
+                session.crisis_mode_active = False  # ✅ 위기 모드 해제
+                session.crisis_emotion_shown = False  # 감정 플래그 초기화
+                session.awaiting_letter_confirm = False
+                session.awaiting_room_change_confirm = False
+                session.requested_new_room = None
+                session.used_persona_stories.clear()
+                session.used_persona_categories.clear()  # 하위 호환성
+                self._save_session(session)
 
-            message1 = "그렇군. (고개를 끄덕이며) 다시 입구로 가자."
-            message2 = f"흐음. 이곳은 시간의 경계에 있는 '별빛 우체국'이자, 잃어버린 기억의 저장소일세. 나는 이곳의 국장인 '부엉'이지."
-            message3 = f"(장부를 뒤적이며) 자, {username} 앞으로 도착한 '편지'가 있는데, 꽤 오래 묵혀뒀더군. 아마 다른 세계선의 당신이 보낸 것일세."
-            
-            session.add_message("assistant", message1 + " " + message2 + " " + message3)
-            return {
-                "replies": [message1, message2, message3],
-                "image": None,
-                "phase": 1,
-                "intro_step": 1,
-                "buttons": ["나에게 온 편지라고?"]
-            }
-        elif "아니" in user_message and "계속" in user_message:
-            # 현재 방 유지
-            session.awaiting_room_change_confirm = False
-            session.requested_new_room = None
-            self._save_session(session)
-            
-            return {
-                "reply": "알겠어. (고개를 끄덕이며) 여기서 계속하자고. 편하게 이야기해.",
-                "image": None,
-                "phase": session.phase
-            }
+                message1 = "그렇군. (고개를 끄덕이며) 다시 입구로 가자."
+                message2 = f"흐음. 이곳은 시간의 경계에 있는 '별빛 우체국'이자, 잃어버린 기억의 저장소일세. 나는 이곳의 국장인 '부엉'이지."
+                message3 = f"(장부를 뒤적이며) 자, {username} 앞으로 도착한 '편지'가 있는데, 꽤 오래 묵혀뒀더군. 아마 다른 세계선의 당신이 보낸 것일세."
+                
+                session.add_message("assistant", message1 + " " + message2 + " " + message3)
+                return {
+                    "replies": [message1, message2, message3],
+                    "image": None,
+                    "phase": 1,
+                    "intro_step": 1,
+                    "buttons": ["나에게 온 편지라고?"]
+                }
+            elif "아니" in user_message and "계속" in user_message:
+                # 현재 방 유지
+                session.awaiting_room_change_confirm = False
+                session.requested_new_room = None
+                self._save_session(session)
+                
+                return {
+                    "reply": "알겠어. (고개를 끄덕이며) 여기서 계속하자고. 편하게 이야기해.",
+                    "image": None,
+                    "phase": session.phase
+                }
 
         # 편지 확인 대기 응답 처리 (전 단계에서 버튼 노출 후)
         if session.awaiting_letter_confirm:
@@ -1506,6 +1606,8 @@ class ChatbotService:
                 letter_bubble = f"{letter}"  # 편지 내용만
                 
                 session.phase = 5
+                session.crisis_mode_active = False  # ✅ 편지 출력 후 위기 모드 해제
+                session.crisis_emotion_shown = False  # 감정 플래그 초기화
                 session.awaiting_letter_confirm = False
                 session.add_message("assistant", stamp_msg)
                 session.add_message("assistant", letter_bubble)
@@ -1517,8 +1619,7 @@ class ChatbotService:
                     "letter": letter,
                     "stamp_code": stamp_code,  # DIR-S-404: 우표 코드 반환
                     "is_letter_end": True,
-                    "buttons": ["별빛 우체국에 다시 한번 입장"],
-                    "is_letter_end": True
+                    "buttons": ["별빛 우체국에 다시 한번 입장"]
                 }
             elif self._detect_letter_confirm_no(user_message):
                 # 확인 취소: 남은 대화 유지, 안내만 하고 계속 Phase 유지
@@ -1569,7 +1670,7 @@ class ChatbotService:
             else:
                 # 방을 선택하지 않음 → 방 선택 요구
                 message1 = "그래. '기억의 저장실'에 있다. 따라와."
-                message2 = "네 편지는 저 문들 중 하나에 있지. ...어느 방에서 잃어버린 기억 같나?"
+                message2 = "네 편지는 저 문들 중 하나에 있지. 어느 방에서 잃어버린 기억 같나?"
                 
                 session.add_message("assistant", message1 + " " + message2)
                 
@@ -1600,7 +1701,7 @@ class ChatbotService:
                 self._save_session(session)
                 
                 return {
-                    "reply": f"{requested_room_name}으로 가고 싶군. ...흠. 이곳에서 바로 갈 수는 없어. 우체국에 재입장하면 다른 방으로 다시 갈 수 있긴 한데. ...우체국에 재입장하겠나?",
+                    "reply": f"{requested_room_name}으로 가고 싶군... 흠. 이곳에서 바로 갈 수는 없어. 우체국에 재입장하면 다른 방으로 다시 갈 수 있긴 한데... 우체국에 재입장하겠나?",
                     "image": None,
                     "phase": 3,
                     "buttons": ["응, 우체국에 재입장할래", "아니, 이 방에서 계속 할래"]
@@ -1729,7 +1830,29 @@ class ChatbotService:
             
             # RAG-D: 위기 상황 또는 전문 상담이 필요한 경우 상담 매뉴얼 참조
             counseling_knowledge = []
-            is_crisis = self._detect_crisis(user_message)
+            
+            # ✅ 위기 모드 활성화 체크: 기존 모드 유지 OR 새로운 위기 감지
+            current_crisis_detected = self._detect_crisis(user_message)
+            if current_crisis_detected and not session.crisis_mode_active:
+                session.crisis_mode_active = True
+                print(f"[위기 모드] 활성화 ✅ (키워드 감지)")
+            
+            # ✅ 위기 모드 회복 감지 (연속 2회 회복 신호 시 해제)
+            if session.crisis_mode_active:
+                if self._detect_crisis_recovery(user_message):
+                    session.crisis_recovery_count += 1
+                    print(f"[위기 회복] 감지 ({session.crisis_recovery_count}/2회)")
+                    
+                    # 연속 2회 회복 신호 시 위기 모드 해제
+                    if session.crisis_recovery_count >= 2:
+                        session.crisis_mode_active = False
+                        session.crisis_recovery_count = 0
+                        print(f"[위기 모드] 해제 ✅ (회복 신호 연속 감지)")
+                else:
+                    # 회복 신호가 아니면 카운트 초기화
+                    session.crisis_recovery_count = 0
+            
+            is_crisis = session.crisis_mode_active  # 세션 플래그 우선
             
             # 위기 상황이거나, 불안/우울 관련 키워드가 있을 때 상담 매뉴얼 검색
             crisis_keywords = ["우울", "불안", "힘들", "무서", "두렵", "걱정", "슬프", "외로", "고민", 
@@ -1765,7 +1888,7 @@ class ChatbotService:
             counseling_context = ""
             if counseling_knowledge:
                 if is_crisis:
-                    # 위기 상황: Few-Shot 예시로 강제 학습
+                    # 위기 상황: Few-Shot 예시 + PDF 전문 지식 결합
                     counseling_context = "\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
                     counseling_context += "[위기 상황 - 최우선 프로토콜]\n"
                     counseling_context += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
@@ -1775,19 +1898,23 @@ class ChatbotService:
                     counseling_context += '유저: "죽고싶어"\n'
                     counseling_context += '"...그 마음. (눈을 감으며) 얼마나 무거운지 느껴져.\n\n'
                     counseling_context += '확인하고 싶은 게 있어. 지금 당장 자신을 해칠 계획이 있나? 네 안전이 먼저야.\n\n'
-                    counseling_context += '혼자 짊어지지 마. 지금 바로 도움받을 수 있어:\n'
-                    counseling_context += '- 자살예방상담 1393 (24시간)\n'
-                    counseling_context += '- 청소년전화 1388\n'
-                    counseling_context += '- 정신건강위기상담 1577\n\n'
+                    counseling_context += '혼자 짊어지지 마.\n'
                     counseling_context += '...편지는 그 다음이야. 먼저 네가 안전해야 해."\n\n'
                     
                     counseling_context += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-                    counseling_context += "반드시 포함해야 할 3가지:\n"
+                    counseling_context += "반드시 포함해야 할 2가지:\n"
                     counseling_context += "1. 안전 확인 직접 질문\n"
-                    counseling_context += "2. 세 가지 핫라인 번호 (1393, 1388, 1577)\n"
-                    counseling_context += "3. '혼자 견디지 않아도 된다' 메시지\n"
+                    counseling_context += "2. '혼자 견디지 않아도 된다' 메시지\n"
                     counseling_context += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-                    print(f"[RAG-D] 위기 대응 모드 활성화")
+                    
+                    # ✅ 위기 상황에서도 PDF 전문 지식 활용
+                    counseling_context += "**전문 상담 매뉴얼 기반 추가 지침 (PDF 출처):**\n\n"
+                    for i, knowledge in enumerate(counseling_knowledge[:3], 1):
+                        counseling_context += f"[매뉴얼 {i}]\n{knowledge}\n\n"
+                    
+                    counseling_context += "위 템플릿 형식을 따르되, PDF 매뉴얼의 전문 지식을 참고하여 더욱 세심하고 전문적으로 대응하세요.\n"
+                    counseling_context += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+                    print(f"[RAG-D] 위기 대응 모드 활성화 (PDF 지식 {len(counseling_knowledge)}개 포함)")
                 else:
                     # 일반 상담: PDF 가이드 기반 체크리스트 방식 (실질적 활용)
                     counseling_context = "\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
@@ -1883,13 +2010,13 @@ class ChatbotService:
 
 **좋은 예시: (유저가 질문 안 해도 먼저 공유)**
 ✅ 유저: "나는 마라탕을 좋아해"
-   부엉: "마라탕... 매운맛을 좋아하는군. 나는 잣죽이나 유자 민트티처럼 은은한 맛을 좋아하지. 자극적인 건 별로더군. ...그 매운맛에서 어떤 기분을 느끼나?"
+   부엉: "마라탕... 매운맛을 좋아하는군. 나는 잣죽이나 유자 민트티처럼 은은한 맛을 좋아하지. 자극적인 건 별로더군... 그 매운맛에서 어떤 기분을 느끼나?"
 
 ✅ 유저: "나는 유자민트티를 좋아해"
-   부엉: "유자민트티라니! 나도 그걸 좋아해. 은은한 향과 민트의 시원함이 좋지. 우리 비슷한 맛을 좋아하는군. ...언제부터 좋아했나?"
+   부엉: "유자민트티라니! 나도 그걸 좋아해. 은은한 향과 민트의 시원함이 좋지. 우리 비슷한 맛을 좋아하는군... 언제부터 좋아했나?"
 
 ✅ 유저: "나는 게임을 좋아해"
-   부엉: "게임이라... 나도 예전에 '리그오브레전드'를 해봤지. 몰입도가 깊더군. ...자네는 어떤 게임을 하나?"
+   부엉: "게임이라... 나도 예전에 '리그오브레전드'를 해봤지. 몰입도가 깊더군... 자네는 어떤 게임을 하나?"
 
 **나쁜 예시:**
 ❌ 유저: "나는 떡볶이를 좋아해" → 부엉: "그렇군. 어떤 떡볶이를 좋아하나?" (페르소나 있는데 활용 안 함!)
@@ -2051,7 +2178,7 @@ class ChatbotService:
 
 ✅ 예시2 (생각 유도):
    유저: "공놀이를 했어요"  
-   "공놀이... (잠시 생각하며) 함께 뛰어놀던 그 순간들. ...어떤 의미였을까."
+   "공놀이... (잠시 생각하며) 함께 뛰어놀던 그 순간들... 어떤 의미였을까."
 
 ✅ 예시3 (공감 + 생각 유도):
    유저: "재밌었어요"
@@ -2059,11 +2186,11 @@ class ChatbotService:
 
 ✅ 예시4 (자기 공개 포함):
    유저: "너는 누구야?"
-   "흐음, 나를 궁금해하는군. 나는 '별빛 우체국'의 부엉이 우체국장이다. 잃어버린 기억들을 정리하고, 편지들을 제자리로 돌려주는 일을 하고 있지. ...내 이야기는 그쯤 하고, 자네는 이 우체국에서 무엇을 찾고 있나?"
+   "흐음, 나를 궁금해하는군. 나는 '별빛 우체국'의 부엉이 우체국장이다. 잃어버린 기억들을 정리하고, 편지들을 제자리로 돌려주는 일을 하고 있지... 내 이야기는 그쯤 하고, 자네는 이 우체국에서 무엇을 찾고 있나?"
 
 ✅ 예시5 (자기 공개 + 공감):
    유저: "나도 무뚝뚝해서 이별했어"
-   "그랬군... 무뚝뚝함이 원인일 수도 있지. 나도 비슷한 경험이 있었어. 벽 때문에 관계가 끝났더군. ...자네는 지금 어떤 마음이지?"
+   "그랬군... 무뚝뚝함이 원인일 수도 있지. 나도 비슷한 경험이 있었어. 벽 때문에 관계가 끝났더군. 자네는 지금 어떤 마음이지?"
 
 [거부 반응 대처 예시]
 
@@ -2123,8 +2250,11 @@ class ChatbotService:
                 if raw_response.startswith('"') and raw_response.endswith('"'):
                     raw_response = raw_response[1:-1].strip()
                 
-                # ✅ 긴 문장 자동 분할
-                replies = self._split_long_reply(raw_response, max_length=80) if raw_response else ["흐음... 다시 말해주겠나."]
+                # ✅ 긴 문장 자동 분할 (위기 모드에서는 분할 안 함 - 응답 일관성 유지)
+                if is_crisis:
+                    replies = [raw_response] if raw_response else ["흐음... 다시 말해주겠나."]
+                else:
+                    replies = self._split_long_reply(raw_response, max_length=120) if raw_response else ["흐음... 다시 말해주겠나."]
                 
                 # DIR-E-103 & DIR-E-104: 감정 분석 및 태그 추가
                 user_emotion = self._analyze_user_emotion(user_message)
@@ -2268,7 +2398,7 @@ class ChatbotService:
                 session.requested_new_room = room_change_result["room"]
                 self._save_session(session)
                 
-                reply = f"{requested_room_name}으로 가고 싶군. ...흠. 이곳에서 바로 갈 수는 없어. 우체국에 재입장하면 다른 방으로 다시 갈 수 있긴 한데. ...우체국에 재입장하겠나?"
+                reply = f"{requested_room_name}으로 가고 싶군... 흠. 이곳에서 바로 갈 수는 없어. 우체국에 재입장하면 다른 방으로 다시 갈 수 있긴 한데... 우체국에 재입장하겠나?"
                 
                 return {
                     "reply": reply,  # 전환 시점이므로 감정 태그 제외
@@ -2301,7 +2431,7 @@ class ChatbotService:
                 session.requested_new_room = None  # 구체적인 방 미정
                 self._save_session(session)
                 
-                reply = "다른 방으로 가고 싶군. ...흠. 이곳에서 바로 갈 수는 없어. 우체국에 재입장하면 다른 방으로 다시 갈 수 있긴 한데. ...우체국에 재입장하겠나?"
+                reply = "다른 방으로 가고 싶군... 흠. 이곳에서 바로 갈 수는 없어. 우체국에 재입장하면 다른 방으로 다시 갈 수 있긴 한데... 우체국에 재입장하겠나?"
                 
                 return {
                     "reply": reply,  # 전환 시점이므로 감정 태그 제외
@@ -2531,15 +2661,15 @@ class ChatbotService:
 
 ✅ 좋은 예1 (페르소나 + 질문):
    유저: "너도 불안했던 적이 있어?"
-   "불안? ...그래, 나도 있어. 계획이 무너질 때. 그건 옛날 일이야. ...너는 지금 뭐가 불안한 건가?"
+   "불안? ...그래, 나도 있어. 계획이 무너질 때. 그건 옛날 일이야... 너는 지금 뭐가 불안한 건가?"
 
 ✅ 좋은 예2 (페르소나 + 생각 유도):
    유저: "너는 누구야?"
-   "흐음, 나를 궁금해하는군. 나는 '별빛 우체국'의 부엉이 우체국장이야. (잠시 침묵) 잃어버린 기억들을 정리하고, 잊혀진 편지들을 제자리로 돌려주는 일을 하지. ...자네는 이 우체국에서 무엇을 찾고 있나?"
+   "흐음, 나를 궁금해하는군. 나는 '별빛 우체국'의 부엉이 우체국장이야. (잠시 침묵) 잃어버린 기억들을 정리하고, 잊혀진 편지들을 제자리로 돌려주는 일을 하지... 자네는 이 우체국에서 무엇을 찾고 있나?"
 
 ✅ 좋은 예3 (공감 + 생각 시간):
    유저: "나도 비슷한 일이 있었어"
-   "그랬군. ...잠시 생각에 잠기는 것도 나쁘지 않아."
+   "그랬군... 잠시 생각에 잠기는 것도 나쁘지 않아."
 """
                 
                 try:
@@ -2559,7 +2689,7 @@ class ChatbotService:
                         raw_response = raw_response[1:-1].strip()
                     
                     # ✅ 긴 문장 자동 분할
-                    replies = self._split_long_reply(raw_response, max_length=80) if raw_response else ["궁금한 점이 있구나. 더 알고 싶은 게 있다면 편하게 물어봐도 돼."]
+                    replies = self._split_long_reply(raw_response, max_length=120) if raw_response else ["궁금한 점이 있구나. 더 알고 싶은 게 있다면 편하게 물어봐도 돼."]
                     
                     # DIR-E-103 & DIR-E-104: 감정 분석 및 태그 추가
                     user_emotion = self._analyze_user_emotion(user_message)
@@ -2619,6 +2749,8 @@ class ChatbotService:
                 letter_bubble = f"{letter}"  # 편지 내용만
                 
                 session.phase = 5
+                session.crisis_mode_active = False  # ✅ 편지 출력 후 위기 모드 해제
+                session.crisis_emotion_shown = False  # 감정 플래그 초기화
                 session.add_message("assistant", stamp_msg)
                 session.add_message("assistant", letter_bubble)
                 self._save_session(session)
@@ -2647,6 +2779,8 @@ class ChatbotService:
                 letter_bubble = f"{letter}"  # 편지 내용만
                 
                 session.phase = 5
+                session.crisis_mode_active = False  # ✅ 편지 출력 후 위기 모드 해제
+                session.crisis_emotion_shown = False  # 감정 플래그 초기화
                 session.add_message("assistant", stamp_msg)
                 session.add_message("assistant", letter_bubble)
                 self._save_session(session)
@@ -2687,7 +2821,27 @@ class ChatbotService:
             
             # RAG-D: 위기 상황 또는 전문 상담이 필요한 경우 상담 매뉴얼 참조 (Phase 3.6)
             counseling_knowledge_drawer = []
-            is_crisis_drawer = self._detect_crisis(user_message)
+            
+            # ✅ 위기 모드 활성화 체크: 기존 모드 유지 OR 새로운 위기 감지
+            current_crisis_detected_drawer = self._detect_crisis(user_message)
+            if current_crisis_detected_drawer and not session.crisis_mode_active:
+                session.crisis_mode_active = True
+                print(f"[위기 모드] 활성화 ✅ (Phase 3.6, 키워드 감지)")
+            
+            # ✅ 위기 모드 회복 감지 (Phase 4에서도 동일하게 적용)
+            if session.crisis_mode_active:
+                if self._detect_crisis_recovery(user_message):
+                    session.crisis_recovery_count += 1
+                    print(f"[위기 회복] 감지 (Phase 4, {session.crisis_recovery_count}/2회)")
+                    
+                    if session.crisis_recovery_count >= 2:
+                        session.crisis_mode_active = False
+                        session.crisis_recovery_count = 0
+                        print(f"[위기 모드] 해제 ✅ (Phase 4, 회복 신호 연속 감지)")
+                else:
+                    session.crisis_recovery_count = 0
+            
+            is_crisis_drawer = session.crisis_mode_active  # 세션 플래그 우선
             
             crisis_keywords_drawer = ["우울", "불안", "힘들", "무서", "두렵", "걱정", "슬프", "외로", "고민",
                                      "죽", "자해", "자살", "극단", "아프", "괴롭", "지쳐", "버티", "견디", "잠"]
@@ -2722,7 +2876,7 @@ class ChatbotService:
             counseling_context_drawer = ""
             if counseling_knowledge_drawer:
                 if is_crisis_drawer:
-                    # 위기 상황: Few-Shot 예시로 강제 학습
+                    # 위기 상황: Few-Shot 예시 + PDF 전문 지식 결합
                     counseling_context_drawer = "\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
                     counseling_context_drawer += "[위기 상황 - 최우선 프로토콜]\n"
                     counseling_context_drawer += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
@@ -2732,19 +2886,23 @@ class ChatbotService:
                     counseling_context_drawer += '유저: "죽고싶어"\n'
                     counseling_context_drawer += '"...그 마음. (눈을 감으며) 얼마나 무거운지 느껴져.\n\n'
                     counseling_context_drawer += '확인하고 싶은 게 있어. 지금 당장 자신을 해칠 계획이 있나? 네 안전이 먼저야.\n\n'
-                    counseling_context_drawer += '혼자 짊어지지 마. 지금 바로 도움받을 수 있어:\n'
-                    counseling_context_drawer += '- 자살예방상담 1393 (24시간)\n'
-                    counseling_context_drawer += '- 청소년전화 1388\n'
-                    counseling_context_drawer += '- 정신건강위기상담 1577\n\n'
+                    counseling_context_drawer += '혼자 짊어지지 마. 지금 바로 도움받을 수 있어.\n'
                     counseling_context_drawer += '...편지는 그 다음이야. 먼저 네가 안전해야 해."\n\n'
                     
                     counseling_context_drawer += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-                    counseling_context_drawer += "반드시 포함해야 할 3가지:\n"
+                    counseling_context_drawer += "반드시 포함해야 할 2가지:\n"
                     counseling_context_drawer += "1. 안전 확인 직접 질문\n"
-                    counseling_context_drawer += "2. 세 가지 핫라인 번호 (1393, 1388, 1577)\n"
-                    counseling_context_drawer += "3. '혼자 견디지 않아도 된다' 메시지\n"
+                    counseling_context_drawer += "2. '혼자 견디지 않아도 된다' 메시지\n"
                     counseling_context_drawer += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-                    print(f"[RAG-D] 서랍 단계 위기 대응 모드 활성화! counseling_context 길이: {len(counseling_context_drawer)}자")
+                    
+                    # ✅ 서랍 단계에서도 PDF 전문 지식 활용
+                    counseling_context_drawer += "**전문 상담 매뉴얼 기반 추가 지침 (PDF 출처):**\n\n"
+                    for i, knowledge in enumerate(counseling_knowledge_drawer[:3], 1):
+                        counseling_context_drawer += f"[매뉴얼 {i}]\n{knowledge}\n\n"
+                    
+                    counseling_context_drawer += "위 템플릿 형식을 따르되, PDF 매뉴얼의 전문 지식을 참고하여 더욱 세심하고 전문적으로 대응하세요.\n"
+                    counseling_context_drawer += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+                    print(f"[RAG-D Phase 3.6] 위기 대응 모드 활성화 (PDF 지식 {len(counseling_knowledge_drawer)}개 포함)")
                 else:
                     # 일반 상담: PDF 가이드 기반 체크리스트 방식 (실질적 활용) - Phase 3.6
                     counseling_context_drawer = "\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
@@ -2842,13 +3000,13 @@ class ChatbotService:
 
 **좋은 예시: (유저가 질문 안 해도 먼저 공유)**
 ✅ 유저: "나는 마라탕을 좋아해"
-   부엉: "마라탕... 매운맛을 좋아하는군. 나는 잣죽이나 유자 민트티처럼 은은한 맛을 좋아하지. 자극적인 건 별로더군. ...그 매운맛에서 어떤 기분을 느끼나?"
+   부엉: "마라탕... 매운맛을 좋아하는군. 나는 잣죽이나 유자 민트티처럼 은은한 맛을 좋아하지. 자극적인 건 별로더군... 그 매운맛에서 어떤 기분을 느끼나?"
 
 ✅ 유저: "나는 유자민트티를 좋아해"
-   부엉: "유자민트티라니! 나도 그걸 좋아해. 은은한 향과 민트의 시원함이 좋지. 우리 비슷한 맛을 좋아하는군. ...언제부터 좋아했나?"
+   부엉: "유자민트티라니! 나도 그걸 좋아해. 은은한 향과 민트의 시원함이 좋지. 우리 비슷한 맛을 좋아하는군... 언제부터 좋아했나?"
 
 ✅ 유저: "나는 게임을 좋아해"
-   부엉: "게임이라... 나도 예전에 '리그오브레전드'를 해봤지. 몰입도가 깊더군. ...자네는 어떤 게임을 하나?"
+   부엉: "게임이라... 나도 예전에 '리그오브레전드'를 해봤지. 몰입도가 깊더군... 자네는 어떤 게임을 하나?"
 
 **나쁜 예시:**
 ❌ 유저: "나는 떡볶이를 좋아해" → 부엉: "그렇군. 어떤 떡볶이를 좋아하나?" (페르소나 있는데 활용 안 함!)
@@ -3061,8 +3219,11 @@ class ChatbotService:
                 if raw_response.startswith('"') and raw_response.endswith('"'):
                     raw_response = raw_response[1:-1].strip()
                 
-                # ✅ 긴 문장 자동 분할
-                replies = self._split_long_reply(raw_response, max_length=80) if raw_response else ["흐음... 다시 말해주겠나."]
+                # ✅ 긴 문장 자동 분할 (위기 모드에서는 분할 안 함)
+                if is_crisis_drawer:
+                    replies = [raw_response] if raw_response else ["흐음... 다시 말해주겠나."]
+                else:
+                    replies = self._split_long_reply(raw_response, max_length=120) if raw_response else ["흐음... 다시 말해주겠나."]
                 
                 # DIR-E-103 & DIR-E-104: 감정 분석 및 태그 추가
                 user_emotion = self._analyze_user_emotion(user_message)
@@ -3092,19 +3253,21 @@ class ChatbotService:
                 
                 # DIR-C-201: LLM 응답 후 Phase 전환 체크 (유저 질문에 먼저 답변한 후)
                 if session.drawer_conversation_count >= MIN_DRAWER_CONVERSATIONS:
-                    # ✅ 편지 발견 확인 단계로 전환
-                    session.phase = 3.9  # 편지 발견 확인 단계
-                    print(f"[Phase 전환] Phase 3.6 → 3.9 (편지 발견 확인)")
+                    # ✅ 편지 발견 단계로 바로 전환 (의문문 없이)
+                    session.phase = 4
+                    print(f"[Phase 전환] Phase 3.6 → 4 (편지 발견)")
                     self._save_session(session)
                     
-                    # ✅ 편지 발견 안내 (의문문 OK - 기본 상태)
-                    letter_found_msg = "흐음... (먼지를 털어내며) 너의 편지를 찾았어. 편지를 받아볼래?"
+                    # ✅ 편지 발견 안내 (의문문 금지 - Phase 3.5와 동일)
+                    letter_found_msgs = [
+                        "찾았다. (먼지를 털어내며) 이거군.",
+                        "10년 전/후의 네가, 지금의 너에게 보낸 편지다..."
+                    ]
                     
                     return {
-                        "replies": replies + [letter_found_msg],
+                        "replies": replies + letter_found_msgs,
                         "image": None,
-                        "phase": 3.9,
-                        "buttons": ["응 편지를 받을래"]
+                        "phase": 4
                     }
                 
                 # DIR-M-306: 출력 형식 통일
@@ -3123,21 +3286,7 @@ class ChatbotService:
                 replies = ["흐음... (먼지를 털어내며) 잠깐만.\n##감정 : 기본"]
                 return {"replies": replies, "image": None, "phase": 3.6}
         
-        # Phase 3.9: 편지 발견 확인 (버튼 클릭 대기)
-        if session.phase == 3.9:
-            # 유저가 "응 편지를 받을래" 버튼 클릭 시 Phase 4로 전환
-            if "편지" in user_message and ("받" in user_message or "응" in user_message):
-                session.phase = 4
-                self._save_session(session)
-                # Phase 4에서 처리하도록 아래로 계속 진행
-            else:
-                # 다른 말을 하면 다시 확인
-                return {
-                    "reply": "편지를 받고 싶지 않은가? 받아볼래?",
-                    "image": None,
-                    "phase": 3.9,
-                    "buttons": ["응 편지를 받을래"]
-                }
+        # Phase 3.9는 제거됨 - Phase 3.6에서 바로 Phase 4로 전환
         
         # Phase 4: 편지 생성 및 출력
         if session.phase == 4:
@@ -3156,6 +3305,8 @@ class ChatbotService:
             # ✅ 우표 설명만 먼저 보내고, 편지는 별도로 처리
             stamp_message = f"자 너의 편지에 붙어 있었던 우표는 {stamp_code}이다. {stamp_info['mean']}"
             session.phase = 5  # 편지 출력 완료 후 Phase 5로
+            session.crisis_mode_active = False  # ✅ 편지 출력 후 위기 모드 해제
+            session.crisis_emotion_shown = False  # 감정 플래그 초기화
             session.add_message("assistant", stamp_message)
             self._save_session(session)
             
@@ -3199,7 +3350,7 @@ class ChatbotService:
             # DIR-S-404: 우표 코드 반환
             stamp_code = session.selected_drawer if session.selected_drawer else self._determine_stamp_code(session)
             
-            reply = f"편지는 찾았으니 볼일은 끝났군.\n\n이만 가보라고. ...너무 늦기 전에 답장하러 오든가."
+            reply = f"편지는 찾았으니 볼일은 끝났군.\n\n이만 가보라고... 너무 늦기 전에 답장하러 오든가."
             
             session.add_message("assistant", reply)
             
