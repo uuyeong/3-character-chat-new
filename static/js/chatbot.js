@@ -399,7 +399,12 @@ async function sendMessage(isInitial = false) {
     console.log("응답 데이터:", data);
     // 봉투 편지 메시지
     if (data.is_letter_end && data.letter) {
-      const stampReplies = extractStampOnly(Array.isArray(data.replies) ? data.replies : []);
+      // ✅ stamp_description이 있으면 우선 사용, 없으면 extractStampOnly로 추출
+      const stampDescription = data.stamp_description;
+      const stampReplies = stampDescription 
+        ? [stampDescription] 
+        : extractStampOnly(Array.isArray(data.replies) ? data.replies : []);
+      
       if (stampReplies.length) {
         // 우표 설명 말풍선 먼저
         stampReplies.forEach((replyText, index) => {
@@ -454,7 +459,6 @@ async function sendMessage(isInitial = false) {
       replyText = data.reply;
       imagePath = data.image || null;
     }
-    if (replyText?.startsWith("부엉:")) replyText = replyText.replace("부엉:", "").trim();
 
     appendMessage("bot", replyText, imagePath);
     if (data.buttons?.length) {
