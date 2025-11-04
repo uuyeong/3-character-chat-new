@@ -11,6 +11,34 @@ const imageBtn = document.getElementById("imageBtn");
 
 const BOT_AVATAR_SRC = "/static/images/hateslop/owl1.png";
 
+// 감정에 따른 아바타 이미지 매핑
+const EMOTION_AVATAR_MAP = {
+  "슬픔": "/static/images/hateslop/sad_owl.png",
+  "기쁨": "/static/images/hateslop/happy_owl.png",
+  "분노": "/static/images/hateslop/angry_owl.png",
+  "의문": "/static/images/hateslop/question_owl.png",
+  "기본": BOT_AVATAR_SRC
+};
+
+// 감정 태그 파싱 함수
+function parseEmotionTag(text) {
+  const emotionRegex = /##감정\s*:\s*([^\n]+)/;
+  const match = text.match(emotionRegex);
+  if (match) {
+    const emotion = match[1].trim();
+    // 감정 태그 제거
+    const cleanText = text.replace(emotionRegex, "").trim();
+    return { emotion, cleanText };
+  }
+  return { emotion: null, cleanText: text };
+}
+
+// 감정에 따른 아바타 이미지 가져오기
+function getAvatarForEmotion(emotion) {
+  if (!emotion) return BOT_AVATAR_SRC;
+  return EMOTION_AVATAR_MAP[emotion] || BOT_AVATAR_SRC;
+}
+
 // ============================================
 // 임시로 만든 버튼 기능, 나중에 수정 필요
 // ============================================
@@ -130,35 +158,17 @@ function showRoomEntrance(roomName, roomImageSrc) {
   if (!chatLog) return;
 
   const container = document.createElement("div");
-  container.classList.add("room-entrance-message");
-  container.style.cssText = `
-    text-align: center;
-    opacity: 0;
-    transition: opacity 0.8s ease-in;
-    margin: 30px 0;
-  `;
+  container.classList.add("entrance-message");
 
   // 방 이미지
   const img = document.createElement("img");
   img.src = roomImageSrc;
   img.alt = `${roomName} 이미지`;
-  img.style.cssText = `
-    width: 90%;
-    max-width: 500px;
-    height: auto;
-    border-radius: 16px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    margin-bottom: 16px;
-  `;
+  img.classList.add("entrance-img");
 
   // 텍스트
   const text = document.createElement("div");
-  text.style.cssText = `
-    font-size: 1.1rem;
-    color: #555;
-    font-weight: 600;
-    margin-top: 12px;
-  `;
+  text.classList.add("entrance-text");
   text.textContent = `${roomName}에 입장했습니다.`;
 
   // DOM 연결
@@ -191,6 +201,8 @@ function showEnvelopePreview(letterText, buttons = [], stampImageSrc = null) {
     display: inline-block;
     width: 95%;
     margin: 20px auto;
+    overflow: hidden;
+    border-radius: 12px;
   `;
 
   // 편지 봉투 이미지
@@ -198,8 +210,13 @@ function showEnvelopePreview(letterText, buttons = [], stampImageSrc = null) {
   envelopeImg.src = "/static/images/chatbot/a_full_envelope.png";
   envelopeImg.alt = "편지 봉투";
   envelopeImg.style.cssText = `
-    width: 110%;
+    width: 100%;
+    height: 100%;
     display: block;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    object-fit: cover;
+    object-position: 48% center;
   `;
 
   // 우표 이미지 (오른쪽 상단에 겹치기)
@@ -217,7 +234,40 @@ function showEnvelopePreview(letterText, buttons = [], stampImageSrc = null) {
       z-index: 10;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
       border-radius: 4px;
+      transform: rotate(2deg);
+      transition: all 0.3s ease;
+      cursor: pointer;
+      animation: stampFloat 3s ease-in-out infinite;
     `;
+    
+    // 우표 애니메이션 키프레임 추가
+    if (!document.getElementById('stamp-animation-style')) {
+      const style = document.createElement('style');
+      style.id = 'stamp-animation-style';
+      style.textContent = `
+        @keyframes stampFloat {
+          0%, 100% {
+            transform: rotate(2deg) translateY(0px);
+          }
+          50% {
+            transform: rotate(2deg) translateY(-5px);
+          }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+    
+    // 호버 효과
+    stampImg.addEventListener('mouseenter', () => {
+      stampImg.style.transform = 'rotate(0deg) scale(1.15)';
+      stampImg.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.3)';
+    });
+    
+    stampImg.addEventListener('mouseleave', () => {
+      stampImg.style.transform = 'rotate(2deg) scale(1)';
+      stampImg.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.2)';
+    });
+    
     envelopeWrapper.appendChild(stampImg);
   }
 
@@ -228,12 +278,23 @@ function showEnvelopePreview(letterText, buttons = [], stampImageSrc = null) {
   messageDiv.textContent = "편지를 열어보겠나?";
   messageDiv.style.cssText = `
     margin: 15px 0;
-    font-size: 1.1em;
+    font-size: 1.1rem;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 17px;
+    padding: 8px 12px;
+    color: #1a1919;
+    font-weight: 500;
+    display: inline-block;
   `;
 
   // 버튼 컨테이너
   const btnContainer = document.createElement("div");
-  btnContainer.style.marginTop = "20px";
+  btnContainer.style.cssText = `
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+  `;
 
   // 예/아니오 버튼
   const yesBtn = document.createElement("button");
@@ -316,7 +377,7 @@ function showLetter(letterText, buttons = [], stampImageSrc = null) {
 
     const closeBtn = document.createElement("button");
     closeBtn.textContent = "편지 닫기";
-    closeBtn.classList.add("reply-btn", "dream-room"); // 색상 클래스는 취향대로
+    closeBtn.classList.add("reply-btn"); // 현재 테마 색상이 자동으로 적용됨
 
     closeBtn.style.margin = "0 auto";
     closeBtn.style.padding = "12px 24px";
@@ -429,24 +490,47 @@ async function sendMessage(isInitial = false) {
 
     // 일반 연속 메시지
     if (Array.isArray(data.replies)) {
+      let totalDelay = 0;
+      const allSplitMessages = [];
+      
+      // 모든 메시지를 미리 분할하고 총 지연 시간 계산
       data.replies.forEach((replyText, index) => {
-        const splitMessages = splitLongMessage(replyText, 120);
-        splitMessages.forEach((msg, subIndex) => {
+        const splitMessages = splitLongMessage(replyText, 100);
+        allSplitMessages.push({ messages: splitMessages, originalIndex: index });
+        totalDelay += splitMessages.length * 800;
+      });
+      
+      // 메시지 순차적으로 표시
+      let currentDelay = 0;
+      allSplitMessages.forEach((item, index) => {
+        item.messages.forEach((msg, subIndex) => {
           setTimeout(() => {
             const showAvatar = index === 0 && subIndex === 0;
             appendMessage("bot", msg, null, { showAvatar });
             scrollToBottomSmooth();
-          }, (index * splitMessages.length + subIndex) * 800);
+          }, currentDelay);
+          currentDelay += 800;
         });
-        if (index === data.replies.length - 1) {
-          setTimeout(() => {
-            if (data.buttons?.length) {
-              renderButtons(data.buttons);
-              setInputEnabled(false);
-            } else setInputEnabled(true);
-          }, (index + 1) * 1000);
-        }
       });
+      
+      // 모든 메시지가 끝난 후 이미지와 버튼 표시
+      setTimeout(() => {
+        if (data.image) {
+          setTimeout(() => {
+            appendMessage("bot", "", data.image, { showAvatar: false });
+            scrollToBottomSmooth();
+          }, 300);
+        }
+        if (data.buttons?.length) {
+          setTimeout(() => {
+            renderButtons(data.buttons);
+            setInputEnabled(false);
+          }, data.image ? 500 : 200);
+        } else {
+          setInputEnabled(true);
+        }
+      }, totalDelay);
+      
       return;
     }
 
@@ -498,7 +582,19 @@ let messageIdCounter = 0;
 function appendMessage(sender, text, imageSrc = null, options = {}) {
   const { showAvatar = sender === "bot", avatarSrc = BOT_AVATAR_SRC } = options;
   const messageId = `msg-${messageIdCounter++}`;
-  const messages = splitLongMessage(text, 120);
+  
+  // 감정 태그 파싱 (봇 메시지일 경우)
+  let processedText = text;
+  let emotionImageSrc = null;
+  if (sender === "bot") {
+    const { emotion, cleanText } = parseEmotionTag(text);
+    processedText = cleanText;
+    if (emotion) {
+      emotionImageSrc = getAvatarForEmotion(emotion);
+    }
+  }
+  
+  const messages = splitLongMessage(processedText, 120);
 
   if (!chatLog) {
     return messageId;
@@ -513,7 +609,7 @@ function appendMessage(sender, text, imageSrc = null, options = {}) {
       const avatarContainer = document.createElement("div");
       avatarContainer.classList.add("bot-avatar");
       const avatarImg = document.createElement("img");
-      avatarImg.src = avatarSrc;
+      avatarImg.src = BOT_AVATAR_SRC; // 항상 기본 아바타 사용
       avatarImg.alt = "부엉장 프로필";
       avatarContainer.appendChild(avatarImg);
       groupElem.appendChild(avatarContainer);
@@ -524,6 +620,19 @@ function appendMessage(sender, text, imageSrc = null, options = {}) {
     const bubbleContainer = document.createElement("div");
     bubbleContainer.classList.add("bot-bubble-container");
     groupElem.appendChild(bubbleContainer);
+
+    // 감정 이미지를 이모티콘처럼 표시 (메시지 앞에)
+    if (emotionImageSrc) {
+      const emotionImg = document.createElement("img");
+      emotionImg.classList.add("emotion-emoji");
+      emotionImg.src = emotionImageSrc;
+      emotionImg.alt = "감정";
+      emotionImg.style.opacity = "0";
+      bubbleContainer.appendChild(emotionImg);
+      setTimeout(() => {
+        emotionImg.style.opacity = "1";
+      }, 100);
+    }
 
     if (imageSrc) {
       const botImg = document.createElement("img");
@@ -579,21 +688,77 @@ function appendMessage(sender, text, imageSrc = null, options = {}) {
   return messageId;
 }
 
-function splitLongMessage(text, maxLen = 120) {
+function splitLongMessage(text, maxLen = 100) {
   const result = [];
-  let current = "";
-
-  const sentences = text.split(/(?<=[.?!…])\s+/); // 문장 단위로 나눔
-  sentences.forEach((s) => {
-    if ((current + s).length > maxLen) {
-      result.push(current.trim());
-      current = s + " ";
-    } else {
-      current += s + " ";
+  
+  // 따옴표로 묶인 부분을 임시로 보호하기 위해 플레이스홀더로 교체
+  const quotedParts = [];
+  let protectedText = text;
+  
+  // 다양한 따옴표 패턴 보호 (한글/영문)
+  const quotePatterns = [
+    /"[^"]*"/g,        // "큰따옴표"
+    /'[^']*'/g,        // '작은따옴표'
+    /「[^」]*」/g,      // 「꺾쇠괄호」
+    /'[^']*'/g,        // '스마트따옴표'
+    /"[^"]*"/g         // "스마트큰따옴표"
+  ];
+  
+  quotePatterns.forEach((pattern) => {
+    protectedText = protectedText.replace(pattern, (match) => {
+      const index = quotedParts.length;
+      quotedParts.push(match);
+      return `__QUOTE_${index}__`;
+    });
+  });
+  
+  // 문장 단위로 나눔 (마침표, 물음표, 느낌표 등)
+  const sentences = protectedText.split(/(?<=[.?!…~])\s*/);
+  
+  sentences.forEach((sentence) => {
+    sentence = sentence.trim();
+    if (!sentence) return;
+    
+    // 짧은 문장(20자 이하)은 이전 문장과 합치기 시도
+    if (sentence.length <= 20 && result.length > 0) {
+      const lastIndex = result.length - 1;
+      // 합쳐도 maxLen을 넘지 않으면 합치기
+      if ((result[lastIndex] + " " + sentence).length <= maxLen) {
+        result[lastIndex] += " " + sentence;
+      } else {
+        result.push(sentence);
+      }
+    } 
+    // 긴 문장은 maxLen 기준으로 나누기 (단, 플레이스홀더는 분리하지 않음)
+    else if (sentence.length > maxLen && !sentence.includes('__QUOTE_')) {
+      let current = "";
+      const words = sentence.split(/\s+/);
+      words.forEach((word) => {
+        if ((current + word).length > maxLen) {
+          if (current.trim()) result.push(current.trim());
+          current = word + " ";
+        } else {
+          current += word + " ";
+        }
+      });
+      if (current.trim()) result.push(current.trim());
+    } 
+    // 적당한 길이의 문장이거나 따옴표가 포함된 문장은 그대로 추가
+    else {
+      result.push(sentence);
     }
   });
-  if (current.trim()) result.push(current.trim());
-  return result;
+  
+  // 플레이스홀더를 원래 따옴표 텍스트로 복원
+  const restored = result.map(text => {
+    let restored = text;
+    quotedParts.forEach((quoted, index) => {
+      restored = restored.replace(`__QUOTE_${index}__`, quoted);
+    });
+    return restored;
+  });
+  
+  return restored.filter(s => s.length > 0);
 }
 
 // 메시지 제거

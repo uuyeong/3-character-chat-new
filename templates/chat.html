@@ -14,19 +14,33 @@
       href="{{ url_for('static', filename='css/style.css') }}"
       rel="stylesheet"
     />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400&subset=korean&display=swap"
+      rel="stylesheet"
+    />
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet" />
     <style>
       html,
       body {
+        height: 100%;
         margin: 0;
         padding: 0;
         height: 100%;
       }
+      @import url('https://fonts.googleapis.com/css2?family=Gaegu&display=swap');
       body {
         font-family: "IBM Plex Sans KR", sans-serif;
         background: #f7f7f7;
         display: flex;
         flex-direction: column;
         align-items: center;
+      }
+      .gaegu-regular {
+        font-family: "Gaegu", sans-serif;
+        font-weight: 400;
+        font-style: normal;
       }
       .header {
         width: 100%;
@@ -37,6 +51,10 @@
         padding: 15px 20px;
         box-sizing: border-box;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        background: #fff;            
+        position: sticky;         
+        top: 0;
+        z-index: 100;  
       }
       .header-center {
         flex: 1;
@@ -75,6 +93,10 @@
         margin-bottom: 15px;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
         scroll-behavior: smooth;
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        transition: background-image 0.5s ease-in-out;
       }
       .message {
         margin-bottom: 15px;
@@ -98,20 +120,28 @@
         opacity: 0;
         transition: opacity 0.8s ease-in;
         margin: 30px 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;    
       }
 
       .entrance-img {
-        width: 180px;
+        width: 250px;
         height: auto;
-        border-radius: 16px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        margin-bottom: 12px;
+        filter: brightness(1.2);
+        border-radius: 20px;
+        box-shadow: 0 2px 8px rgba(255, 255, 255, 0.1);
       }
 
       .entrance-text {
-        font-size: 1rem;
-        color: #666;
+        font-size: 1.1rem;
+        background: rgba(255, 255, 255, 0.5);
+        border-radius: 17px;
+        padding: 8px 12px;   
+        color: #1a1919;
         font-weight: 500;
+        display: inline-block; 
       }
 
       /* 방 입장 메시지 스타일 */
@@ -127,7 +157,7 @@
       }
 
       .room-entrance-message img {
-        width: 90%;
+        width: 100%;
         max-width: 500px;
         height: auto;
         border-radius: 16px;
@@ -171,6 +201,9 @@
         color: #0056b3;
         max-width: 75%;
       }
+      .message.user.multi-line {
+        text-align: left !important; /* 2줄 이상일 때 왼쪽 정렬 */
+      }
       .message.bot {
         display: inline-block;
         width: fit-content;
@@ -193,13 +226,25 @@
         border-radius: 12px;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
       }
+      .emotion-emoji {
+        display: inline-block;
+        width: 18%;
+        height: auto;
+        object-fit: contain;
+        margin-right: 8px;
+        margin-bottom: 4px;
+        vertical-align: middle;
+        transition: opacity 0.3s ease;
+        border-radius: 12px;
+      }
       .chat-input-area {
+        width: 100%;
         display: flex;
         gap: 10px;
         align-items: center;
         flex-shrink: 0;               
-        position: sticky;          
-        bottom: 0;
+        position: sticky;
+        bottom: 0;                  
         background: #f7f7f7;       
         padding-top: 10px;
       }
@@ -340,6 +385,7 @@
           /*background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); */
       }
 
+      /* 마우스 오버 효과 (JS 이벤트 대체) */
       .reply-btn:hover {
           transform: translateY(-2px);
           box-shadow: 0 6px 20px rgba(118, 75, 162, 0.4);
@@ -349,26 +395,75 @@
 
       /* 1. 후회의 방  */
       .reply-btn.regret-room {
-        background: #6e59c4 !important; 
+        background: linear-gradient(to bottom, rgba(145, 85, 202, 0.9), rgba(94, 10, 149, 0.9)) !important; 
         box-shadow: 0 4px 15px rgba(93, 63, 211, 0.3);
       }
 
       /* 2. 사랑의 방  */
       .reply-btn.love-room {
-        background: #d67fab !important; 
+        background: linear-gradient(to bottom, rgba(206, 144, 208, 0.9), rgba(202, 52, 192, 0.9)) !important;
         box-shadow: 0 4px 15px rgba(255, 105, 180, 0.3);
       }
 
       /* 3. 불안의 방  */
       .reply-btn.anxiety-room {
-        background: #42749f !important; 
+        background: linear-gradient(to bottom, rgba(51, 115, 194, 0.9), rgba(35, 23, 165, 0.9)) !important; 
         box-shadow: 0 4px 15px rgba(76, 154, 217, 0.3);
       }
 
       /* 4. 꿈의 방 */
       .reply-btn.dream-room {
-        background: #FFD700 !important; 
-        box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+        background: linear-gradient(to bottom, rgba(37, 102, 181, 0.9), rgba(133, 37, 188, 0.9)) !important; 
+        box-shadow: 0 4px 15px rgba(76, 154, 217, 0.3);
+      }
+
+      /* 테마가 선택된 후 모든 버튼에 통일된 색상 적용 */
+      /* 후회의 방 테마 - 모든 버튼 */
+      .user-theme-regret .reply-btn:not(.regret-room):not(.love-room):not(.anxiety-room):not(.dream-room),
+      .user-theme-regret button.send-btn {
+        background: linear-gradient(to bottom, rgba(145, 85, 202, 0.9), rgba(94, 10, 149, 0.9)) !important; 
+        box-shadow: 0 4px 15px rgba(93, 63, 211, 0.3);
+        color: white;
+      }
+
+      /* 사랑의 방 테마 - 모든 버튼 */
+      .user-theme-love .reply-btn:not(.regret-room):not(.love-room):not(.anxiety-room):not(.dream-room),
+      .user-theme-love button.send-btn {
+        background: linear-gradient(to bottom, rgba(206, 144, 208, 0.9), rgba(202, 52, 192, 0.9)) !important;
+        box-shadow: 0 4px 15px rgba(255, 105, 180, 0.3);
+        color: white;
+      }
+
+      /* 불안의 방 테마 - 모든 버튼 */
+      .user-theme-anxiety .reply-btn:not(.regret-room):not(.love-room):not(.anxiety-room):not(.dream-room),
+      .user-theme-anxiety button.send-btn {
+        background: linear-gradient(to bottom, rgba(51, 115, 194, 0.9), rgba(35, 23, 165, 0.9)) !important; 
+        box-shadow: 0 4px 15px rgba(76, 154, 217, 0.3);
+        color: white;
+      }
+
+      /* 꿈의 방 테마 - 모든 버튼 */
+      .user-theme-dream .reply-btn:not(.regret-room):not(.love-room):not(.anxiety-room):not(.dream-room),
+      .user-theme-dream button.send-btn {
+        background: linear-gradient(to bottom, rgba(37, 102, 181, 0.9), rgba(133, 37, 188, 0.9)) !important; 
+        box-shadow: 0 4px 15px rgba(76, 154, 217, 0.3);
+        color: white;
+      }
+
+      /* 테마별 배경 이미지 */
+      .user-theme-regret #chat-log {
+        background-image: url('/static/images/chatbot/regret_background.png');
+      }
+
+      .user-theme-love #chat-log {
+        background-image: url('/static/images/chatbot/love_background.png');
+      }
+      .user-theme-anxiety #chat-log {
+        background-image: url('/static/images/chatbot/anxiety_background.png');
+      }
+
+      .user-theme-dream #chat-log {
+        background-image: url('/static/images/chatbot/dream_background.png');
       }
 
       .letter-container {
@@ -405,8 +500,8 @@
         padding: 100px 80px;
         font-family: 'IBM Plex Sans KR', sans-serif;
         color: #333;
-        font-size: 1rem;
-        line-height: 1.7;
+        font-size: 1.23rem;
+        line-height: 1.2;
         white-space: pre-wrap;
         text-align: left;
       }
@@ -437,6 +532,8 @@
         border-radius: 16px !important;
         box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15) !important;
         cursor: default !important;
+        overflow: hidden !important;
+        object-fit: cover;
       }
       .stamp {
         position: absolute;
@@ -452,7 +549,7 @@
   </head>
   <body>
     <header class="header">
-      <div class="header-center">{{ bot_name }}</div>
+      <div class="header-center">별빛 우체국</div>
       <button
         class="close-btn"
         onclick="window.location.href='{{ url_for('index') }}'"

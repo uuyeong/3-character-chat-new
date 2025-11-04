@@ -111,6 +111,27 @@ header {
   padding: 15px;
   background: #fafafa;
   margin-bottom: 10px;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  transition: background-image 0.5s ease-in-out;
+}
+
+/* 테마별 배경 이미지 */
+.user-theme-regret #chat-log {
+  background-image: url('/static/images/chatbot/regret_background.png');
+}
+
+.user-theme-love #chat-log {
+  background-image: url('/static/images/chatbot/love_background.png');
+}
+
+.user-theme-anxiety #chat-log {
+  background-image: url('/static/images/chatbot/anxiety_background.png');
+}
+
+.user-theme-dream #chat-log {
+  background-image: url('/static/images/chatbot/dream_background.png');
 }
 
 .message {
@@ -124,40 +145,44 @@ header {
 
 .message.user {
   background: #e6f7ff;
-  text-align: right; /* 기본 한 줄은 우측 정렬 */
+  text-align: right; 
   color: #0056b3;
-  margin-left: auto; /* 말풍선 자체를 오른쪽으로 붙임 */
+  margin-left: auto; 
 }
 
 .message.user.multi-line {
-  text-align: left; /* 두 번째 줄부터는 읽기 좋게 좌측 정렬 */
+  text-align: left;
 }
 
 /* 사용자 말풍선 테마 (방 선택 시 적용) */
 .user-theme-regret .message.user {
-  background: #6f5bdc; /* 보라색 */
+  background: linear-gradient(to bottom, rgba(145, 85, 202, 0.9), rgba(94, 10, 149, 0.9));
   color: #ffffff;
+  box-shadow: 0 2px 8px rgba(93, 63, 211, 0.2);
 }
 .user-theme-love .message.user {
-  background: #ff6ea5; /* 핑크 */
+  background: linear-gradient(to bottom, rgba(206, 144, 208, 0.9), rgba(202, 52, 192, 0.9));
   color: #ffffff;
+  box-shadow: 0 2px 8px rgba(255, 105, 180, 0.2);
 }
 .user-theme-anxiety .message.user {
-  background: #3ba0ff; /* 파랑 */
+  background: linear-gradient(to bottom, rgba(51, 115, 194, 0.9), rgba(35, 23, 165, 0.9));
   color: #ffffff;
+  box-shadow: 0 2px 8px rgba(76, 154, 217, 0.2);
 }
 .user-theme-dream .message.user {
-  background: #ffd22e; /* 노랑 */
-  color: #6b4e00; /* 대비 있는 텍스트 */
+  background: linear-gradient(to bottom, rgba(37, 102, 181, 0.9), rgba(133, 37, 188, 0.9));
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(76, 154, 217, 0.2);
 }
 
 .message.bot {
-  background: #f0f0f0;
+  background: rgba(196, 171, 8, 0.75);
   color: #333;
   padding: 10px;
   border-radius: 8px;
   word-break: break-all;
-  margin-right: auto; /* 봇 말풍선은 좌측 정렬 */
+  margin-right: auto; 
 }
 
 .message-group {
@@ -185,7 +210,7 @@ header {
   align-items: center;
   justify-content: center;
   background: #ffffff;
-  border: 2px solid rgba(255, 110, 165, 0.5);
+  border: 1.3px solid rgba(112, 112, 112, 0.5);
 }
 
 .bot-avatar img {
@@ -310,4 +335,8 @@ button:hover {
   border-radius: 12px;
   margin: 2px;
   font-size: 0.9rem;
+}
+
+.letter-container .letter-text {
+  font-family: 'Gaegu', 'IBM Plex Sans KR', sans-serif !important;
 }
