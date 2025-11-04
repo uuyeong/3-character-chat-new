@@ -250,14 +250,14 @@
 <table>
   <tr>
     <td align="center">
-      <div style="width: 100px; height: 100px; background-color: white; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 80px; line-height: 1; margin: 0 auto;">🎨</div>
+      <div><span style="font-size: 100px;">🎨</span></div>
       <br />
       <sub><b>박소현</b></sub>
       <br />
       <sub>역할1</sub>
     </td>
     <td align="center">
-      <div style="width: 100px; height: 100px; background-color: white; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 80px; line-height: 1; margin: 0 auto;">✨</div>
+      <div><span style="font-size: 100px;">✨</span></div>
       <br />
       <sub><b>이유진</b></sub>
       <br />
