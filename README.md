@@ -1,6 +1,6 @@
 # 별빛 우체국
 
->시간의 경계에서, 별빛 우체국장 부엉과 함께 미래 혹은 과거의 '나'로부터 편지를 받는 심층 스토리텔링 챗봇
+>시간의 경계에서, 별빛 우체국장 부엉과 함께 다른 세계선의 '나'로부터 편지를 받는 심층 스토리텔링 챗봇
 
 [![Python](https://img.shields.io/badge/Python-3.11-blue.svg)](https://www.python.org/)
 [![Flask](https://img.shields.io/badge/Flask-3.0-green.svg)](https://flask.palletsprojects.com/)
@@ -10,9 +10,9 @@
 
 ## 📖 프로젝트 개요
 
-별빛 우체국은 RAG(Retrieval-Augmented Generation) 기반의 감정 분석 및 상담 챗봇입니다. 부엉 우체국장이 사용자의 감정을 이해하고, 방별 주제(후회, 사랑, 불안, 꿈)에 맞는 대화를 제공합니다. 
+별빛 우체국은 RAG 기반의 감정 분석 및 심층 상담 챗봇입니다. 이곳의 국장인 부엉은 사용자의 감정을 이성적으로 분석하고, 후회, 사랑, 불안, 꿈의 주제별 방을 탐험하도록 안내합니다. 
+이 탐험을 통해 사용자는 대화 맥락을 담아 다른 세계선의 '나'로부터 편지를 받게 되며, 그 내용에 따라 당신의 상황에 맞는 우표가 붙어 전달됩니다. 
 
-**핵심 경험**: 대화를 통해 **미래 혹은 과거의 '나'로부터 편지를 받는** 서비스입니다. 대화 내용에 따라 **당신의 상황에 맞는 우표가 붙어있는 편지**를 받게 됩니다. 위기 상황을 감지하면 전문 상담 매뉴얼을 활용한 안전한 응답을 제공합니다.
 
 ### 핵심 기능
 
@@ -22,6 +22,13 @@
 - 🏠 **방별 맞춤 상담**: 후회, 사랑, 불안, 꿈 주제별 전문 데이터 활용
 - 🧠 **Persona 시스템**: 상황에 맞는 부엉장의 자기 공개 스토리
 - ⚠️ **위기 감지 모드**: 상담 매뉴얼 기반 전문 상담 응답
+
+## 엔지니어
+
+[![uuyeong](https://github.com/uuyeong.png?size=100)](https://github.com/uuyeong) - Backend
+[![yunjin-Kim4809](https://github.com/yunjin-Kim4809.png?size=100)](https://github.com/yunjin-Kim4809) - Frontend
+
+
 
 ## 🚀 빠른 시작
 
@@ -335,10 +342,6 @@ vercel --prod
 - 이미지 임베딩을 통한 멀티모달 검색
 - 대화 품질 평가 메트릭 도입
 
-## 👥 기여자
-
-- [@uuyeong](https://github.com/uuyeong) - Backend (엔지니어)
-- [@yunjin-Kim4809](https://github.com/yunjin-Kim4809) - Frontend (엔지니어)
 
 **HateSlop 3기 엔지니어 x 프로듀서 합동 프로젝트**
 
