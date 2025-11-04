@@ -691,8 +691,29 @@ function appendMessage(sender, text, imageSrc = null, options = {}) {
 function splitLongMessage(text, maxLen = 100) {
   const result = [];
   
+  // 따옴표로 묶인 부분을 임시로 보호하기 위해 플레이스홀더로 교체
+  const quotedParts = [];
+  let protectedText = text;
+  
+  // 다양한 따옴표 패턴 보호 (한글/영문)
+  const quotePatterns = [
+    /"[^"]*"/g,        // "큰따옴표"
+    /'[^']*'/g,        // '작은따옴표'
+    /「[^」]*」/g,      // 「꺾쇠괄호」
+    /'[^']*'/g,        // '스마트따옴표'
+    /"[^"]*"/g         // "스마트큰따옴표"
+  ];
+  
+  quotePatterns.forEach((pattern) => {
+    protectedText = protectedText.replace(pattern, (match) => {
+      const index = quotedParts.length;
+      quotedParts.push(match);
+      return `__QUOTE_${index}__`;
+    });
+  });
+  
   // 문장 단위로 나눔 (마침표, 물음표, 느낌표 등)
-  const sentences = text.split(/(?<=[.?!…~])\s*/);
+  const sentences = protectedText.split(/(?<=[.?!…~])\s*/);
   
   sentences.forEach((sentence) => {
     sentence = sentence.trim();
@@ -708,8 +729,8 @@ function splitLongMessage(text, maxLen = 100) {
         result.push(sentence);
       }
     } 
-    // 긴 문장은 maxLen 기준으로 나누기
-    else if (sentence.length > maxLen) {
+    // 긴 문장은 maxLen 기준으로 나누기 (단, 플레이스홀더는 분리하지 않음)
+    else if (sentence.length > maxLen && !sentence.includes('__QUOTE_')) {
       let current = "";
       const words = sentence.split(/\s+/);
       words.forEach((word) => {
@@ -722,13 +743,22 @@ function splitLongMessage(text, maxLen = 100) {
       });
       if (current.trim()) result.push(current.trim());
     } 
-    // 적당한 길이의 문장은 그대로 추가
+    // 적당한 길이의 문장이거나 따옴표가 포함된 문장은 그대로 추가
     else {
       result.push(sentence);
     }
   });
   
-  return result.filter(s => s.length > 0);
+  // 플레이스홀더를 원래 따옴표 텍스트로 복원
+  const restored = result.map(text => {
+    let restored = text;
+    quotedParts.forEach((quoted, index) => {
+      restored = restored.replace(`__QUOTE_${index}__`, quoted);
+    });
+    return restored;
+  });
+  
+  return restored.filter(s => s.length > 0);
 }
 
 // 메시지 제거
