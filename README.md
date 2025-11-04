@@ -250,14 +250,14 @@
 <table>
   <tr>
     <td align="center">
-      <div><span style="font-size: 100px;">🎨</span></div>
+      <h1 style="margin: 0; font-size: 100px; line-height: 1;">🎨</h1>
       <br />
       <sub><b>박소현</b></sub>
       <br />
       <sub>역할1</sub>
     </td>
     <td align="center">
-      <div><span style="font-size: 100px;">✨</span></div>
+      <h1 style="margin: 0; font-size: 100px; line-height: 1;">✨</h1>
       <br />
       <sub><b>이유진</b></sub>
       <br />
