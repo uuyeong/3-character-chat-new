@@ -23,12 +23,6 @@
 - 🧠 **Persona 시스템**: 상황에 맞는 부엉장의 자기 공개 스토리
 - ⚠️ **위기 감지 모드**: 상담 매뉴얼 기반 전문 상담 응답
 
-## 엔지니어
-
-[![uuyeong](https://github.com/uuyeong.png?size=100)](https://github.com/uuyeong) - Backend
-[![yunjin-Kim4809](https://github.com/yunjin-Kim4809.png?size=100)](https://github.com/yunjin-Kim4809) - Frontend
-
-
 
 ## 🚀 빠른 시작
 
@@ -342,6 +336,33 @@ vercel --prod
 - 이미지 임베딩을 통한 멀티모달 검색
 - 대화 품질 평가 메트릭 도입
 
+
+## 엔지니어
+
+## 👥 기여자
+
+<table>
+  <tr>
+    <td align="center">
+      <a href="https://github.com/uuyeong">
+        <img src="https://github.com/uuyeong.png" width="100px;" alt=""/>
+        <br />
+        <sub><b>uuyeong</b></sub>
+      </a>
+      <br />
+      <sub>Backend (엔지니어)</sub>
+    </td>
+    <td align="center">
+      <a href="https://github.com/yunjin-Kim4809">
+        <img src="https://github.com/yunjin-Kim4809.png" width="100px;" alt=""/>
+        <br />
+        <sub><b>yunjin-Kim4809</b></sub>
+      </a>
+      <br />
+      <sub>Frontend (엔지니어)</sub>
+    </td>
+  </tr>
+</table>
 
 **HateSlop 3기 엔지니어 x 프로듀서 합동 프로젝트**
 
