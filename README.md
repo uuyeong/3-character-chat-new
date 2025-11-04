@@ -222,7 +222,7 @@
 - **테스트**: 단위 테스트 도입으로 버그 조기 발견
 
 
-## 엔지니어
+## Contributors
 <table>
   <tr>
     <td align="center">
@@ -243,12 +243,6 @@
       <br />
       <sub>Frontend</sub>
     </td>
-  </tr>
-</table>
-
-## 프로듀서
-<table>
-  <tr>
     <td align="center">
       <div style="width: 100px; height: 100px; background: white; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; font-size: 70px;">🎨</div>
       <br />
