@@ -227,8 +227,6 @@
   <tr>
     <td align="center">
       <a href="https://github.com/uuyeong">
-        <img src="https://github.com/uuyeong.png" width="100px;" alt=""/>
-        <br />
         <sub><b>uuyeong</b></sub>
       </a>
       <br />
@@ -236,23 +234,17 @@
     </td>
     <td align="center">
       <a href="https://github.com/yunjin-Kim4809">
-        <img src="https://github.com/yunjin-Kim4809.png" width="100px;" alt=""/>
-        <br />
         <sub><b>yunjin-Kim4809</b></sub>
       </a>
       <br />
       <sub>Frontend</sub>
     </td>
     <td align="center">
-      <div style="width: 100px; height: 100px; background: white; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; font-size: 70px;">🎨</div>
-      <br />
       <sub><b>박소현</b></sub>
       <br />
       <sub>역할1</sub>
     </td>
     <td align="center">
-      <div style="width: 100px; height: 100px; background: white; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; font-size: 70px;">✨</div>
-      <br />
       <sub><b>이유진</b></sub>
       <br />
       <sub>역할2</sub>
