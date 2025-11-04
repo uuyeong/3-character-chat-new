@@ -450,31 +450,47 @@ async function sendMessage(isInitial = false) {
 
     // 일반 연속 메시지
     if (Array.isArray(data.replies)) {
+      let totalDelay = 0;
+      const allSplitMessages = [];
+      
+      // 모든 메시지를 미리 분할하고 총 지연 시간 계산
       data.replies.forEach((replyText, index) => {
-        const splitMessages = splitLongMessage(replyText, 120);
-        splitMessages.forEach((msg, subIndex) => {
+        const splitMessages = splitLongMessage(replyText, 100);
+        allSplitMessages.push({ messages: splitMessages, originalIndex: index });
+        totalDelay += splitMessages.length * 800;
+      });
+      
+      // 메시지 순차적으로 표시
+      let currentDelay = 0;
+      allSplitMessages.forEach((item, index) => {
+        item.messages.forEach((msg, subIndex) => {
           setTimeout(() => {
             const showAvatar = index === 0 && subIndex === 0;
             appendMessage("bot", msg, null, { showAvatar });
             scrollToBottomSmooth();
-          }, (index * splitMessages.length + subIndex) * 800);
+          }, currentDelay);
+          currentDelay += 800;
         });
-        if (index === data.replies.length - 1) {
-          setTimeout(() => {
-            // replies 배열의 마지막 메시지 후에 이미지가 있으면 표시
-            if (data.image) {
-              setTimeout(() => {
-                appendMessage("bot", "", data.image, { showAvatar: false });
-                scrollToBottomSmooth();
-              }, 300);
-            }
-            if (data.buttons?.length) {
-              renderButtons(data.buttons);
-              setInputEnabled(false);
-            } else setInputEnabled(true);
-          }, (index + 1) * 1000);
-        }
       });
+      
+      // 모든 메시지가 끝난 후 이미지와 버튼 표시
+      setTimeout(() => {
+        if (data.image) {
+          setTimeout(() => {
+            appendMessage("bot", "", data.image, { showAvatar: false });
+            scrollToBottomSmooth();
+          }, 300);
+        }
+        if (data.buttons?.length) {
+          setTimeout(() => {
+            renderButtons(data.buttons);
+            setInputEnabled(false);
+          }, data.image ? 500 : 200);
+        } else {
+          setInputEnabled(true);
+        }
+      }, totalDelay);
+      
       return;
     }
 
@@ -632,21 +648,47 @@ function appendMessage(sender, text, imageSrc = null, options = {}) {
   return messageId;
 }
 
-function splitLongMessage(text, maxLen = 120) {
+function splitLongMessage(text, maxLen = 100) {
   const result = [];
-  let current = "";
-
-  const sentences = text.split(/(?<=[.?!…])\s+/); // 문장 단위로 나눔
-  sentences.forEach((s) => {
-    if ((current + s).length > maxLen) {
-      result.push(current.trim());
-      current = s + " ";
-    } else {
-      current += s + " ";
+  
+  // 문장 단위로 나눔 (마침표, 물음표, 느낌표 등)
+  const sentences = text.split(/(?<=[.?!…~])\s*/);
+  
+  sentences.forEach((sentence) => {
+    sentence = sentence.trim();
+    if (!sentence) return;
+    
+    // 짧은 문장(20자 이하)은 이전 문장과 합치기 시도
+    if (sentence.length <= 20 && result.length > 0) {
+      const lastIndex = result.length - 1;
+      // 합쳐도 maxLen을 넘지 않으면 합치기
+      if ((result[lastIndex] + " " + sentence).length <= maxLen) {
+        result[lastIndex] += " " + sentence;
+      } else {
+        result.push(sentence);
+      }
+    } 
+    // 긴 문장은 maxLen 기준으로 나누기
+    else if (sentence.length > maxLen) {
+      let current = "";
+      const words = sentence.split(/\s+/);
+      words.forEach((word) => {
+        if ((current + word).length > maxLen) {
+          if (current.trim()) result.push(current.trim());
+          current = word + " ";
+        } else {
+          current += word + " ";
+        }
+      });
+      if (current.trim()) result.push(current.trim());
+    } 
+    // 적당한 길이의 문장은 그대로 추가
+    else {
+      result.push(sentence);
     }
   });
-  if (current.trim()) result.push(current.trim());
-  return result;
+  
+  return result.filter(s => s.length > 0);
 }
 
 // 메시지 제거

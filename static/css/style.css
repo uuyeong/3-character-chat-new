@@ -156,20 +156,24 @@ header {
 
 /* 사용자 말풍선 테마 (방 선택 시 적용) */
 .user-theme-regret .message.user {
-  background: #6f5bdc; /* 보라색 */
+  background: linear-gradient(to bottom, rgba(145, 85, 202, 0.9), rgba(94, 10, 149, 0.9));
   color: #ffffff;
+  box-shadow: 0 2px 8px rgba(93, 63, 211, 0.2);
 }
 .user-theme-love .message.user {
-  background: #ff6ea5; /* 핑크 */
+  background: linear-gradient(to bottom, rgba(206, 144, 208, 0.9), rgba(202, 52, 192, 0.9));
   color: #ffffff;
+  box-shadow: 0 2px 8px rgba(255, 105, 180, 0.2);
 }
 .user-theme-anxiety .message.user {
-  background: #3ba0ff; /* 파랑 */
+  background: linear-gradient(to bottom, rgba(51, 115, 194, 0.9), rgba(35, 23, 165, 0.9));
   color: #ffffff;
+  box-shadow: 0 2px 8px rgba(76, 154, 217, 0.2);
 }
 .user-theme-dream .message.user {
-  background: #ffd22e; /* 노랑 */
-  color: #6b4e00; /* 대비 있는 텍스트 */
+  background: linear-gradient(to bottom, rgba(37, 102, 181, 0.9), rgba(133, 37, 188, 0.9));
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(76, 154, 217, 0.2);
 }
 
 .message.bot {
