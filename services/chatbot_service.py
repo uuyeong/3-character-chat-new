@@ -3450,20 +3450,14 @@ class ChatbotService:
             letter = self._generate_letter(session)
             session.letter_content = letter
             
-            # Phase 5로 전환 (다음 턴은 엔딩)
-            session.phase = 5
-            session.crisis_mode_active = False  # ✅ 편지 출력 후 위기 모드 해제
-            session.crisis_emotion_shown = False  # 감정 플래그 초기화
-            session.add_message("assistant", "편지를 열어보겠나?")  # 편지 열기 안내
-            self._save_session(session)
-            
-            # 우표 정보 가져오기 (우표 설명 포함)
-            stamp_info = self._get_stamp_info(stamp_code)
+
+            # ✅ 우표 설명만 먼저 보내고, 편지는 별도로 처리
             stamp_message = f"자 너의 편지에 붙어 있었던 우표는 {stamp_code}이다. {stamp_info['mean']}"
             
             # ✅ 편지 열기 안내 + 편지 내용을 한 번에 출력 (사용자 입력 없이 연속 출력)
             return {
-                "replies": ["편지를 열어보겠나?"],  # 편지 열기 안내
+                "replies": [stamp_message],  # 우표 설명만 말풍선으로
+
                 "image": None,
                 "phase": 5,
                 "letter": letter,  # 편지 내용은 이 키를 통해 별도 출력 (연속 출력)
