@@ -201,6 +201,8 @@ function showEnvelopePreview(letterText, buttons = [], stampImageSrc = null) {
     display: inline-block;
     width: 95%;
     margin: 20px auto;
+    overflow: hidden;
+    border-radius: 12px;
   `;
 
   // 편지 봉투 이미지
@@ -208,8 +210,13 @@ function showEnvelopePreview(letterText, buttons = [], stampImageSrc = null) {
   envelopeImg.src = "/static/images/chatbot/a_full_envelope.png";
   envelopeImg.alt = "편지 봉투";
   envelopeImg.style.cssText = `
-    width: 110%;
+    width: 100%;
+    height: 100%;
     display: block;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    object-fit: cover;
+    object-position: 48% center;
   `;
 
   // 우표 이미지 (오른쪽 상단에 겹치기)
@@ -227,7 +234,40 @@ function showEnvelopePreview(letterText, buttons = [], stampImageSrc = null) {
       z-index: 10;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
       border-radius: 4px;
+      transform: rotate(2deg);
+      transition: all 0.3s ease;
+      cursor: pointer;
+      animation: stampFloat 3s ease-in-out infinite;
     `;
+    
+    // 우표 애니메이션 키프레임 추가
+    if (!document.getElementById('stamp-animation-style')) {
+      const style = document.createElement('style');
+      style.id = 'stamp-animation-style';
+      style.textContent = `
+        @keyframes stampFloat {
+          0%, 100% {
+            transform: rotate(2deg) translateY(0px);
+          }
+          50% {
+            transform: rotate(2deg) translateY(-5px);
+          }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+    
+    // 호버 효과
+    stampImg.addEventListener('mouseenter', () => {
+      stampImg.style.transform = 'rotate(0deg) scale(1.15)';
+      stampImg.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.3)';
+    });
+    
+    stampImg.addEventListener('mouseleave', () => {
+      stampImg.style.transform = 'rotate(2deg) scale(1)';
+      stampImg.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.2)';
+    });
+    
     envelopeWrapper.appendChild(stampImg);
   }
 

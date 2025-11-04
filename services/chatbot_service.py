@@ -1723,7 +1723,7 @@ class ChatbotService:
                 
                 # 우표 정보 가져오기
                 stamp_info = self._get_stamp_info(stamp_code)
-                stamp_msg = f"자 너의 편지에 붙어 있었던 우표는 {stamp_code}이다. {stamp_info['mean']}"
+                stamp_msg = f"자, 너의 편지에 붙어 있었던 우표다. {stamp_info['mean']}"
                 
                 letter = self._generate_letter(session)
                 session.letter_content = letter
@@ -2849,7 +2849,7 @@ class ChatbotService:
                 
                 # 우표 정보 가져오기
                 stamp_info = self._get_stamp_info(stamp_code)
-                stamp_msg = f"자 너의 편지에 붙어 있었던 우표는 {stamp_code}이다. {stamp_info['mean']}"
+                stamp_msg = f"자, 너의 편지에 붙어 있었던 우표다. {stamp_info['mean']}"
                 letter = self._generate_letter(session)
                 session.letter_content = letter
                 letter_bubble = f"{letter}"  # 편지 내용만
@@ -2878,7 +2878,7 @@ class ChatbotService:
                 
                 # 우표 정보 가져오기
                 stamp_info = self._get_stamp_info(stamp_code)
-                stamp_msg = f"자 너의 편지에 붙어 있었던 우표는 {stamp_code}이다. {stamp_info['mean']}"
+                stamp_msg = f"자, 너의 편지에 붙어 있었던 우표다. {stamp_info['mean']}"
                 
                 letter = self._generate_letter(session)
                 session.letter_content = letter
@@ -3394,7 +3394,7 @@ class ChatbotService:
                     ]
                     
                     # 우표 설명 메시지
-                    stamp_message = f"자 너의 편지에 붙어 있었던 우표는 {stamp_code}이다. {stamp_info['mean']}"
+                    stamp_message = f"자, 너의 편지에 붙어 있었던 우표다. {stamp_info['mean']}"
                     
                     # 편지 열기 안내
                     letter_open_msg = "편지를 열어보겠나?"
@@ -3452,7 +3452,7 @@ class ChatbotService:
             
 
             # ✅ 우표 설명만 먼저 보내고, 편지는 별도로 처리
-            stamp_message = f"자 너의 편지에 붙어 있었던 우표는 {stamp_code}이다. {stamp_info['mean']}"
+            stamp_message = f"자, 너의 편지에 붙어 있었던 우표다. {stamp_info['mean']}"
             
             # ✅ 편지 열기 안내 + 편지 내용을 한 번에 출력 (사용자 입력 없이 연속 출력)
             return {
@@ -3474,7 +3474,7 @@ class ChatbotService:
                 if session.letter_content:
                     stamp_code = session.selected_drawer if session.selected_drawer else self._determine_stamp_code(session)
                     stamp_info = self._get_stamp_info(stamp_code)
-                    stamp_message = f"좋아. 다시 한번 보여주지. 너의 편지에 붙어 있었던 우표는 {stamp_code}이다. {stamp_info['mean']}"
+                    stamp_message = f"좋아. 다시 한번 보여주지. 자, 너의 편지에 붙어 있었던 우표다. {stamp_info['mean']}"
                     session.add_message("assistant", stamp_message)
                     self._save_session(session)
                     
