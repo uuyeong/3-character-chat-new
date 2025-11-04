@@ -249,7 +249,12 @@ function showEnvelopePreview(letterText, buttons = [], stampImageSrc = null) {
 
   // 버튼 컨테이너
   const btnContainer = document.createElement("div");
-  btnContainer.style.marginTop = "20px";
+  btnContainer.style.cssText = `
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+  `;
 
   // 예/아니오 버튼
   const yesBtn = document.createElement("button");
@@ -332,7 +337,7 @@ function showLetter(letterText, buttons = [], stampImageSrc = null) {
 
     const closeBtn = document.createElement("button");
     closeBtn.textContent = "편지 닫기";
-    closeBtn.classList.add("reply-btn", "dream-room"); // 색상 클래스는 취향대로
+    closeBtn.classList.add("reply-btn"); // 현재 테마 색상이 자동으로 적용됨
 
     closeBtn.style.margin = "0 auto";
     closeBtn.style.padding = "12px 24px";

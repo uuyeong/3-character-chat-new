@@ -160,7 +160,7 @@ header {
   color: #ffffff;
 }
 .user-theme-love .message.user {
-  background: rgba(215, 135, 175, 0.85);
+  background: #ff6ea5; /* 핑크 */
   color: #ffffff;
 }
 .user-theme-anxiety .message.user {
@@ -190,7 +190,7 @@ header {
 }
 
 .bot-group-no-avatar {
-  padding-left: 56px; /* 아바타 영역만큼 여백 유지 */
+  padding-left: 56px; 
 }
 
 .bot-avatar {
@@ -273,17 +273,45 @@ button:hover {
 }
 
 /* 테마에 따른 전송 버튼 색상 */
-.user-theme-regret #send-btn { background: #6f5bdc; color: #ffffff; }
-.user-theme-regret #send-btn:hover { background: #5a48c9; }
+.user-theme-regret #send-btn { 
+  background: linear-gradient(to bottom, rgba(145, 85, 202, 0.9), rgba(94, 10, 149, 0.9)); 
+  color: #ffffff; 
+  box-shadow: 0 4px 15px rgba(93, 63, 211, 0.3);
+}
+.user-theme-regret #send-btn:hover { 
+  box-shadow: 0 6px 20px rgba(93, 63, 211, 0.4);
+  transform: translateY(-2px);
+}
 
-.user-theme-love #send-btn { background: #ff6ea5; color: #ffffff; }
-.user-theme-love #send-btn:hover { background: #e65f97; }
+.user-theme-love #send-btn { 
+  background: linear-gradient(to bottom, rgba(206, 144, 208, 0.9), rgba(202, 52, 192, 0.9)); 
+  color: #ffffff; 
+  box-shadow: 0 4px 15px rgba(255, 105, 180, 0.3);
+}
+.user-theme-love #send-btn:hover { 
+  box-shadow: 0 6px 20px rgba(255, 105, 180, 0.4);
+  transform: translateY(-2px);
+}
 
-.user-theme-anxiety #send-btn { background: #3ba0ff; color: #ffffff; }
-.user-theme-anxiety #send-btn:hover { background: #1f8ff7; }
+.user-theme-anxiety #send-btn { 
+  background: linear-gradient(to bottom, rgba(51, 115, 194, 0.9), rgba(35, 23, 165, 0.9)); 
+  color: #ffffff; 
+  box-shadow: 0 4px 15px rgba(76, 154, 217, 0.3);
+}
+.user-theme-anxiety #send-btn:hover { 
+  box-shadow: 0 6px 20px rgba(76, 154, 217, 0.4);
+  transform: translateY(-2px);
+}
 
-.user-theme-dream #send-btn { background: #ffd22e; color: #6b4e00; }
-.user-theme-dream #send-btn:hover { background: #f5c400; }
+.user-theme-dream #send-btn { 
+  background: linear-gradient(to bottom, rgba(37, 102, 181, 0.9), rgba(133, 37, 188, 0.9)); 
+  color: #ffffff; 
+  box-shadow: 0 4px 15px rgba(76, 154, 217, 0.3);
+}
+.user-theme-dream #send-btn:hover { 
+  box-shadow: 0 6px 20px rgba(76, 154, 217, 0.4);
+  transform: translateY(-2px);
+}
 
 /* Modal Styles */
 .modal {

@@ -392,26 +392,59 @@
 
       /* 1. 후회의 방  */
       .reply-btn.regret-room {
-        background: #6e59c4 !important; 
+        background: linear-gradient(to bottom, rgba(145, 85, 202, 0.9), rgba(94, 10, 149, 0.9)) !important; 
         box-shadow: 0 4px 15px rgba(93, 63, 211, 0.3);
       }
 
       /* 2. 사랑의 방  */
       .reply-btn.love-room {
-        background: rgba(215, 135, 175, 0.85) !important;!important; 
+        background: linear-gradient(to bottom, rgba(206, 144, 208, 0.9), rgba(202, 52, 192, 0.9)) !important;
         box-shadow: 0 4px 15px rgba(255, 105, 180, 0.3);
       }
 
       /* 3. 불안의 방  */
       .reply-btn.anxiety-room {
-        background: #42749f !important; 
+        background: linear-gradient(to bottom, rgba(51, 115, 194, 0.9), rgba(35, 23, 165, 0.9)) !important; 
         box-shadow: 0 4px 15px rgba(76, 154, 217, 0.3);
       }
 
       /* 4. 꿈의 방 */
       .reply-btn.dream-room {
-        background: #FFD700 !important; 
-        box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+        background: linear-gradient(to bottom, rgba(37, 102, 181, 0.9), rgba(133, 37, 188, 0.9)) !important; 
+        box-shadow: 0 4px 15px rgba(76, 154, 217, 0.3);
+      }
+
+      /* 테마가 선택된 후 모든 버튼에 통일된 색상 적용 */
+      /* 후회의 방 테마 - 모든 버튼 */
+      .user-theme-regret .reply-btn:not(.regret-room):not(.love-room):not(.anxiety-room):not(.dream-room),
+      .user-theme-regret button.send-btn {
+        background: linear-gradient(to bottom, rgba(145, 85, 202, 0.9), rgba(94, 10, 149, 0.9)) !important; 
+        box-shadow: 0 4px 15px rgba(93, 63, 211, 0.3);
+        color: white;
+      }
+
+      /* 사랑의 방 테마 - 모든 버튼 */
+      .user-theme-love .reply-btn:not(.regret-room):not(.love-room):not(.anxiety-room):not(.dream-room),
+      .user-theme-love button.send-btn {
+        background: linear-gradient(to bottom, rgba(206, 144, 208, 0.9), rgba(202, 52, 192, 0.9)) !important;
+        box-shadow: 0 4px 15px rgba(255, 105, 180, 0.3);
+        color: white;
+      }
+
+      /* 불안의 방 테마 - 모든 버튼 */
+      .user-theme-anxiety .reply-btn:not(.regret-room):not(.love-room):not(.anxiety-room):not(.dream-room),
+      .user-theme-anxiety button.send-btn {
+        background: linear-gradient(to bottom, rgba(51, 115, 194, 0.9), rgba(35, 23, 165, 0.9)) !important; 
+        box-shadow: 0 4px 15px rgba(76, 154, 217, 0.3);
+        color: white;
+      }
+
+      /* 꿈의 방 테마 - 모든 버튼 */
+      .user-theme-dream .reply-btn:not(.regret-room):not(.love-room):not(.anxiety-room):not(.dream-room),
+      .user-theme-dream button.send-btn {
+        background: linear-gradient(to bottom, rgba(37, 102, 181, 0.9), rgba(133, 37, 188, 0.9)) !important; 
+        box-shadow: 0 4px 15px rgba(76, 154, 217, 0.3);
+        color: white;
       }
 
       /* 테마별 배경 이미지 */
