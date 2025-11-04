@@ -84,6 +84,9 @@
 ```
 
 
+## 작동 화면
+
+
 ## 문서
 
 - [ARCHITECTURE.md](ARCHITECTURE.md): 시스템 아키텍처 상세 설명
@@ -247,14 +250,18 @@
 <table>
   <tr>
     <td align="center">
-      <div style="font-size: 100px;">🎨</div>
+      <div style="font-size: 120px; line-height: 1;">🎨</div>
       <br />
       <sub><b>박소현</b></sub>
+      <br />
+      <sub>역할1</sub>
     </td>
     <td align="center">
-      <div style="font-size: 100px;">✨</div>
+      <div style="font-size: 120px; line-height: 1;">✨</div>
       <br />
       <sub><b>이유진</b></sub>
+      <br />
+      <sub>역할2</sub>
     </td>
   </tr>
 </table>
