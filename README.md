@@ -1,4 +1,4 @@
-# 별빛 우체국
+# 🦉 별빛 우체국 ✨
 
 >시간의 경계에서, 별빛 우체국장 부엉과 함께 다른 세계선의 '나'로부터 편지를 받는 심층 스토리텔링 챗봇
 
@@ -171,7 +171,7 @@
 
 
 
-## 😔 아쉬웠던 점
+## 아쉬웠던 점
 
 ### 1. 부엉의 감정 구현의 한계
 
@@ -247,12 +247,12 @@
 <table>
   <tr>
     <td align="center">
-      <div style="font-size: 60px;">🎨</div>
+      <div style="font-size: 100px;">🎨</div>
       <br />
       <sub><b>박소현</b></sub>
     </td>
     <td align="center">
-      <div style="font-size: 60px;">✨</div>
+      <div style="font-size: 100px;">✨</div>
       <br />
       <sub><b>이유진</b></sub>
     </td>
