@@ -250,14 +250,14 @@
 <table>
   <tr>
     <td align="center">
-      <h1 style="margin: 0; font-size: 100px; line-height: 1;">🎨</h1>
+      <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect width='100' height='100' fill='white'/%3E%3Ctext x='50%25' y='50%25' font-size='80' text-anchor='middle' dominant-baseline='middle'%3E%F0%9F%8E%A8%3C/text%3E%3C/svg%3E" width="100px;" alt=""/>
       <br />
       <sub><b>박소현</b></sub>
       <br />
       <sub>역할1</sub>
     </td>
     <td align="center">
-      <h1 style="margin: 0; font-size: 100px; line-height: 1;">✨</h1>
+      <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect width='100' height='100' fill='white'/%3E%3Ctext x='50%25' y='50%25' font-size='80' text-anchor='middle' dominant-baseline='middle'%3E%E2%9C%A8%3C/text%3E%3C/svg%3E" width="100px;" alt=""/>
       <br />
       <sub><b>이유진</b></sub>
       <br />
