@@ -242,12 +242,12 @@
     <td align="center">
       <sub><b>박소현</b></sub>
       <br />
-      <sub>역할1</sub>
+      <sub>Producer</sub>
     </td>
     <td align="center">
       <sub><b>이유진</b></sub>
       <br />
-      <sub>역할2</sub>
+      <sub>Producer</sub>
     </td>
   </tr>
 </table>
