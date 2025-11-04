@@ -2490,7 +2490,7 @@ class ChatbotService:
             
             return {
                 "replies": replies,  # 전환 시점이므로 감정 태그 제외
-                "image": None,
+                "image": "/static/images/chatbot/drawers.png",  # 서랍 이미지 표시
                 "phase": 3.6
             }
         

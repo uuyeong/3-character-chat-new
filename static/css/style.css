@@ -111,6 +111,27 @@ header {
   padding: 15px;
   background: #fafafa;
   margin-bottom: 10px;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  transition: background-image 0.5s ease-in-out;
+}
+
+/* 테마별 배경 이미지 */
+.user-theme-regret #chat-log {
+  background-image: url('/static/images/chatbot/regret_background.png');
+}
+
+.user-theme-love #chat-log {
+  background-image: url('/static/images/chatbot/love_background.png');
+}
+
+.user-theme-anxiety #chat-log {
+  background-image: url('/static/images/chatbot/anxiety_background.png');
+}
+
+.user-theme-dream #chat-log {
+  background-image: url('/static/images/chatbot/dream_background.png');
 }
 
 .message {
@@ -139,7 +160,7 @@ header {
   color: #ffffff;
 }
 .user-theme-love .message.user {
-  background: #ff6ea5; /* 핑크 */
+  background: rgba(215, 135, 175, 0.85);
   color: #ffffff;
 }
 .user-theme-anxiety .message.user {
@@ -185,7 +206,7 @@ header {
   align-items: center;
   justify-content: center;
   background: #ffffff;
-  border: 2px solid rgba(255, 110, 165, 0.5);
+  border: 1.3px solid rgba(112, 112, 112, 0.5);
 }
 
 .bot-avatar img {
@@ -310,4 +331,8 @@ button:hover {
   border-radius: 12px;
   margin: 2px;
   font-size: 0.9rem;
+}
+
+.letter-container .letter-text {
+  font-family: 'Gaegu', 'IBM Plex Sans KR', sans-serif !important;
 }

@@ -11,6 +11,34 @@ const imageBtn = document.getElementById("imageBtn");
 
 const BOT_AVATAR_SRC = "/static/images/hateslop/owl1.png";
 
+// 감정에 따른 아바타 이미지 매핑
+const EMOTION_AVATAR_MAP = {
+  "슬픔": "/static/images/hateslop/sad_owl.png",
+  "기쁨": "/static/images/hateslop/happy_owl.png",
+  "분노": "/static/images/hateslop/angry_owl.png",
+  "의문": "/static/images/hateslop/question_owl.png",
+  "기본": BOT_AVATAR_SRC
+};
+
+// 감정 태그 파싱 함수
+function parseEmotionTag(text) {
+  const emotionRegex = /##감정\s*:\s*([^\n]+)/;
+  const match = text.match(emotionRegex);
+  if (match) {
+    const emotion = match[1].trim();
+    // 감정 태그 제거
+    const cleanText = text.replace(emotionRegex, "").trim();
+    return { emotion, cleanText };
+  }
+  return { emotion: null, cleanText: text };
+}
+
+// 감정에 따른 아바타 이미지 가져오기
+function getAvatarForEmotion(emotion) {
+  if (!emotion) return BOT_AVATAR_SRC;
+  return EMOTION_AVATAR_MAP[emotion] || BOT_AVATAR_SRC;
+}
+
 // ============================================
 // 임시로 만든 버튼 기능, 나중에 수정 필요
 // ============================================
@@ -130,35 +158,17 @@ function showRoomEntrance(roomName, roomImageSrc) {
   if (!chatLog) return;
 
   const container = document.createElement("div");
-  container.classList.add("room-entrance-message");
-  container.style.cssText = `
-    text-align: center;
-    opacity: 0;
-    transition: opacity 0.8s ease-in;
-    margin: 30px 0;
-  `;
+  container.classList.add("entrance-message");
 
   // 방 이미지
   const img = document.createElement("img");
   img.src = roomImageSrc;
   img.alt = `${roomName} 이미지`;
-  img.style.cssText = `
-    width: 90%;
-    max-width: 500px;
-    height: auto;
-    border-radius: 16px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    margin-bottom: 16px;
-  `;
+  img.classList.add("entrance-img");
 
   // 텍스트
   const text = document.createElement("div");
-  text.style.cssText = `
-    font-size: 1.1rem;
-    color: #555;
-    font-weight: 600;
-    margin-top: 12px;
-  `;
+  text.classList.add("entrance-text");
   text.textContent = `${roomName}에 입장했습니다.`;
 
   // DOM 연결
@@ -228,7 +238,13 @@ function showEnvelopePreview(letterText, buttons = [], stampImageSrc = null) {
   messageDiv.textContent = "편지를 열어보겠나?";
   messageDiv.style.cssText = `
     margin: 15px 0;
-    font-size: 1.1em;
+    font-size: 1.1rem;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 17px;
+    padding: 8px 12px;
+    color: #1a1919;
+    font-weight: 500;
+    display: inline-block;
   `;
 
   // 버튼 컨테이너
@@ -440,6 +456,13 @@ async function sendMessage(isInitial = false) {
         });
         if (index === data.replies.length - 1) {
           setTimeout(() => {
+            // replies 배열의 마지막 메시지 후에 이미지가 있으면 표시
+            if (data.image) {
+              setTimeout(() => {
+                appendMessage("bot", "", data.image, { showAvatar: false });
+                scrollToBottomSmooth();
+              }, 300);
+            }
             if (data.buttons?.length) {
               renderButtons(data.buttons);
               setInputEnabled(false);
@@ -498,7 +521,19 @@ let messageIdCounter = 0;
 function appendMessage(sender, text, imageSrc = null, options = {}) {
   const { showAvatar = sender === "bot", avatarSrc = BOT_AVATAR_SRC } = options;
   const messageId = `msg-${messageIdCounter++}`;
-  const messages = splitLongMessage(text, 120);
+  
+  // 감정 태그 파싱 (봇 메시지일 경우)
+  let processedText = text;
+  let emotionImageSrc = null;
+  if (sender === "bot") {
+    const { emotion, cleanText } = parseEmotionTag(text);
+    processedText = cleanText;
+    if (emotion) {
+      emotionImageSrc = getAvatarForEmotion(emotion);
+    }
+  }
+  
+  const messages = splitLongMessage(processedText, 120);
 
   if (!chatLog) {
     return messageId;
@@ -513,7 +548,7 @@ function appendMessage(sender, text, imageSrc = null, options = {}) {
       const avatarContainer = document.createElement("div");
       avatarContainer.classList.add("bot-avatar");
       const avatarImg = document.createElement("img");
-      avatarImg.src = avatarSrc;
+      avatarImg.src = BOT_AVATAR_SRC; // 항상 기본 아바타 사용
       avatarImg.alt = "부엉장 프로필";
       avatarContainer.appendChild(avatarImg);
       groupElem.appendChild(avatarContainer);
@@ -524,6 +559,19 @@ function appendMessage(sender, text, imageSrc = null, options = {}) {
     const bubbleContainer = document.createElement("div");
     bubbleContainer.classList.add("bot-bubble-container");
     groupElem.appendChild(bubbleContainer);
+
+    // 감정 이미지를 이모티콘처럼 표시 (메시지 앞에)
+    if (emotionImageSrc) {
+      const emotionImg = document.createElement("img");
+      emotionImg.classList.add("emotion-emoji");
+      emotionImg.src = emotionImageSrc;
+      emotionImg.alt = "감정";
+      emotionImg.style.opacity = "0";
+      bubbleContainer.appendChild(emotionImg);
+      setTimeout(() => {
+        emotionImg.style.opacity = "1";
+      }, 100);
+    }
 
     if (imageSrc) {
       const botImg = document.createElement("img");
