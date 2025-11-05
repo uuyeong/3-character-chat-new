@@ -1529,7 +1529,7 @@ class ChatbotService:
                 "image": None,
                 "phase": 1,
                 "intro_step": 1,
-                "buttons": ["나에게 온 편지라고?"]
+                "buttons": ["저에게 온 편지요?"]
             }
         
         # 사용자 메시지 기록 + 반복 의도 상태 갱신 + 위기 완충 세팅
