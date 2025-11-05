@@ -1,3 +1,11 @@
+/* Font Face Declaration */
+@font-face {
+  font-family: 'KyoboHandwriting2024psw';
+  src: url('/static/font/KyoboHandwriting2024psw.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
 /* Global Styles */
 html, body {
   height: 100%;
@@ -319,5 +327,5 @@ button:hover {
 }
 
 .letter-container .letter-text {
-  font-family: 'Gaegu', 'IBM Plex Sans KR', sans-serif !important;
+  font-family: 'KyoboHandwriting2024psw', 'IBM Plex Sans KR', sans-serif !important;
 }
