@@ -85,6 +85,17 @@
 
 
 ## 작동 화면
+<img width="1894" height="1004" alt="Image" src="https://github.com/user-attachments/assets/da7104a0-8b41-49cf-a5df-c8d5c65eddd7" />
+
+<img width="1913" height="1010" alt="Image" src="https://github.com/user-attachments/assets/6df7400b-cfc2-4a14-840d-bf8bcc97bc16" />
+
+<img width="869" height="1024" alt="Image" src="https://github.com/user-attachments/assets/9646a4fa-1096-4921-a8a5-e45356ae6fc2" />
+
+<img width="814" height="1032" alt="Image" src="https://github.com/user-attachments/assets/6e7781ed-d546-444a-8ff5-c069aebd2754" />
+
+<img width="829" height="1031" alt="Image" src="https://github.com/user-attachments/assets/a5434f4f-f1c6-41ab-888c-31c2e7d53a86" />
+
+<img width="699" height="994" alt="Image" src="https://github.com/user-attachments/assets/75f2cf37-5cee-4097-b855-a1f1bcb85021" />
 
 ## 문서
 

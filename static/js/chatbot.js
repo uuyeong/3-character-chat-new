@@ -513,21 +513,59 @@ async function sendMessage(isInitial = false) {
         });
       });
       
-      // 모든 메시지가 끝난 후 이미지와 버튼 표시
+      // 모든 메시지가 끝난 후 이미지 표시
       setTimeout(() => {
         if (data.image) {
           setTimeout(() => {
             appendMessage("bot", "", data.image, { showAvatar: false });
             scrollToBottomSmooth();
+            
+            // 이미지 후 추가 메시지가 있으면 표시
+            if (Array.isArray(data.replies_after_image) && data.replies_after_image.length > 0) {
+              let afterImageDelay = 500; // 이미지 후 대기 시간
+              
+              data.replies_after_image.forEach((replyText, index) => {
+                const splitMessages = splitLongMessage(replyText, 100);
+                splitMessages.forEach((msg, subIndex) => {
+                  setTimeout(() => {
+                    appendMessage("bot", msg, null, { showAvatar: false });
+                    scrollToBottomSmooth();
+                  }, afterImageDelay);
+                  afterImageDelay += 800;
+                });
+              });
+              
+              // 이미지 후 메시지까지 모두 끝난 후 버튼 표시
+              setTimeout(() => {
+                if (data.buttons?.length) {
+                  renderButtons(data.buttons);
+                  setInputEnabled(false);
+                } else {
+                  setInputEnabled(true);
+                }
+              }, afterImageDelay);
+            } else {
+              // 이미지 후 메시지가 없으면 바로 버튼 표시
+              if (data.buttons?.length) {
+                setTimeout(() => {
+                  renderButtons(data.buttons);
+                  setInputEnabled(false);
+                }, 500);
+              } else {
+                setInputEnabled(true);
+              }
+            }
           }, 300);
-        }
-        if (data.buttons?.length) {
-          setTimeout(() => {
-            renderButtons(data.buttons);
-            setInputEnabled(false);
-          }, data.image ? 500 : 200);
         } else {
-          setInputEnabled(true);
+          // 이미지가 없는 경우 (기존 로직)
+          if (data.buttons?.length) {
+            setTimeout(() => {
+              renderButtons(data.buttons);
+              setInputEnabled(false);
+            }, 200);
+          } else {
+            setInputEnabled(true);
+          }
         }
       }, totalDelay);
       

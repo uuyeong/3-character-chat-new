@@ -233,6 +233,7 @@ header {
   height: auto;
   margin: 0 auto 8px;
   border-radius: 8px;
+  align-self: center; /* flex 컨테이너 안에서 가운데 정렬 */
 }
 
 .bot-text {

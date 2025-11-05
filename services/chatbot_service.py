@@ -2479,8 +2479,11 @@ class ChatbotService:
             drawer_action = "(서랍을 연다)"
             drawer_look_inside = "...네 기억이 여기 있어. 좀 더 자세히 이야기해봐."
             
-            # replies 구성: [유저 말에 대한 응답들] + [서랍 열림 과정]
-            replies = closing_parts + [drawer_opening, drawer_action, drawer_look_inside]
+            # replies 구성: 이미지 전후로 분리
+            # 이미지 전: [유저 말에 대한 응답들] + [서랍으로 걸어가는 동작]
+            replies_before_image = closing_parts + [drawer_opening]
+            # 이미지 후: [서랍 열기] + [기억 발견]
+            replies_after_image = [drawer_action, drawer_look_inside]
             
             # 전환 시점이므로 감정 태그 제외
             
@@ -2489,8 +2492,9 @@ class ChatbotService:
             session.add_message("assistant", full_response)
             
             return {
-                "replies": replies,  # 전환 시점이므로 감정 태그 제외
+                "replies": replies_before_image,  # 이미지 전 메시지
                 "image": "/static/images/chatbot/drawers.png",  # 서랍 이미지 표시
+                "replies_after_image": replies_after_image,  # 이미지 후 메시지
                 "phase": 3.6
             }
         
