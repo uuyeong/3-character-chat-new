@@ -198,7 +198,7 @@
         float: right;
         clear:both;
         text-align: right;
-        color: #0056b3;
+        color: #ffffff;
         max-width: 75%;
       }
       .message.user.multi-line {
@@ -380,7 +380,7 @@
           font-size: 0.95rem;
           font-weight: 500;
           transition: all 0.3s;
-          box-shadow: 0 4px 15px rgba(118, 75, 162, 0.3); /* 기본 그림자 */
+          box-shadow: 0 4px 15px rgba(255, 255, 255, 0.8); /* 기본 그림자 */
           /* 기본 배경색 (혹시 클래스가 지정되지 않았을 경우 대비) */
           /*background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); */
       }
@@ -388,66 +388,68 @@
       /* 마우스 오버 효과 (JS 이벤트 대체) */
       .reply-btn:hover {
           transform: translateY(-2px);
-          box-shadow: 0 6px 20px rgba(118, 75, 162, 0.4);
+          box-shadow: 0 6px 20px rgba(255, 255, 255, 0.9);
       }
 
       /* 개별 버튼 색상 설정 */
 
       /* 1. 후회의 방  */
       .reply-btn.regret-room {
-        background: linear-gradient(to bottom, rgba(145, 85, 202, 0.9), rgba(94, 10, 149, 0.9)) !important; 
-        box-shadow: 0 4px 15px rgba(93, 63, 211, 0.3);
+        background: #588B8B !important; 
+        box-shadow: 0 4px 15px rgba(255, 255, 255, 0.8);
       }
 
       /* 2. 사랑의 방  */
       .reply-btn.love-room {
-        background: linear-gradient(to bottom, rgba(206, 144, 208, 0.9), rgba(202, 52, 192, 0.9)) !important;
-        box-shadow: 0 4px 15px rgba(255, 105, 180, 0.3);
+        background: #F7A9A8 !important;
+        box-shadow: 0 4px 15px rgba(255, 255, 255, 0.8);
+        color: #333333 !important;
       }
 
       /* 3. 불안의 방  */
       .reply-btn.anxiety-room {
-        background: linear-gradient(to bottom, rgba(51, 115, 194, 0.9), rgba(35, 23, 165, 0.9)) !important; 
-        box-shadow: 0 4px 15px rgba(76, 154, 217, 0.3);
+        background: #734962 !important; 
+        box-shadow: 0 4px 15px rgba(255, 255, 255, 0.8);
       }
 
       /* 4. 꿈의 방 */
       .reply-btn.dream-room {
-        background: linear-gradient(to bottom, rgba(37, 102, 181, 0.9), rgba(133, 37, 188, 0.9)) !important; 
-        box-shadow: 0 4px 15px rgba(76, 154, 217, 0.3);
+        background: #EDD892 !important; 
+        box-shadow: 0 4px 15px rgba(255, 255, 255, 0.8);
+        color: #333333 !important;
       }
 
       /* 테마가 선택된 후 모든 버튼에 통일된 색상 적용 */
       /* 후회의 방 테마 - 모든 버튼 */
       .user-theme-regret .reply-btn:not(.regret-room):not(.love-room):not(.anxiety-room):not(.dream-room),
       .user-theme-regret button.send-btn {
-        background: linear-gradient(to bottom, rgba(145, 85, 202, 0.9), rgba(94, 10, 149, 0.9)) !important; 
-        box-shadow: 0 4px 15px rgba(93, 63, 211, 0.3);
+        background: #588B8B !important; 
+        box-shadow: 0 4px 15px rgba(255, 255, 255, 0.8);
         color: white;
       }
 
       /* 사랑의 방 테마 - 모든 버튼 */
       .user-theme-love .reply-btn:not(.regret-room):not(.love-room):not(.anxiety-room):not(.dream-room),
       .user-theme-love button.send-btn {
-        background: linear-gradient(to bottom, rgba(206, 144, 208, 0.9), rgba(202, 52, 192, 0.9)) !important;
-        box-shadow: 0 4px 15px rgba(255, 105, 180, 0.3);
-        color: white;
+        background: #F7A9A8 !important;
+        box-shadow: 0 4px 15px rgba(255, 255, 255, 0.8);
+        color: #333333;
       }
 
       /* 불안의 방 테마 - 모든 버튼 */
       .user-theme-anxiety .reply-btn:not(.regret-room):not(.love-room):not(.anxiety-room):not(.dream-room),
       .user-theme-anxiety button.send-btn {
-        background: linear-gradient(to bottom, rgba(51, 115, 194, 0.9), rgba(35, 23, 165, 0.9)) !important; 
-        box-shadow: 0 4px 15px rgba(76, 154, 217, 0.3);
+        background: #734962 !important; 
+        box-shadow: 0 4px 15px rgba(255, 255, 255, 0.8);
         color: white;
       }
 
       /* 꿈의 방 테마 - 모든 버튼 */
       .user-theme-dream .reply-btn:not(.regret-room):not(.love-room):not(.anxiety-room):not(.dream-room),
       .user-theme-dream button.send-btn {
-        background: linear-gradient(to bottom, rgba(37, 102, 181, 0.9), rgba(133, 37, 188, 0.9)) !important; 
-        box-shadow: 0 4px 15px rgba(76, 154, 217, 0.3);
-        color: white;
+        background: #EDD892 !important; 
+        box-shadow: 0 4px 15px rgba(255, 255, 255, 0.8);
+        color: #333333;
       }
 
       /* 테마별 배경 이미지 */
