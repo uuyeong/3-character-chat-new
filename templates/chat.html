@@ -452,18 +452,18 @@
 
       /* 테마별 배경 이미지 */
       .user-theme-regret #chat-log {
-        background-image: url('/static/images/chatbot/regret_background.png');
+        background-image: url('/static/images/chatbot/background/regret_background.png');
       }
 
       .user-theme-love #chat-log {
-        background-image: url('/static/images/chatbot/love_background.png');
+        background-image: url('/static/images/chatbot/background/love_background.png');
       }
       .user-theme-anxiety #chat-log {
-        background-image: url('/static/images/chatbot/anxiety_background.png');
+        background-image: url('/static/images/chatbot/background/anxiety_background.png');
       }
 
       .user-theme-dream #chat-log {
-        background-image: url('/static/images/chatbot/dream_background.png');
+        background-image: url('/static/images/chatbot/background/dream_background.png');
       }
 
       .letter-container {
@@ -550,7 +550,7 @@
       <div class="header-center">별빛 우체국</div>
       <button
         class="close-btn"
-        onclick="window.location.href='{{ url_for('index') }}'"
+        data-href="{{ url_for('index') }}"
       >
         &times;
       </button>
@@ -579,7 +579,7 @@
         <div class="image-grid">
           {% if image_files %} {% for filename in image_files %}
           <img
-            src="./static/images/hateslop/logo_black_genai.png"
+            src="{{ url_for('static', filename='images/chatbot/' + filename) }}"
             alt="{{ filename }}"
           />
           {% endfor %} {% else %}
@@ -610,8 +610,13 @@
     </div>
 
     <script src="{{ url_for('static', filename='js/chatbot.js') }}"></script>
+    <script>
+      document.querySelector('.close-btn').addEventListener('click', function() {
+        window.location.href = this.dataset.href;
+      });
+    </script>
     <div class="letter-container" id="letterContainer" style="display:none;">
-      <img src="/static/images/chatbot/letter_test.png" class="letter-bg" alt="별빛 편지 배경" />
+      <img src="/static/images/chatbot/letter/letter_test.png" class="letter-bg" alt="별빛 편지 배경" />
       <img id="stampImage" class="stamp" alt="우표" />
       <div class="letter-text" id="letterText"></div>
       <div class="letter-buttons" id="letterButtons" style="position: absolute; bottom: 30px; width: 100%; text-align: center; z-index: 2;"></div>

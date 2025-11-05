@@ -248,7 +248,7 @@
         <h2>별빛 우체국</h2>
         <button
           class="close-btn"
-          onclick="window.location.href='{{ url_for('index') }}'"
+          data-href="{{ url_for('index') }}"
         >
           &times;
         </button>
@@ -256,7 +256,7 @@
 
       <div class="modal-content">
         <img
-          src="./static/images/hateslop/owl1.png"
+          src="{{ url_for('static', filename='images/chatbot/owl/owl1.png') }}"
           alt="{{ bot.name }}"
           class="bot-image"
         />
@@ -287,7 +287,7 @@
         <button class="intro-close" id="intro-close">&times;</button>
         
         <div class="intro-header">
-          <img src="./static/images/hateslop/owl1.png" alt="부엉장" class="intro-owl" />
+          <img src="{{ url_for('static', filename='images/chatbot/owl/owl1.png') }}" alt="부엉장" class="intro-owl" />
           <div class="intro-speech-bubble">
             <p>
               별빛 아래에 오신 걸 환영하네. 
@@ -315,6 +315,7 @@
       const introModal = document.getElementById("intro-modal");
       const introClose = document.getElementById("intro-close");
       const introStartBtn = document.getElementById("intro-start-btn");
+      const closeBtn = document.querySelector(".close-btn");
 
       // 채팅 시작
       function startChat() {
@@ -355,6 +356,11 @@
       introStartBtn.addEventListener("click", function () {
         introModal.classList.remove("active");
         startChat();
+      });
+
+      // 닫기 버튼
+      closeBtn.addEventListener("click", function () {
+        window.location.href = this.dataset.href;
       });
     </script>
   </body>

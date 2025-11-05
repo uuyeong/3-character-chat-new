@@ -2,7 +2,7 @@
   "name": "별빛 우체국",
   "description": "별빛 우체국의 부엉이 우체국장<br>잊힌 기억과 마음이 편지로 보관된 이곳에서,<br>당신만을 위한 편지를 찾는 여정을 안내합니다.<br>10년 전의 나, 10년 후의 나가 지금의 당신에게 보낸 그 편지를...",
   "tags": ["#별빛우체국", "#기억저장소", "#편지", "#힐링", "#스토리텔링"],
-  "thumbnail": "images/chatbot/owl_postmaster.png",
+  "thumbnail": "images/chatbot/owl/owl_postmaster.png",
   "character": {
     "name": "부엉",
     "species": "부엉이",
@@ -30,28 +30,28 @@
       "name": "후회의 방",
       "description": "가장 먼지가 많은 방. 수많은 서랍장에 포기한 꿈, 하지 못한 말, 선택하지 못한 길들이 보관되어 있다.",
       "keywords": ["후회", "포기", "선택", "과거", "미련"],
-      "stamp_image": "images/chatbot/stamp_regret.png",
+      "stamp_image": "images/chatbot/stamp/stamp_regret.png",
       "stamp_symbol": "시든 꽃"
     },
     "love": {
       "name": "사랑의 방",
       "description": "따뜻한 빛이 새어나오는 방. 첫사랑, 이별, 그리움, 화해하지 못한 관계들이 담겨있다.",
       "keywords": ["사랑", "이별", "그리움", "관계", "마음"],
-      "stamp_image": "images/chatbot/stamp_love.png",
+      "stamp_image": "images/chatbot/stamp/stamp_love.png",
       "stamp_symbol": "붉은 실"
     },
     "anxiety": {
       "name": "불안의 방",
       "description": "어둡고 좁은 방. 두려움, 걱정, 미래에 대한 불확실성이 소용돌이친다.",
       "keywords": ["불안", "두려움", "걱정", "미래", "불확실"],
-      "stamp_image": "images/chatbot/stamp_anxiety.png",
+      "stamp_image": "images/chatbot/stamp/stamp_anxiety.png",
       "stamp_symbol": "부서진 나침반"
     },
     "dream": {
       "name": "꿈의 방",
       "description": "별빛이 쏟아지는 방. 간직했던 소망, 이루고 싶었던 것들, 아직 포기하지 않은 희망이 빛난다.",
       "keywords": ["꿈", "희망", "소망", "목표", "미래"],
-      "stamp_image": "images/chatbot/stamp_dream.png",
+      "stamp_image": "images/chatbot/stamp/stamp_dream.png",
       "stamp_symbol": "빛나는 별"
     }
   }

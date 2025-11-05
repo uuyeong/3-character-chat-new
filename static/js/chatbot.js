@@ -9,14 +9,14 @@ const sendBtn = document.getElementById("send-btn");
 const videoBtn = document.getElementById("videoBtn");
 const imageBtn = document.getElementById("imageBtn");
 
-const BOT_AVATAR_SRC = "/static/images/hateslop/owl1.png";
+const BOT_AVATAR_SRC = "/static/images/chatbot/owl/owl1.png";
 
 // 감정에 따른 아바타 이미지 매핑
 const EMOTION_AVATAR_MAP = {
-  "슬픔": "/static/images/hateslop/sad_owl.png",
-  "기쁨": "/static/images/hateslop/happy_owl.png",
-  "분노": "/static/images/hateslop/angry_owl.png",
-  "의문": "/static/images/hateslop/question_owl.png",
+  "슬픔": "/static/images/chatbot/owl/sad_owl.png",
+  "기쁨": "/static/images/chatbot/owl/happy_owl.png",
+  "분노": "/static/images/chatbot/owl/angry_owl.png",
+  "의문": "/static/images/chatbot/owl/question_owl.png",
   "기본": BOT_AVATAR_SRC
 };
 
@@ -104,20 +104,20 @@ function renderButtons(buttons) {
       if (button.classList.contains('regret-room')) {
         setUserTheme('regret');
         roomName = '후회의 방';
-        roomImage = '/static/images/chatbot/regret_room.png';
+        roomImage = '/static/images/chatbot/room/regret_room.png';
 
       } else if (button.classList.contains('love-room')) {
         setUserTheme('love');
         roomName = '사랑의 방';
-        roomImage = '/static/images/chatbot/love_room.png';
+        roomImage = '/static/images/chatbot/room/love_room.png';
       } else if (button.classList.contains('anxiety-room')) {
         setUserTheme('anxiety');
         roomName = '불안의 방';
-        roomImage = '/static/images/chatbot/anxiety_room.png';
+        roomImage = '/static/images/chatbot/room/anxiety_room.png';
       } else if (button.classList.contains('dream-room')) {
         setUserTheme('dream');
         roomName = '꿈의 방';
-        roomImage = '/static/images/chatbot/dream_room.png';
+        roomImage = '/static/images/chatbot/room/dream_room.png';
       }
 
       // 방 입장 메시지 표시 (방 버튼일 경우만)
@@ -207,7 +207,7 @@ function showEnvelopePreview(letterText, buttons = [], stampImageSrc = null) {
 
   // 편지 봉투 이미지
   const envelopeImg = document.createElement("img");
-  envelopeImg.src = "/static/images/chatbot/a_full_envelope.png";
+  envelopeImg.src = "/static/images/chatbot/letter/a_full_envelope.png";
   envelopeImg.alt = "편지 봉투";
   envelopeImg.style.cssText = `
     width: 100%;
@@ -415,7 +415,7 @@ function showEntranceMessage() {
 
   // 이미지
   const img = document.createElement("img");
-  img.src = "/static/images/chatbot/main_background2.png"; 
+  img.src = "/static/images/chatbot/background/main_background2.png"; 
   img.alt = "별빛 우체국 로고";
   img.classList.add("entrance-img");
 
@@ -477,12 +477,12 @@ async function sendMessage(isInitial = false) {
         });
         // 그 다음 봉투 미리보기
         setTimeout(() => {
-          const stampSrc = data.stamp_image || (data.stamp_code ? `/static/images/chatbot/${data.stamp_code}.png` : null);
+          const stampSrc = data.stamp_image || (data.stamp_code ? `/static/images/chatbot/stamp/${data.stamp_code}.png` : null);
           showEnvelopePreview(data.letter, data.buttons || [], stampSrc);
         }, stampReplies.length * 800 + 300);
       } else {
         // 설명이 없으면 즉시 봉투
-        const stampSrc = data.stamp_image || (data.stamp_code ? `/static/images/chatbot/${data.stamp_code}.png` : null);
+        const stampSrc = data.stamp_image || (data.stamp_code ? `/static/images/chatbot/stamp/${data.stamp_code}.png` : null);
         showEnvelopePreview(data.letter, data.buttons || [], stampSrc);
       }
       return; 
@@ -573,7 +573,7 @@ function scrollToBottomSmooth() {
 }
 /*function showStamp(stampCode) {
   const stampImg = document.getElementById("stampImage");
-  stampImg.src = `/static/images/chatbot/${stampCode}.png`; 
+  stampImg.src = `/static/images/chatbot/stamp/${stampCode}.png`; 
   stampImg.style.display = "block";
 }*/
 

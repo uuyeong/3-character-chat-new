@@ -15,14 +15,21 @@
       rel="stylesheet"
     />
     <style>
-      body {
+      html, body {
         margin: 0;
         padding: 0;
+        height: 100%;
         font-family: "IBM Plex Sans KR", sans-serif;
+      }
+      body {
         min-height: 100vh;
         display: flex;
         align-items: center;
         justify-content: center;
+        background-image: url("{{ url_for('static', filename='images/chatbot/background/main_background2.png') }}");
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
       }
       .container {
         max-width: 600px;
@@ -57,6 +64,19 @@
         border-radius: 50%;
         margin-bottom: 20px;
         box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+      }
+      .intro-text {
+        margin: 20px 0;
+        color: #555;
+        line-height: 1.8;
+        font-size: 1rem;
+        max-width: 500px;
+        padding: 0 20px;
+      }
+      .intro-text .highlight {
+        font-weight: 700;
+        color: #764ba2;
+        text-shadow: 0 1px 2px rgba(118, 75, 162, 0.2);
       }
       .card h2 {
         margin: 10px 0;
@@ -108,14 +128,19 @@
   <body>
     <div class="container">
       <div class="header">
-        <h1>별빛 우체국</h1>
+        <h1>✨별빛 우체국✨</h1>
       </div>
       <div class="card" style="flex-direction: column; align-items: center">
         <img
-          src="./static/images/hateslop/owl1.png"
+          src="{{ url_for('static', filename='images/chatbot/owl/owl1.png') }}"
           alt="{{ bot.name }}"
         />
-        <a href="{{ url_for('detail') }}" class="start-btn">시작하기</a>
+        <p class="intro-text">
+          <span class="highlight">별빛 우체국</span>에 온 것을 환영합니다.<br>
+          우체국장 <span class="highlight">부엉</span>과 함께 대화하며,<br>
+           다른 세계선의 당신으로부터 <span class="highlight">편지</span>를 받아보세요.
+        </p>
+        <a href="{{ url_for('detail') }}" class="start-btn">별빛 우체국에 입장하기</a>
       </div>
     </div>
   </body>
