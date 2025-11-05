@@ -919,7 +919,7 @@ class ChatbotService:
         if any(k in user_message for k in early_letter_keywords):
             if session.phase == 3 and session.room_conversation_count < 3:
                 return "의문"
-            if session.phase == 3.6 and session.drawer_conversation_count < 2:
+            if session.phase == 3.5 and session.drawer_conversation_count < 2:
                 return "의문"
         
         # 재입장 의도 감지
@@ -2471,7 +2471,7 @@ class ChatbotService:
             # 2단계: 우표 코드 결정 (DIR-S-401)
             stamp_code = self._determine_stamp_code(session)
             session.selected_drawer = stamp_code  # 우표 코드 저장
-            session.phase = 3.6
+            session.phase = 3.5
             
             # 3단계: 응답 구성 (마무리 응답 + 서랍 열림)
             # ✅ 서랍은 우표 코드 없이 단순 표현 (우표는 편지 발견 시 표시)
@@ -2491,11 +2491,11 @@ class ChatbotService:
             return {
                 "replies": replies,  # 전환 시점이므로 감정 태그 제외
                 "image": "/static/images/chatbot/drawers.png",  # 서랍 이미지 표시
-                "phase": 3.6
+                "phase": 3.5
             }
         
-        # Phase 3.6: 서랍에서의 대화
-        if session.phase == 3.6:
+        # Phase 3.5: 서랍에서의 대화
+        if session.phase == 3.5:
             # 방 변경 요청 감지 (서랍 단계에서도 가능)
             room_change_result = self._detect_room_change_request(user_message, session.selected_room)
             
@@ -2518,7 +2518,7 @@ class ChatbotService:
                 return {
                     "reply": reply,  # 전환 시점이므로 감정 태그 제외
                     "image": None,
-                    "phase": 3.6,
+                    "phase": 3.5,
                     "buttons": ["응, 우체국에 재입장할래", "아니, 이 방에서 계속 할래"]
                 }
             
@@ -2537,7 +2537,7 @@ class ChatbotService:
                 return {
                     "reply": reply,  # 전환 시점이므로 감정 태그 제외
                     "image": None,
-                    "phase": 3.6
+                    "phase": 3.5
                 }
             
             # 케이스 3: "다른 방"이라고만 함 (구체적인 방 지정 없음)
@@ -2551,7 +2551,7 @@ class ChatbotService:
                 return {
                     "reply": reply,  # 전환 시점이므로 감정 태그 제외
                     "image": None,
-                    "phase": 3.6,
+                    "phase": 3.5,
                     "buttons": ["응, 우체국에 재입장할래", "아니, 이 방에서 계속 할래"]
                 }
             
@@ -2565,7 +2565,7 @@ class ChatbotService:
                 return {
                     "reply": reply,
                     "image": None,
-                    "phase": 3.6,
+                    "phase": 3.5,
                     "buttons": ["응 편지를 받을래", "아니, 더 대화할래"]
                 }
             
@@ -2587,14 +2587,14 @@ class ChatbotService:
                     return {
                         "reply": reply,
                         "image": None,
-                        "phase": 3.6
+                        "phase": 3.5
                     }
                 else:
                     # 다른 말을 하면 다시 확인
                     return {
                         "reply": "편지를 먼저 받고 싶은가? 아니면 더 이야기하고 싶은가?",
                         "image": None,
-                        "phase": 3.6,
+                        "phase": 3.5,
                         "buttons": ["응 편지를 받을래", "아니, 더 대화할래"]
                     }
             
@@ -2831,7 +2831,7 @@ class ChatbotService:
                 return {
                     "replies": replies,
                     "image": None,
-                    "phase": 3.6,
+                    "phase": 3.5,
                     "conversation_count": session.drawer_conversation_count
                 }
 
@@ -2842,7 +2842,7 @@ class ChatbotService:
                     return {
                         "reply": "...알겠어. 다만 지금은 서두르지 말자. 네 마음이 다칠 수 있으니 한 번만 더 확인하자.",
                         "image": None,
-                        "phase": 3.6
+                        "phase": 3.5
                     }
                 # DIR-S-404: 편지 전달 (우표 코드 포함)
                 stamp_code = self._determine_stamp_code(session)
@@ -2903,7 +2903,7 @@ class ChatbotService:
                 return {
                     "reply": "(자료를 정리하는 중이네… 잠깐만 기다려 주겠나.)",
                     "image": None,
-                    "phase": 3.6
+                    "phase": 3.5
                 }
             session.drawer_conversation_count += 1
             # 길이 증가시 자동 요약
@@ -2925,14 +2925,14 @@ class ChatbotService:
                     similarity_threshold=0.65
                 )
             
-            # RAG-D: 위기 상황 또는 전문 상담이 필요한 경우 상담 매뉴얼 참조 (Phase 3.6)
+            # RAG-D: 위기 상황 또는 전문 상담이 필요한 경우 상담 매뉴얼 참조 (Phase 3.5)
             counseling_knowledge_drawer = []
             
             # ✅ 위기 모드 활성화 체크: 기존 모드 유지 OR 새로운 위기 감지
             current_crisis_detected_drawer = self._detect_crisis(user_message)
             if current_crisis_detected_drawer and not session.crisis_mode_active:
                 session.crisis_mode_active = True
-                print(f"[위기 모드] 활성화 ✅ (Phase 3.6, 키워드 감지)")
+                print(f"[위기 모드] 활성화 ✅ (Phase 3.5, 키워드 감지)")
             
             # ✅ 위기 모드 회복 감지 (Phase 4에서도 동일하게 적용)
             if session.crisis_mode_active:
@@ -2959,7 +2959,7 @@ class ChatbotService:
             else:
                 counseling_knowledge_drawer = []
             
-            # RAG-P: 페르소나 검색 (상황에 맞는 부엉이의 자기 공개) - Phase 3.6
+            # RAG-P: 페르소나 검색 (상황에 맞는 부엉이의 자기 공개) - Phase 3.5
             conversation_context_drawer = session.get_summary()
             persona_match_drawer = self._search_persona(user_message, conversation_context_drawer, session.used_persona_stories)
             persona_story_drawer = ""
@@ -2978,7 +2978,7 @@ class ChatbotService:
             if is_crisis_drawer:
                 safety_rules = "\n[안전 지침 - 모델 내부 지침]\n- 위험이 의심되는 경우, 조심스럽게 안전을 우선하고 전문 도움 연결을 부드럽게 안내한다.\n- 단정/지시/위협 금지. 사용자의 자율성을 존중하며 정보 제공에 그친다."
             
-            # 상담 매뉴얼 지식을 시스템 프롬프트에 포함 (Phase 3.6)
+            # 상담 매뉴얼 지식을 시스템 프롬프트에 포함 (Phase 3.5)
             counseling_context_drawer = ""
             if counseling_knowledge_drawer:
                 if is_crisis_drawer:
@@ -3008,9 +3008,9 @@ class ChatbotService:
                     
                     counseling_context_drawer += "위 템플릿 형식을 따르되, PDF 매뉴얼의 전문 지식을 참고하여 더욱 세심하고 전문적으로 대응하세요.\n"
                     counseling_context_drawer += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-                    print(f"[RAG-D Phase 3.6] 위기 대응 모드 활성화 (PDF 지식 {len(counseling_knowledge_drawer)}개 포함)")
+                    print(f"[RAG-D Phase 3.5] 위기 대응 모드 활성화 (PDF 지식 {len(counseling_knowledge_drawer)}개 포함)")
                 else:
-                    # 일반 상담: PDF 가이드 기반 체크리스트 방식 (실질적 활용) - Phase 3.6
+                    # 일반 상담: PDF 가이드 기반 체크리스트 방식 (실질적 활용) - Phase 3.5
                     counseling_context_drawer = "\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
                     counseling_context_drawer += "[상담 가이드 기반 대화 프로토콜 - 반드시 준수]\n"
                     counseling_context_drawer += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
@@ -3022,8 +3022,8 @@ class ChatbotService:
                         counseling_context_drawer += f"{knowledge}\n"  # ✅ 전체 내용!
                         counseling_context_drawer += f"━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
                     
-                    # 디버그 로그 (확인용) - Phase 3.6
-                    print(f"[RAG-D Phase 3.6] 일반 상담 모드 활성화 ({len(counseling_knowledge_drawer)}개 가이드)")
+                    # 디버그 로그 (확인용) - Phase 3.5
+                    print(f"[RAG-D Phase 3.5] 일반 상담 모드 활성화 ({len(counseling_knowledge_drawer)}개 가이드)")
                     
                     # 구체적 적용 방법 (3단계 프로토콜)
                     counseling_context_drawer += "**위 원칙을 다음 3단계로 적용하세요:**\n\n"
@@ -3052,7 +3052,7 @@ class ChatbotService:
                     counseling_context_drawer += "4. 부엉이 말투를 유지하되, 전문성 있는 질문을 하세요\n"
                     counseling_context_drawer += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
             
-            # 페르소나 정보를 시스템 프롬프트에 포함 (RAG-P) - Phase 3.6
+            # 페르소나 정보를 시스템 프롬프트에 포함 (RAG-P) - Phase 3.5
             # 1. 일반 질문용: 부엉이의 전체 정보 제공
             general_persona_info_drawer = f"""
 
@@ -3187,7 +3187,7 @@ class ChatbotService:
 [현재 상황 - 당신이 알고 있는 세션 정보]
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 - **유저 이름**: {session.username} (반드시 기억하고 활용하세요!)
-- **Phase**: 3.6 (서랍에서의 대화 단계)
+- **Phase**: 3.5 (서랍에서의 대화 단계)
 - **현재 위치**: '{room_data.get('name', '')}' 안에서 더 깊은 대화 중
 - **대화 진행**: {session.drawer_conversation_count}/{MIN_DRAWER_CONVERSATIONS}회 (최소)
 - **목표**: 유저의 핵심 감정과 진실에 다가가기
@@ -3376,7 +3376,7 @@ class ChatbotService:
                 # DIR-C-201: LLM 응답 후 Phase 전환 체크 (유저 질문에 먼저 답변한 후)
                 if session.drawer_conversation_count >= MIN_DRAWER_CONVERSATIONS:
                     # ✅ 편지 발견 단계로 바로 전환 (의문문 없이)
-                    print(f"[Phase 전환] Phase 3.6 → 4 (편지 발견 및 생성)")
+                    print(f"[Phase 전환] Phase 3.5 → 4 (편지 발견 및 생성)")
                     
                     # 문제 2 해결: 우표 코드 결정 및 우표 설명, 편지 생성까지 한 번에 처리
                     stamp_code = self._determine_stamp_code(session)
@@ -3423,7 +3423,7 @@ class ChatbotService:
                 resp = {
                     "replies": replies,
                     "image": None,
-                    "phase": 3.6,
+                    "phase": 3.5,
                     "conversation_count": session.drawer_conversation_count
                 }
                 if self.debug_rag and getattr(self, "_last_sources", None):
@@ -3433,15 +3433,15 @@ class ChatbotService:
             except Exception as e:
                 print(f"[에러] LLM 호출 실패: {e}")
                 replies = ["흐음... (먼지를 털어내며) 잠깐만.\n##감정 : 기본"]
-                return {"replies": replies, "image": None, "phase": 3.6}
+                return {"replies": replies, "image": None, "phase": 3.5}
         
-        # Phase 3.9는 제거됨 - Phase 3.6에서 바로 Phase 4로 전환
+        # Phase 3.9는 제거됨 - Phase 3.5에서 바로 Phase 4로 전환
         
         # Phase 4: 편지 생성 및 출력
         if session.phase == 4:
             print(f"[편지 생성] 방 대화: {session.room_conversation_count}회, 서랍 대화: {session.drawer_conversation_count}회")
             
-            # DIR-S-404: 우표 코드는 이미 Phase 3.6에서 결정됨 (없으면 재결정)
+            # DIR-S-404: 우표 코드는 이미 Phase 3.5에서 결정됨 (없으면 재결정)
             stamp_code = session.selected_drawer if session.selected_drawer else self._determine_stamp_code(session)
             if not session.selected_drawer:
                 session.selected_drawer = stamp_code  # 우표 코드 저장
