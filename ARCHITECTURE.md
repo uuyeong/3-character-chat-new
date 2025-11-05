@@ -148,7 +148,7 @@ ChatbotService.generate_response()
   ↓
 [1단계] 세션 관리
   - 사용자별 세션 로드/생성
-  - Phase 상태 확인 (1: 입장, 2: 방 선택, 3: 방 대화, 3.6: 서랍, 4: 편지 생성, 5: 편지 전달)
+  - Phase 상태 확인 (1: 입장, 2: 방 선택, 3: 방 대화, 3.5: 서랍, 4: 편지 생성, 5: 편지 전달)
   - 대화 기록 저장
 
 [2단계] 예외 처리 (우선 처리)
@@ -369,7 +369,7 @@ class ChatbotService:
 
 **주요 상태**:
 
-- `phase`: 현재 Phase (1: 입장, 2: 방 선택, 3: 방 대화, 3.6: 서랍, 4: 편지 생성, 5: 편지 전달)
+- `phase`: 현재 Phase (1: 입장, 2: 방 선택, 3: 방 대화, 3.5: 서랍, 4: 편지 생성, 5: 편지 전달)
 - `selected_room`: 선택한 방 (regret, love, anxiety, dream)
 - `conversation_history`: 대화 기록
 - `summary_text`: 대화 요약 (장기 기억)
@@ -640,7 +640,7 @@ static/data/chatbot/chardb_text/
 **조기 요청 감지**:
 - 키워드: "편지줘", "편지내놔", "그만", "끝" 등
 - Phase 3에서 최소 대화 횟수(3회) 미달 시
-- Phase 3.6에서 최소 대화 횟수(2회) 미달 시
+- Phase 3.5에서 최소 대화 횟수(2회) 미달 시
 
 **확인 프로세스**:
 1. `session.awaiting_letter_confirm = True` 설정

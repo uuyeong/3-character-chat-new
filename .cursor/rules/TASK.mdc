@@ -320,7 +320,7 @@ def _create_embedding(self, text: str) -> list:
 - [ ] 에러 핸들링
 - [ ] 벡터 반환
 
-### 3.6 이미지 Embedding 생성 함수 구현 (필수!)
+### 3.5 이미지 Embedding 생성 함수 구현 (필수!)
 
 ```python
 def _create_image_embedding(self, image_description: str, keywords: list) -> list:
