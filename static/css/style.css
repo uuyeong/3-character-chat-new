@@ -116,6 +116,7 @@ header {
   border: 1px solid #e0e0e0;
   border-radius: 8px;
   overflow-y: auto;
+  overflow-x: hidden; /* 가로 스크롤바 제거 */
   padding: 15px;
   background: #fafafa;
   margin-bottom: 10px;
@@ -146,7 +147,9 @@ header {
   margin-bottom: 12px;
   padding: 10px;
   border-radius: 8px;
-  word-break: break-all;
+  word-wrap: break-word; /* 긴 단어는 줄바꿈 */
+  overflow-wrap: break-word; /* 최신 표준 속성 */
+  white-space: pre-wrap; /* 공백과 줄바꿈 유지 */
   display: inline-block; /* 말풍선을 내용 너비로 */
   max-width: 80%; /* 너무 길어지지 않도록 제한 */
 }

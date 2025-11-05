@@ -11,6 +11,13 @@ const imageBtn = document.getElementById("imageBtn");
 
 const BOT_AVATAR_SRC = "/static/images/chatbot/owl/owl_profile.png";
 
+// 마지막 편지 정보 저장 (편지 다시 보기용)
+let lastLetterInfo = {
+  text: null,
+  buttons: [],
+  stampImageSrc: null
+};
+
 // 감정에 따른 아바타 이미지 매핑
 const EMOTION_AVATAR_MAP = {
   "슬픔": "/static/images/chatbot/owl/sad_owl.png",
@@ -31,6 +38,25 @@ function parseEmotionTag(text) {
     return { emotion, cleanText };
   }
   return { emotion: null, cleanText: text };
+}
+
+// 우표 텍스트를 HTML로 변환 (중간 부분을 굵게)
+function formatStampText(text) {
+  // "이건 [내용] 우표야" 패턴 감지
+  const stampRegex = /(이건\s+)(.+?)(\s+우표야)/;
+  const match = text.match(stampRegex);
+  
+  if (match) {
+    const before = match[1]; // "이건 "
+    const content = match[2]; // 중간 내용
+    const after = match[3];   // " 우표야"
+    
+    // 중간 부분을 <strong> 태그로 감싸기
+    return text.replace(stampRegex, `${before}<strong>${content}</strong>${after}`);
+  }
+  
+  // 패턴이 없으면 원본 반환
+  return text;
 }
 
 // 감정에 따른 아바타 이미지 가져오기
@@ -97,6 +123,15 @@ function renderButtons(buttons) {
     // onmouseover, onmouseout 이벤트 제거 (CSS :hover로 대체)
     
     button.onclick = () => {
+      // "편지 다시 보기" 버튼 처리
+      if (buttonText === "편지 다시 보기") {
+        if (lastLetterInfo.text) {
+          showLetter(lastLetterInfo.text, lastLetterInfo.buttons, lastLetterInfo.stampImageSrc);
+          buttonContainer.remove();
+        }
+        return;
+      }
+      
       // 방 버튼 확인 및 입장 메시지 표시
       let roomName = null;
       let roomImage = null;
@@ -191,7 +226,8 @@ function showEnvelopePreview(letterText, buttons = [], stampImageSrc = null) {
     text-align: center;
     padding: 20px;
     margin: 20px auto;
-    max-width: 600px;
+    max-width: 100%;
+    box-sizing: border-box;
   `;
 
   // 봉투 + 우표를 담을 컨테이너 (position: relative)
@@ -199,10 +235,12 @@ function showEnvelopePreview(letterText, buttons = [], stampImageSrc = null) {
   envelopeWrapper.style.cssText = `
     position: relative;
     display: inline-block;
-    width: 95%;
+    width: 100%;
+    max-width: 500px;
     margin: 20px auto;
     overflow: hidden;
     border-radius: 12px;
+    box-sizing: border-box;
   `;
 
   // 편지 봉투 이미지
@@ -275,16 +313,18 @@ function showEnvelopePreview(letterText, buttons = [], stampImageSrc = null) {
 
   // 안내 메시지
   const messageDiv = document.createElement("p");
-  messageDiv.textContent = "편지를 열어보겠나?";
+  messageDiv.textContent = "지금 편지를 열어보겠나?";
   messageDiv.style.cssText = `
-    margin: 15px 0;
+    margin: 15px auto;
     font-size: 1.1rem;
-    background: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.75);
     border-radius: 17px;
     padding: 8px 12px;
     color: #1a1919;
     font-weight: 500;
-    display: inline-block;
+    display: block;
+    width: fit-content;
+    text-align: center;
   `;
 
   // 버튼 컨테이너
@@ -333,7 +373,12 @@ function backToChatEntrance() {
   if (letterContainer) letterContainer.style.display = "none";
   if (chatLog) chatLog.style.display = "block";
 
-  renderButtons(["별빛 우체국에 다시 한번 입장"]);
+  // 편지 정보가 있으면 "편지 다시 보기" 버튼도 추가
+  const buttons = ["별빛 우체국에 다시 한번 입장"];
+  if (lastLetterInfo.text) {
+    buttons.push("편지 다시 보기");
+  }
+  renderButtons(buttons);
 
   setInputEnabled(true);
   scrollToBottomSmooth();
@@ -342,6 +387,13 @@ function backToChatEntrance() {
 // showLetter 함수
 function showLetter(letterText, buttons = [], stampImageSrc = null) {
   console.log("[showLetter] 시작 - 텍스트 길이:", letterText ? letterText.length : 0, "버튼 개수:", buttons ? buttons.length : 0, "우표:", stampImageSrc);
+  
+  // 편지 정보 저장 (다시 보기용)
+  lastLetterInfo = {
+    text: letterText,
+    buttons: buttons,
+    stampImageSrc: stampImageSrc
+  };
   
   const letterContainer = document.getElementById("letterContainer");
   const letterTextDiv = document.getElementById("letterText");
@@ -677,7 +729,8 @@ function appendMessage(sender, text, imageSrc = null, options = {}) {
     }
   }
   
-  const messages = splitLongMessage(processedText, 120);
+  // 사용자 메시지는 분할하지 않고, 봇 메시지만 분할
+  const messages = sender === "user" ? [processedText] : splitLongMessage(processedText, 120);
 
   if (!chatLog) {
     return messageId;
@@ -731,11 +784,40 @@ function appendMessage(sender, text, imageSrc = null, options = {}) {
       messageElem.classList.add("message", "bot");
       messageElem.id = `${messageId}-${idx}`;
       messageElem.style.opacity = "0";
-      messageElem.textContent = msg;
+      
+      // 우표 텍스트 포맷팅 적용
+      const formattedMsg = formatStampText(msg);
+      if (formattedMsg !== msg) {
+        // HTML이 포함된 경우 innerHTML 사용
+        messageElem.innerHTML = formattedMsg;
+      } else {
+        // 일반 텍스트는 textContent 사용
+        messageElem.textContent = msg;
+      }
+      
       bubbleContainer.appendChild(messageElem);
 
       setTimeout(() => {
         messageElem.style.opacity = "1";
+        
+        // 첫 번째 메시지의 너비를 기준으로 다른 메시지들의 max-width 설정
+        if (idx === 0 && messages.length > 1) {
+          // 약간의 지연을 두고 첫 번째 메시지의 실제 너비 측정
+          setTimeout(() => {
+            // 임시로 max-width 제거하여 실제 텍스트 너비 측정
+            const originalMaxWidth = messageElem.style.maxWidth;
+            messageElem.style.maxWidth = 'none';
+            const firstMsgWidth = messageElem.offsetWidth;
+            messageElem.style.maxWidth = originalMaxWidth || '';
+            
+            // 같은 그룹의 모든 메시지에 첫 번째 메시지 너비를 max-width로 적용
+            const allMessages = bubbleContainer.querySelectorAll('.message.bot');
+            allMessages.forEach((elem) => {
+              elem.style.maxWidth = `${firstMsgWidth}px`;
+            });
+          }, 50);
+        }
+        
         scrollToBottomSmooth();
       }, idx * 500);
     });

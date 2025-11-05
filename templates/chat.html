@@ -90,6 +90,7 @@
         padding: 20px;
         background: white;
         overflow-y: auto;
+        overflow-x: hidden; /* 가로 스크롤바 제거 */
         margin-bottom: 15px;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
         scroll-behavior: smooth;
@@ -216,6 +217,11 @@
         word-wrap: break-word;
         white-space: pre-wrap;
         box-sizing: border-box;
+      }
+      /* 우표 텍스트 강조 스타일 */
+      .message.bot strong {
+        font-weight: 700;
+        color: #1a1a1a;
       }
       .bot-big-img {
         display: block;

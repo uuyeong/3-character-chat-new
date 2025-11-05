@@ -1454,7 +1454,7 @@ class ChatbotService:
 
 위 긴 대화 내용을 바탕으로 **한국어로만** 편지를 작성하세요.
 
-편지 시작: "To. 지금의 {session.username}에게. 나는 [10년 전의 너/10년 후의 너]야."
+편지 시작: "To. 지금의 {session.username}에게. \n\n 나는 [10년 전의 너/10년 후의 너]야."
 편지 마무리: "너의 [과거/미래]에서, [화자 이름 또는 {session.username}]."
 
 **⚠️ 다시 한 번 강조: 반드시 한국어로만 작성하세요!**
@@ -2416,8 +2416,7 @@ class ChatbotService:
                 return {"replies": replies, "image": None, "phase": 3}
         
         # Phase 3.5: 서랍 열기 - 유저의 마지막 말에 응답 후 서랍 열기
-        # 서랍이 아직 열리지 않았을 때만 실행 (drawer_conversation_count == 0)
-        if session.phase == 3.5 and session.drawer_conversation_count == 0:
+        if session.phase == 3.5:
             # 1단계: 유저의 마지막 말에 짧게 응답 (의문문 금지!)
             closing_prompt = f"""당신은 별빛 우체국의 부엉이 우체국장입니다.
 
@@ -2476,11 +2475,13 @@ class ChatbotService:
             session.phase = 3.5
             
             # 3단계: 응답 구성 (마무리 응답 + 서랍 열림)
+            # ✅ 서랍은 우표 코드 없이 단순 표현 (우표는 편지 발견 시 표시)
             drawer_opening = "(서랍으로 걸어가며) 흐음..."
             drawer_action = "(서랍을 연다)"
             drawer_look_inside = "...네 기억이 여기 있어. 좀 더 자세히 이야기해봐."
             
             # replies 구성: 이미지 전후로 분리
+            # 이미지 전: [유저 말에 대한 응답들] + [서랍으로 걸어가는 동작]
             replies_before_image = closing_parts + [drawer_opening]
             # 이미지 후: [서랍 열기] + [기억 발견]
             replies_after_image = [drawer_action, drawer_look_inside]
@@ -2874,9 +2875,9 @@ class ChatbotService:
                     "phase": 5,
                     "letter": letter,
                     "stamp_code": stamp_code,  # DIR-S-404: 우표 코드 반환
-                    "stamp_description": stamp_msg,  # ✅ 우표 설명을 별도 필드로 전달
                     "is_letter_end": True,
-                    "buttons": ["별빛 우체국에 다시 한번 입장"]
+                    "buttons": ["별빛 우체국에 다시 한번 입장"],
+                    "is_letter_end": True
                 }
 
             # 반복 스로틀: 동일 의도 3회 이상이면 편지 단계로 전환
@@ -3418,7 +3419,7 @@ class ChatbotService:
                     
                     # 편지 발견 메시지 + 우표 설명 + 편지 열기 안내를 함께 출력 (사용자 입력 없이 연속 출력)
                     return {
-                        "replies": letter_found_msgs,  # ✅ 편지 발견 안내만 (이전 대화/우표 설명 제외)
+                        "replies": replies + letter_found_msgs + [stamp_message, letter_open_msg],
                         "image": None,
                         "phase": 5,
                         "letter": letter,  # 편지 내용은 이 키를 통해 별도 출력 (연속 출력)
