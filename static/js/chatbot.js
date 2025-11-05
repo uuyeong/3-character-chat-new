@@ -9,7 +9,7 @@ const sendBtn = document.getElementById("send-btn");
 const videoBtn = document.getElementById("videoBtn");
 const imageBtn = document.getElementById("imageBtn");
 
-const BOT_AVATAR_SRC = "/static/images/chatbot/owl/owl1.png";
+const BOT_AVATAR_SRC = "/static/images/chatbot/owl/owl_profile.png";
 
 // 감정에 따른 아바타 이미지 매핑
 const EMOTION_AVATAR_MAP = {

@@ -86,7 +86,6 @@
 
 ## 작동 화면
 
-
 ## 문서
 
 - [ARCHITECTURE.md](ARCHITECTURE.md): 시스템 아키텍처 상세 설명
