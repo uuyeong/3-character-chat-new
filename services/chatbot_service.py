@@ -3418,7 +3418,7 @@ class ChatbotService:
                     
                     # 편지 발견 메시지 + 우표 설명 + 편지 열기 안내를 함께 출력 (사용자 입력 없이 연속 출력)
                     return {
-                        "replies": replies + letter_found_msgs + [stamp_message, letter_open_msg],
+                        "replies": letter_found_msgs,  # ✅ 편지 발견 안내만 (이전 대화/우표 설명 제외)
                         "image": None,
                         "phase": 5,
                         "letter": letter,  # 편지 내용은 이 키를 통해 별도 출력 (연속 출력)

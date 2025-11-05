@@ -460,30 +460,75 @@ async function sendMessage(isInitial = false) {
     console.log("응답 데이터:", data);
     // 봉투 편지 메시지
     if (data.is_letter_end && data.letter) {
-      // ✅ stamp_description이 있으면 우선 사용, 없으면 extractStampOnly로 추출
+      let totalDelay = 0;
+      
+      // 1단계: 앞의 일반 대화 메시지들 먼저 표시 (편지 발견 메시지 등)
+      if (Array.isArray(data.replies) && data.replies.length > 0) {
+        const allSplitMessages = [];
+        
+        // 우표 설명과 편지 내용을 제외한 일반 메시지만 먼저 처리
+        const regularReplies = data.replies.filter(text => 
+          !text.includes('우표') && 
+          !text.includes('stamp') &&
+          !text.startsWith('To.') &&  // 편지 내용 제외
+          !text.startsWith('to.') &&  // 편지 내용 제외 (소문자)
+          !text.includes('년 전의') && // 편지 시작 패턴 제외
+          !text.includes('년 후의')    // 편지 시작 패턴 제외
+        );
+        
+        // 메시지 분할 및 총 시간 계산
+        regularReplies.forEach((replyText, index) => {
+          const splitMessages = splitLongMessage(replyText, 100);
+          allSplitMessages.push({ messages: splitMessages, originalIndex: index });
+          totalDelay += splitMessages.length * 800;
+        });
+        
+        // 순차적으로 표시
+        let currentDelay = 0;
+        allSplitMessages.forEach((item, index) => {
+          item.messages.forEach((msg, subIndex) => {
+            setTimeout(() => {
+              const showAvatar = index === 0 && subIndex === 0;
+              appendMessage("bot", msg, null, { showAvatar });
+              scrollToBottomSmooth();
+            }, currentDelay);
+            currentDelay += 800;
+          });
+        });
+      }
+      
+      // 2단계: 앞의 메시지가 모두 끝난 후 우표 설명 표시
       const stampDescription = data.stamp_description;
       const stampReplies = stampDescription 
         ? [stampDescription] 
         : extractStampOnly(Array.isArray(data.replies) ? data.replies : []);
       
       if (stampReplies.length) {
-        // 우표 설명 말풍선 먼저
-        stampReplies.forEach((replyText, index) => {
+        // 앞의 메시지 완료 후 1초 대기 후 우표 설명 시작
+        const stampStartDelay = totalDelay + 1000;
+        
+        // 우표 설명을 문장 단위로 분할하여 순차 표시
+        const stampSentences = stampReplies[0].split(/(?<=[.?!])\s+/);
+        
+        stampSentences.forEach((sentence, index) => {
           setTimeout(() => {
-            const showAvatar = index === 0;
-            appendMessage("bot", replyText, null, { showAvatar });
+            const showAvatar = totalDelay === 0 && index === 0; // 앞에 메시지가 없었으면 첫 우표 메시지에 아바타
+            appendMessage("bot", sentence.trim(), null, { showAvatar });
             scrollToBottomSmooth();
-          }, index * 800);
+          }, stampStartDelay + index * 800);
         });
-        // 그 다음 봉투 미리보기
+        
+        // 3단계: 우표 설명 완료 후 봉투 미리보기
         setTimeout(() => {
           const stampSrc = data.stamp_image || (data.stamp_code ? `/static/images/chatbot/stamp/${data.stamp_code}.png` : null);
           showEnvelopePreview(data.letter, data.buttons || [], stampSrc);
-        }, stampReplies.length * 800 + 300);
+        }, stampStartDelay + stampSentences.length * 800 + 500);
       } else {
-        // 설명이 없으면 즉시 봉투
-        const stampSrc = data.stamp_image || (data.stamp_code ? `/static/images/chatbot/stamp/${data.stamp_code}.png` : null);
-        showEnvelopePreview(data.letter, data.buttons || [], stampSrc);
+        // 우표 설명이 없으면 앞의 메시지 후 바로 봉투
+        setTimeout(() => {
+          const stampSrc = data.stamp_image || (data.stamp_code ? `/static/images/chatbot/stamp/${data.stamp_code}.png` : null);
+          showEnvelopePreview(data.letter, data.buttons || [], stampSrc);
+        }, totalDelay + 500);
       }
       return; 
     }
