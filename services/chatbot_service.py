@@ -1742,6 +1742,7 @@ class ChatbotService:
                     "phase": 5,
                     "letter": letter,
                     "stamp_code": stamp_code,  # DIR-S-404: 우표 코드 반환
+                    "stamp_description": stamp_msg,  # ✅ 우표 설명을 별도 필드로 전달
                     "is_letter_end": True,
                     "buttons": ["별빛 우체국에 다시 한번 입장"]
                 }
@@ -2875,9 +2876,9 @@ class ChatbotService:
                     "phase": 5,
                     "letter": letter,
                     "stamp_code": stamp_code,  # DIR-S-404: 우표 코드 반환
+                    "stamp_description": stamp_msg,  # ✅ 우표 설명을 별도 필드로 전달
                     "is_letter_end": True,
-                    "buttons": ["별빛 우체국에 다시 한번 입장"],
-                    "is_letter_end": True
+                    "buttons": ["별빛 우체국에 다시 한번 입장"]
                 }
 
             # 반복 스로틀: 동일 의도 3회 이상이면 편지 단계로 전환
@@ -2905,6 +2906,7 @@ class ChatbotService:
                     "phase": 5,
                     "letter": letter,
                     "stamp_code": stamp_code,  # DIR-S-404: 우표 코드 반환
+                    "stamp_description": stamp_msg,  # ✅ 우표 설명을 별도 필드로 전달
                     "buttons": ["별빛 우체국에 한번 더 입장하시겠습니까?"],
                     "is_letter_end": True
                 }
