@@ -137,7 +137,7 @@
 
       .entrance-text {
         font-size: 1.1rem;
-        background: rgba(255, 255, 255, 0.5);
+        background: rgba(255, 255, 255, 0.75);
         border-radius: 17px;
         padding: 8px 12px;   
         color: #1a1919;
@@ -231,6 +231,7 @@
         margin: 10px auto;
         border-radius: 12px;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        transform: translateX(-35px);
       }
       .emotion-emoji {
         display: inline-block;
@@ -526,10 +527,12 @@
         border-radius: 4px;
         transform: rotate(3deg);
         transition: transform 0.3s ease;
+        cursor: pointer;
       }
 
       .letter-stamp:hover {
         transform: rotate(0deg) scale(1.1);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
       }
       .letter-preview {
         display: block !important;

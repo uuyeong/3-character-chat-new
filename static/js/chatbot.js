@@ -65,6 +65,149 @@ function getAvatarForEmotion(emotion) {
   return EMOTION_AVATAR_MAP[emotion] || BOT_AVATAR_SRC;
 }
 
+// 우표 확대 모달 표시
+function showStampModal(stampImageSrc) {
+  // 기존 모달이 있으면 제거
+  const existingModal = document.getElementById('stampModal');
+  if (existingModal) {
+    existingModal.remove();
+  }
+
+  // 모달 컨테이너 생성
+  const modal = document.createElement('div');
+  modal.id = 'stampModal';
+  modal.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    animation: fadeIn 0.3s ease;
+  `;
+
+  // 모달 내용 컨테이너
+  const modalContent = document.createElement('div');
+  modalContent.style.cssText = `
+    position: relative;
+    max-width: 90%;
+    max-height: 90%;
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    animation: scaleIn 0.3s ease;
+  `;
+
+  // 닫기 버튼
+  const closeBtn = document.createElement('button');
+  closeBtn.innerHTML = '&times;';
+  closeBtn.style.cssText = `
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: none;
+    border: none;
+    font-size: 2.5rem;
+    cursor: pointer;
+    color: #666;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s;
+    z-index: 10;
+  `;
+  
+  closeBtn.addEventListener('mouseenter', () => {
+    closeBtn.style.background = 'rgba(0, 0, 0, 0.1)';
+    closeBtn.style.color = '#333';
+  });
+  
+  closeBtn.addEventListener('mouseleave', () => {
+    closeBtn.style.background = 'none';
+    closeBtn.style.color = '#666';
+  });
+
+  // 우표 이미지
+  const stampImg = document.createElement('img');
+  stampImg.src = stampImageSrc;
+  stampImg.alt = '우표 확대';
+  stampImg.style.cssText = `
+    max-width: 500px;
+    max-height: 70vh;
+    width: auto;
+    height: auto;
+    display: block;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  `;
+
+  // 닫기 함수
+  const closeModal = () => {
+    modal.style.animation = 'fadeOut 0.3s ease';
+    setTimeout(() => {
+      modal.remove();
+    }, 300);
+  };
+
+  // 이벤트 리스너
+  closeBtn.onclick = closeModal;
+  modal.onclick = (e) => {
+    if (e.target === modal) {
+      closeModal();
+    }
+  };
+
+  // ESC 키로 닫기
+  const handleEsc = (e) => {
+    if (e.key === 'Escape') {
+      closeModal();
+      document.removeEventListener('keydown', handleEsc);
+    }
+  };
+  document.addEventListener('keydown', handleEsc);
+
+  // 요소 조립
+  modalContent.appendChild(closeBtn);
+  modalContent.appendChild(stampImg);
+  modal.appendChild(modalContent);
+  document.body.appendChild(modal);
+
+  // 애니메이션 CSS 추가
+  if (!document.getElementById('modal-animation-style')) {
+    const style = document.createElement('style');
+    style.id = 'modal-animation-style';
+    style.textContent = `
+      @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+      @keyframes fadeOut {
+        from { opacity: 1; }
+        to { opacity: 0; }
+      }
+      @keyframes scaleIn {
+        from { 
+          transform: scale(0.8);
+          opacity: 0;
+        }
+        to { 
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+}
+
 // ============================================
 // 임시로 만든 버튼 기능, 나중에 수정 필요
 // ============================================
@@ -306,6 +449,11 @@ function showEnvelopePreview(letterText, buttons = [], stampImageSrc = null) {
       stampImg.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.2)';
     });
     
+    // 우표 클릭 시 확대 모달 표시
+    stampImg.addEventListener('click', () => {
+      showStampModal(stampImageSrc);
+    });
+    
     envelopeWrapper.appendChild(stampImg);
   }
 
@@ -415,10 +563,22 @@ function showLetter(letterText, buttons = [], stampImageSrc = null) {
       stampImg = document.createElement("img");
       stampImg.id = "letterStamp";
       stampImg.classList.add("letter-stamp");
+      stampImg.style.cursor = "pointer";
       letterContainer.appendChild(stampImg);
     }
     stampImg.src = stampImageSrc;
     stampImg.style.display = "block";
+    stampImg.style.cursor = "pointer";
+    
+    // 기존 클릭 이벤트 제거 후 새로 추가 (중복 방지)
+    const newStampImg = stampImg.cloneNode(true);
+    stampImg.parentNode.replaceChild(newStampImg, stampImg);
+    stampImg = newStampImg;
+    
+    // 우표 클릭 시 확대 모달 표시
+    stampImg.addEventListener('click', () => {
+      showStampModal(stampImageSrc);
+    });
   } else {
     if (stampImg) stampImg.style.display = "none";
   }

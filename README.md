@@ -87,28 +87,29 @@
 ## 작동 화면
 
 ## 메인 페이지  
-<img width="1894" height="1004" alt="메인 페이지" src="https://github.com/user-attachments/assets/da7104a0-8b41-49cf-a5df-c8d5c65eddd7" />
+<img width="1885" height="1002" alt="Image" src="https://github.com/user-attachments/assets/0587020f-db6d-4134-94a3-f9ebeabeeab7" />
 
 ---
 
 ## 상세 페이지  
-<img width="1913" height="1010" alt="상세 페이지" src="https://github.com/user-attachments/assets/6df7400b-cfc2-4a14-840d-bf8bcc97bc16" />
+<img width="1912" height="1006" alt="Image" src="https://github.com/user-attachments/assets/d6be4c05-9190-445a-8fbf-db98bc9c30a0" />
 
 ---
 
 ## 채팅 페이지  
 ### 채팅 초기 화면 | 채팅 진행 화면  
 <div align="center">
-  <img width="400" alt="채팅 초기 화면" src="https://github.com/user-attachments/assets/9646a4fa-1096-4921-a8a5-e45356ae6fc2" />
-  <img width="400" alt="채팅 진행 화면" src="https://github.com/user-attachments/assets/6e7781ed-d546-444a-8ff5-c069aebd2754" />
+  <img width="400" alt="채팅 초기 화면" src="https://github.com/user-attachments/assets/6023a0b8-3db4-4e25-8003-b2d7bd15fada" />
+  <img width="400" alt="채팅 진행 화면" src="https://github.com/user-attachments/assets/0da0b29a-4343-400f-a25f-5ba8fb43dc8f" />
 </div>
 
 ---
 
 ### 편지 받기 직전 화면 | 편지 출력 화면  
 <div align="center">
-  <img width="400" alt="편지 받기 직전 화면" src="https://github.com/user-attachments/assets/a5434f4f-f1c6-41ab-888c-31c2e7d53a86" />
-  <img width="400" alt="편지 출력 화면" src="https://github.com/user-attachments/assets/75f2cf37-5cee-4097-b855-a1f1bcb85021" />
+
+  <img width="400" alt="편지 받기 직전 화면" src="https://github.com/user-attachments/assets/4b3e3e00-5817-4923-a578-abbf58cd40d2" />
+  <img width="400" alt="편지 출력 화면" src="https://github.com/user-attachments/assets/d433e33b-f62a-4878-b7f5-aa4d597acdf3" />
 </div>
 
 
