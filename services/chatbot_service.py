@@ -2476,13 +2476,11 @@ class ChatbotService:
             session.phase = 3.5
             
             # 3단계: 응답 구성 (마무리 응답 + 서랍 열림)
-            # ✅ 서랍은 우표 코드 없이 단순 표현 (우표는 편지 발견 시 표시)
             drawer_opening = "(서랍으로 걸어가며) 흐음..."
             drawer_action = "(서랍을 연다)"
             drawer_look_inside = "...네 기억이 여기 있어. 좀 더 자세히 이야기해봐."
             
             # replies 구성: 이미지 전후로 분리
-            # 이미지 전: [유저 말에 대한 응답들] + [서랍으로 걸어가는 동작]
             replies_before_image = closing_parts + [drawer_opening]
             # 이미지 후: [서랍 열기] + [기억 발견]
             replies_after_image = [drawer_action, drawer_look_inside]
@@ -2499,8 +2497,8 @@ class ChatbotService:
             
             return {
                 "replies": replies_before_image,  # 이미지 전 메시지
+                "replies_after_image": replies_after_image,  # ✅ 이미지 후 메시지 (서랍 열기 + 기억 발견)
                 "image": "/static/images/chatbot/drawers.png",  # 서랍 이미지 표시
-
                 "phase": 3.5
             }
         
