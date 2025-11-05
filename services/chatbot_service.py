@@ -743,8 +743,8 @@ class ChatbotService:
             return None
         
         try:
-            from langchain_community.vectorstores import Chroma
-            from langchain_openai import OpenAIEmbeddings
+            from langchain_community.vectorstores import Chroma  # type: ignore
+            from langchain_openai import OpenAIEmbeddings  # type: ignore
             
             embeddings = OpenAIEmbeddings(
                 model="text-embedding-3-small",
@@ -2415,7 +2415,8 @@ class ChatbotService:
                 return {"replies": replies, "image": None, "phase": 3}
         
         # Phase 3.5: 서랍 열기 - 유저의 마지막 말에 응답 후 서랍 열기
-        if session.phase == 3.5:
+        # 서랍이 아직 열리지 않았을 때만 실행 (drawer_conversation_count == 0)
+        if session.phase == 3.5 and session.drawer_conversation_count == 0:
             # 1단계: 유저의 마지막 말에 짧게 응답 (의문문 금지!)
             closing_prompt = f"""당신은 별빛 우체국의 부엉이 우체국장입니다.
 
@@ -2490,6 +2491,10 @@ class ChatbotService:
             # 세션 기록
             full_response = '\n\n'.join(closing_parts + [drawer_opening, drawer_action, drawer_look_inside])
             session.add_message("assistant", full_response)
+            
+            # ✅ 서랍을 열었으므로 drawer_conversation_count를 1로 설정 (다음부터 서랍 대화 로직으로 진행)
+            session.drawer_conversation_count = 1
+            self._save_session(session)
             
             return {
                 "replies": replies_before_image,  # 이미지 전 메시지
