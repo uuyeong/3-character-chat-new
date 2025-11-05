@@ -166,18 +166,22 @@ header {
 .user-theme-regret .message.user {
   background: rgba(88, 139, 139, 0.85);
   color: #ffffff;
+  box-shadow: 0 2px 8px rgba(255, 255, 255, 0.3);
 }
 .user-theme-love .message.user {
   background: rgba(247, 169, 168, 0.85);
   color: #333333;
+  box-shadow: 0 2px 8px rgba(255, 255, 255, 0.3);
 }
 .user-theme-anxiety .message.user {
   background: rgba(115, 73, 98, 0.85);
   color: #ffffff;
+  box-shadow: 0 2px 8px rgba(255, 255, 255, 0.3);
 }
 .user-theme-dream .message.user {
   background: rgba(237, 216, 146, 0.85);
   color: #333333;
+  box-shadow: 0 2px 8px rgba(255, 255, 255, 0.3);
 }
 
 
