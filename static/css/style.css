@@ -152,9 +152,9 @@ header {
 }
 
 .message.user {
-  background: #e6f7ff;
+  background: #686868;
   text-align: right; 
-  color: #0056b3;
+  color: #ffffff;
   margin-left: auto; 
 }
 
@@ -164,24 +164,20 @@ header {
 
 /* 사용자 말풍선 테마 (방 선택 시 적용) */
 .user-theme-regret .message.user {
-  background: linear-gradient(to bottom, rgba(145, 85, 202, 0.9), rgba(94, 10, 149, 0.9));
+  background: rgba(88, 139, 139, 0.85);
   color: #ffffff;
-  box-shadow: 0 2px 8px rgba(93, 63, 211, 0.2);
 }
 .user-theme-love .message.user {
-  background: linear-gradient(to bottom, rgba(206, 144, 208, 0.9), rgba(202, 52, 192, 0.9));
-  color: #ffffff;
-  box-shadow: 0 2px 8px rgba(255, 105, 180, 0.2);
+  background: rgba(247, 169, 168, 0.85);
+  color: #333333;
 }
 .user-theme-anxiety .message.user {
-  background: linear-gradient(to bottom, rgba(51, 115, 194, 0.9), rgba(35, 23, 165, 0.9));
+  background: rgba(115, 73, 98, 0.85);
   color: #ffffff;
-  box-shadow: 0 2px 8px rgba(76, 154, 217, 0.2);
 }
 .user-theme-dream .message.user {
-  background: linear-gradient(to bottom, rgba(37, 102, 181, 0.9), rgba(133, 37, 188, 0.9));
-  color: #ffffff;
-  box-shadow: 0 2px 8px rgba(76, 154, 217, 0.2);
+  background: rgba(237, 216, 146, 0.85);
+  color: #333333;
 }
 
 
@@ -265,7 +261,7 @@ input[type="text"] {
 button {
   padding: 10px 20px;
   border: none;
-  background: #007bff;
+  background: #747474;
   color: #fff;
   border-radius: 8px;
   font-size: 1rem;
@@ -274,7 +270,7 @@ button {
 }
 
 button:hover {
-  background: #0056b3;
+  background: hsl(40, 100%, 61%);
 }
 
 
