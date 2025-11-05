@@ -2494,12 +2494,8 @@ class ChatbotService:
             return {
                 "replies": replies_before_image,  # 이미지 전 메시지
                 "image": "/static/images/chatbot/drawers.png",  # 서랍 이미지 표시
-<<<<<<< HEAD
-                "replies_after_image": replies_after_image,  # 이미지 후 메시지
-                "phase": 3.6
-=======
+
                 "phase": 3.5
->>>>>>> 8b5875916d3fadb7df5c7f2e7b89dc39a983726b
             }
         
         # Phase 3.5: 서랍에서의 대화
