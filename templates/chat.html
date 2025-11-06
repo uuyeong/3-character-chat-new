@@ -577,46 +577,6 @@
       </div>
     </div>
 
-    <!-- Image Gallery Modal -->
-    <div id="imageModal" class="modal">
-      <div class="modal-content">
-        <button class="modal-close" data-close-modal="imageModal">
-          &times;
-        </button>
-        <h2>📷 이미지 갤러리</h2>
-        <div class="image-grid">
-          {% if image_files %} {% for filename in image_files %}
-          <img
-            src="{{ url_for('static', filename='images/chatbot/' + filename) }}"
-            alt="{{ filename }}"
-          />
-          {% endfor %} {% else %}
-          <p>이미지가 없습니다.</p>
-          {% endif %}
-        </div>
-      </div>
-    </div>
-
-    <!-- Video Modal -->
-    <div id="videoModal" class="modal">
-      <div class="modal-content">
-        <button class="modal-close" data-close-modal="videoModal">
-          &times;
-        </button>
-        <h2>🎬 영상 보기</h2>
-        <video
-          controls
-          style="width: 100%; border-radius: 12px; margin-top: 20px"
-        >
-          <source
-            src="{{ url_for('static', filename='videos/chatbot/video.mp4') }}"
-            type="video/mp4"
-          />
-          브라우저가 비디오를 지원하지 않습니다.
-        </video>
-      </div>
-    </div>
-
     <script src="{{ url_for('static', filename='js/chatbot.js') }}"></script>
     <script>
       document.querySelector('.close-btn').addEventListener('click', function() {
