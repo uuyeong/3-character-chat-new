@@ -979,28 +979,10 @@ class ChatbotService:
             return "기쁨"
         
         # 5. LLM 감정 분석 결과 활용 (오버라이드 없을 때)
-        # ⚠️ 중요: LLM이 ANGER로 분석한 경우, 실제로 부엉에게 향한 공격/거부인지 검증 필요
-        if user_emotion == "ANGER":
-            # 부엉에게 직접 향한 표현인지 확인 (2인칭 호칭 + 부정적 표현)
-            second_person_keywords = ["너", "당신", "부엉", "넌", "자네", "니가", "네가"]
-            negative_keywords = ["몬생", "못생", "싫어", "밉", "짜증", "불쾌", "꺼져", "시러", 
-                               "필요없", "까지", "찌질", "바보", "멍청", "등신", "허접", "허접"]
-            
-            # 2인칭 호칭이 있고 부정적 표현이 있으면 분노로 처리
-            has_second_person = any(kw in user_message for kw in second_person_keywords)
-            has_negative = any(kw in user_message for kw in negative_keywords)
-            
-            if has_second_person and has_negative:
-                print(f"[감정] LLM ANGER 분석 + 부엉에게 직접 공격 검증 통과 → 분노 ✅ (메시지: '{user_message}')")
-                return "분노"
-            else:
-                # "구랭" 같은 의미 없는 단어나 부엉과 무관한 표현은 BASIC으로 처리
-                print(f"[감정] LLM이 ANGER로 분석했지만 부엉에게 향한 공격 아님 → BASIC으로 처리 (메시지: '{user_message}')")
-                return "기본"
-        
         emotion_map = {
             "JOY": "기쁨",
             "SADNESS": "슬픔",
+            "ANGER": "분노",
             "QUESTION": "의문",
             "BASIC": "기본"
         }
