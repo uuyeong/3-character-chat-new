@@ -66,13 +66,13 @@ function parseEmotionTag(text) {
 // 우표 텍스트를 HTML로 변환 (중간 부분을 굵게)
 function formatStampText(text) {
   // "이 우표의 이름은 [내용]이다" 패턴 감지
-  const stampNameRegex = /(이 우표의 이름은\s+)(.+?)(\s+이다\.)/;
+  const stampNameRegex = /(이 우표의 이름은\s+)([^.]+?)(이다\.)/;
   const match = text.match(stampNameRegex);
   
   if (match) {
     const before = match[1]; // "이 우표의 이름은 "
-    const content = match[2]; // 우표 이름
-    const after = match[3];   // " 이다."
+    const content = match[2].trim(); // 우표 이름 (앞뒤 공백 제거)
+    const after = match[3];   // "이다."
     
     // 우표 이름 부분을 <strong> 태그로 감싸기
     return text.replace(stampNameRegex, `${before}<strong>${content}</strong>${after}`);
