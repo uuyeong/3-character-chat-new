@@ -63,7 +63,7 @@ function parseEmotionTag(text) {
   return { emotion: null, cleanText: text };
 }
 
-// 우표 텍스트를 HTML로 변환 (중간 부분을 굵게)
+// 우표 텍스트를 HTML로 변환 (우표 이름 전체를 굵게)
 function formatStampText(text) {
   // "이 우표의 이름은 [내용]이다" 패턴 감지
   const stampNameRegex = /(이 우표의 이름은\s+)([^.]+?)(이다\.)/;
@@ -74,7 +74,7 @@ function formatStampText(text) {
     const content = match[2].trim(); // 우표 이름 (앞뒤 공백 제거)
     const after = match[3];   // "이다."
     
-    // 우표 이름 부분을 <strong> 태그로 감싸기
+    // 우표 이름 전체를 <strong> 태그로 감싸기
     return text.replace(stampNameRegex, `${before}<strong>${content}</strong>${after}`);
   }
   
@@ -87,7 +87,7 @@ function formatStampText(text) {
     const content = oldMatch[2]; // 중간 내용
     const after = oldMatch[3];   // " 우표야"
     
-    // 중간 부분을 <strong> 태그로 감싸기
+    // 중간 부분 전체를 <strong> 태그로 감싸기
     return text.replace(stampRegex, `${before}<strong>${content}</strong>${after}`);
   }
   
@@ -248,6 +248,27 @@ function showStampModal(stampImageSrc) {
 // 임시로 만든 버튼 기능, 나중에 수정 필요
 // ============================================
 
+// 테마 설정 함수
+function setUserTheme(themeKey) {
+  if (!chatLog) return;
+  const themeClasses = [
+    'user-theme-regret',
+    'user-theme-love',
+    'user-theme-anxiety',
+    'user-theme-dream'
+  ];
+  // remove from chatLog and body to keep a single active theme
+  themeClasses.forEach(c => {
+    chatLog.classList.remove(c);
+    document.body.classList.remove(c);
+  });
+  if (themeKey) {
+    const cls = `user-theme-${themeKey}`;
+    chatLog.classList.add(cls);
+    document.body.classList.add(cls);
+  }
+}
+
 // 버튼 렌더링 함수
 function renderButtons(buttons) {
   if (!buttons || buttons.length === 0) return;
@@ -255,27 +276,6 @@ function renderButtons(buttons) {
   const buttonContainer = document.createElement('div');
   buttonContainer.classList.add('quick-reply-buttons');
 // buttonContainer.style.cssText 인라인 스타일 제거 (CSS 파일/style 태그로 이동)
-  
-  // 현재 선택된 사용자 테마를 보관
-  function setUserTheme(themeKey) {
-    if (!chatLog) return;
-    const themeClasses = [
-      'user-theme-regret',
-      'user-theme-love',
-      'user-theme-anxiety',
-      'user-theme-dream'
-    ];
-    // remove from chatLog and body to keep a single active theme
-    themeClasses.forEach(c => {
-      chatLog.classList.remove(c);
-      document.body.classList.remove(c);
-    });
-    if (themeKey) {
-      const cls = `user-theme-${themeKey}`;
-      chatLog.classList.add(cls);
-      document.body.classList.add(cls);
-    }
-  }
 
   buttons.forEach(buttonText => {
     const button = document.createElement('button');
@@ -308,6 +308,13 @@ function renderButtons(buttons) {
           showLetter(lastLetterInfo.text, lastLetterInfo.buttons, lastLetterInfo.stampImageSrc);
           buttonContainer.remove();
         }
+        return;
+      }
+      
+      // "별빛 우체국에 다시 한번 입장" 버튼 처리
+      if (buttonText === "별빛 우체국에 다시 한번 입장") {
+        buttonContainer.remove();
+        reEnterPostOffice();
         return;
       }
       
@@ -653,6 +660,56 @@ function showLetter(letterText, buttons = [], stampImageSrc = null) {
 // ============================================
 // 임시 버튼 기능 끝
 // ============================================
+
+// 우체국 재입장 함수
+function reEnterPostOffice() {
+  // 1. 테마 제거 (배경을 흰색으로 되돌림)
+  setUserTheme(null);
+  
+  // 2. "다시 입구로 가자." 메시지 표시
+  appendMessage("bot", "다시 입구로 가자.");
+  
+  // 3. 외관 전경 사진과 재입장 메시지 표시
+  setTimeout(() => {
+    showReEntranceMessage();
+    
+    // 4. 초기 메시지 전송
+    setTimeout(() => {
+      sendMessage(true);
+    }, 1500);
+  }, 800);
+}
+
+// 재입장 메시지 표시
+function showReEntranceMessage() {
+  if (!chatLog) return;
+
+  const container = document.createElement("div");
+  container.classList.add("entrance-message");
+
+  // 이미지
+  const img = document.createElement("img");
+  img.src = "/static/images/chatbot/background/main_background2.png"; 
+  img.alt = "별빛 우체국 외관";
+  img.classList.add("entrance-img");
+
+  // 텍스트
+  const text = document.createElement("div");
+  text.classList.add("entrance-text");
+  text.textContent = `${username}님이 우체국에 재입장하였습니다.`;
+
+  // DOM 연결
+  container.appendChild(img);
+  container.appendChild(text);
+  chatLog.appendChild(container);
+
+  // 부드럽게 나타나는 효과
+  setTimeout(() => {
+    container.style.opacity = "1";
+  }, 100);
+
+  scrollToBottomSmooth();
+}
 
 // 메시지 전송 함수
 function showEntranceMessage() {
@@ -1059,15 +1116,6 @@ function appendMessage(sender, text, imageSrc = null, options = {}) {
     setTimeout(() => {
       messageElem.style.opacity = "1";
       scrollToBottomSmooth();
-
-      if (sender === "user") {
-        const computed = window.getComputedStyle(messageElem);
-        const lineHeight = parseFloat(computed.lineHeight);
-        const height = messageElem.getBoundingClientRect().height;
-        if (lineHeight && height > lineHeight * 1.6) {
-          messageElem.classList.add("multi-line");
-        }
-      }
     }, idx * 500);
   });
 

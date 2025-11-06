@@ -156,13 +156,9 @@ header {
 
 .message.user {
   background: #686868;
-  text-align: right; 
+  text-align: left; 
   color: #ffffff;
   margin-left: auto; 
-}
-
-.message.user.multi-line {
-  text-align: left;
 }
 
 /* 사용자 말풍선 테마 (방 선택 시 적용) */

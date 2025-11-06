@@ -26,14 +26,18 @@
         background-size: cover;
         background-position: center;
         background-repeat: no-repeat;
+        background-attachment: fixed;
+        overflow-y: auto;
       }
       .modal-container {
         max-width: 500px;
         width: 90%;
-        margin: 20px auto;
-        background: linear-gradient(to bottom, #b8e5f5 0%, #e8d4f5 100%);
+        max-height: 90vh;
+        margin: 5vh auto;
+        background: linear-gradient(to bottom, rgba(184, 229, 245, 0.9) 0%, rgba(232, 212, 245, 0.9) 100%);
         border-radius: 12px;
-        overflow: hidden;
+        overflow-y: auto;
+        overflow-x: hidden;
         box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
       }
       .modal-header {
@@ -58,8 +62,17 @@
         color: #666;
       }
       .modal-content {
-        padding: 30px;
+        padding: 20px;
         background: transparent;
+      }
+      
+      @media (max-height: 700px) {
+        .modal-content {
+          padding: 15px;
+        }
+        .bot-image {
+          max-width: 200px !important;
+        }
       }
       .bot-image {
         width: 100%;
@@ -172,15 +185,23 @@
         display: flex;
       }
       .intro-content {
-        background: linear-gradient(to bottom, #b8e5f5 0%, #d6d4f5 100%);
+        background: linear-gradient(to bottom, rgba(184, 229, 245, 0.7) 0%, rgba(214, 212, 245, 0.7) 100%);
         border-radius: 16px;
         max-width: 700px;
         width: 90%;
-        max-height: 80vh;
+        max-height: 85vh;
         overflow-y: auto;
+        overflow-x: hidden;
         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         position: relative;
-        padding: 40px;
+        padding: 30px;
+      }
+      
+      @media (max-height: 700px) {
+        .intro-content {
+          padding: 20px;
+          max-height: 90vh;
+        }
       }
       .intro-close {
         position: absolute;
@@ -213,7 +234,6 @@
       .intro-speech-bubble {
         flex: 1;
         background: rgba(255, 255, 255, 0.6);
-        backdrop-filter: blur(10px);
         padding: 20px;
         border-radius: 16px;
         position: relative;
