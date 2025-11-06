@@ -11,6 +11,29 @@ const imageBtn = document.getElementById("imageBtn");
 
 const BOT_AVATAR_SRC = "/static/images/chatbot/owl/owl_profile.png";
 
+// 우표 이름 매핑 (2단어 이름)
+const STAMP_NAMES = {
+  'R_1': '미련 별',
+  'R_2': '침묵 끝',
+  'R_3': '단절 선',
+  'R_4': '공전 멈춤',
+  'L_1': '스침 빛',
+  'L_2': '봉오리 마음',
+  'L_3': '정지 시간',
+  'L_4': '균열 복원',
+  'L_5': '엇갈림 실',
+  'L_6': '반복 틈',
+  'D_1': '흐릿 길',
+  'D_2': '현실 벽',
+  'D_3': '두려움 극복',
+  'D_4': '공허 정상',
+  'D_5': '내면 빛',
+  'A_1': '연결 끈',
+  'A_2': '갈림 판단',
+  'A_3': '성과 짐',
+  'A_4': '존재 탐구'
+};
+
 // 마지막 편지 정보 저장 (편지 다시 보기용)
 let lastLetterInfo = {
   text: null,
@@ -42,14 +65,27 @@ function parseEmotionTag(text) {
 
 // 우표 텍스트를 HTML로 변환 (중간 부분을 굵게)
 function formatStampText(text) {
-  // "이건 [내용] 우표야" 패턴 감지
-  const stampRegex = /(이건\s+)(.+?)(\s+우표야)/;
-  const match = text.match(stampRegex);
+  // "이 우표의 이름은 [내용]이다" 패턴 감지
+  const stampNameRegex = /(이 우표의 이름은\s+)([^.]+?)(이다\.)/;
+  const match = text.match(stampNameRegex);
   
   if (match) {
-    const before = match[1]; // "이건 "
-    const content = match[2]; // 중간 내용
-    const after = match[3];   // " 우표야"
+    const before = match[1]; // "이 우표의 이름은 "
+    const content = match[2].trim(); // 우표 이름 (앞뒤 공백 제거)
+    const after = match[3];   // "이다."
+    
+    // 우표 이름 부분을 <strong> 태그로 감싸기
+    return text.replace(stampNameRegex, `${before}<strong>${content}</strong>${after}`);
+  }
+  
+  // "이건 [내용] 우표야" 패턴 감지 (기존 패턴 유지)
+  const stampRegex = /(이건\s+)(.+?)(\s+우표야)/;
+  const oldMatch = text.match(stampRegex);
+  
+  if (oldMatch) {
+    const before = oldMatch[1]; // "이건 "
+    const content = oldMatch[2]; // 중간 내용
+    const after = oldMatch[3];   // " 우표야"
     
     // 중간 부분을 <strong> 태그로 감싸기
     return text.replace(stampRegex, `${before}<strong>${content}</strong>${after}`);
@@ -711,8 +747,33 @@ async function sendMessage(isInitial = false) {
       
       // 2단계: 앞의 메시지가 모두 끝난 후 우표 설명 표시
       const stampDescription = data.stamp_description;
-      const stampReplies = stampDescription 
-        ? [stampDescription] 
+      const stampCode = data.stamp_code;
+      
+      // 우표 설명 메시지에 새 이름 적용
+      let processedStampDescription = stampDescription;
+      if (stampDescription && stampCode && STAMP_NAMES[stampCode]) {
+        const stampName = STAMP_NAMES[stampCode];
+        
+        // mean 필드에서 첫 번째 "이건 ~ 우표야/지." 문장 제거
+        processedStampDescription = processedStampDescription.replace(
+          /^이건 [^.]* 우표(?:야|지)\.\s*/,
+          ''
+        );
+        
+        // "자 너의 편지에 붙어 있었던 우표다."를 "이 우표의 이름은 {이름}이다"로 교체
+        processedStampDescription = processedStampDescription.replace(
+          /자 너의 편지에 붙어 있었던 우표다\./,
+          `이 우표의 이름은 ${stampName}이다.`
+        );
+        // "좋아. 다시 한번 보여주지. 자 너의 편지에 붙어 있었던 우표다."도 처리
+        processedStampDescription = processedStampDescription.replace(
+          /좋아\. 다시 한번 보여주지\. 자 너의 편지에 붙어 있었던 우표다\./,
+          `좋아. 다시 한번 보여주지. 이 우표의 이름은 ${stampName}이다.`
+        );
+      }
+      
+      const stampReplies = processedStampDescription 
+        ? [processedStampDescription] 
         : extractStampOnly(Array.isArray(data.replies) ? data.replies : []);
       
       if (stampReplies.length) {

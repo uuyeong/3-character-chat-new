@@ -237,6 +237,11 @@ header {
   margin-bottom: 0;
 }
 
+/* 우표 이름 강조 스타일 */
+.bot-bubble-container .message strong {
+  font-weight: bold;
+}
+
 .bot-big-img {
   display: block;
   width: 100%;
