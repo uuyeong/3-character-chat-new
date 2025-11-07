@@ -86,39 +86,38 @@
 
 ## 작동 화면
 
-## 메인 페이지  
-<img width="1885" height="1002" alt="Image" src="https://github.com/user-attachments/assets/0587020f-db6d-4134-94a3-f9ebeabeeab7" />
-
----
-
-## 상세 페이지  
-<img width="1912" height="1006" alt="Image" src="https://github.com/user-attachments/assets/d6be4c05-9190-445a-8fbf-db98bc9c30a0" />
-
----
-
-## 채팅 페이지  
-### 채팅 초기 화면 | 채팅 진행 화면  
+### 시작 이미지
 <div align="center">
-  <img width="400" alt="채팅 초기 화면" src="https://github.com/user-attachments/assets/6023a0b8-3db4-4e25-8003-b2d7bd15fada" />
-  <img width="400" alt="채팅 진행 화면" src="https://github.com/user-attachments/assets/0da0b29a-4343-400f-a25f-5ba8fb43dc8f" />
+  <img src="git_image/start_1.png" alt="시작 화면 1" width="400" />
+  <img src="git_image/start_2.png" alt="시작 화면 2" width="400" />
 </div>
 
 ---
 
-### 편지 받기 직전 화면 | 편지 출력 화면  
+### 채팅 초기 화면 / 방 선택 화면
 <div align="center">
+  <img src="git_image/main.png" alt="채팅 초기 화면" width="400" />
+  <img src="git_image/room_select.png" alt="방 선택 화면" width="400" />
+</div>
 
-  <img width="400" alt="편지 받기 직전 화면" src="https://github.com/user-attachments/assets/4b3e3e00-5817-4923-a578-abbf58cd40d2" />
-  <img width="400" alt="편지 출력 화면" src="https://github.com/user-attachments/assets/d433e33b-f62a-4878-b7f5-aa4d597acdf3" />
+---
+
+### 감정 이모지 출력
+<div align="center">
+  <img src="git_image/emotion.png" alt="감정 이모지 출력" width="400" />
+</div>
+
+---
+
+### 편지 생성
+<div align="center">
+  <img src="git_image/letter_1.png" alt="편지 생성 화면 1" width="400" />
+  <img src="git_image/letter_2.png" alt="편지 생성 화면 2" width="400" />
 </div>
 
 
-## 문서
-
-- [ARCHITECTURE.md](ARCHITECTURE.md): 시스템 아키텍처 상세 설명
-- [DOCKER-GUIDE.md](DOCKER-GUIDE.md): Docker 개발 환경 가이드
-- [RENDER-GUIDE.md](RENDER-GUIDE.md): Render.com 배포 가이드
-- [ADVANCED_TOPICS.md](ADVANCED_TOPICS.md): 고급 주제 및 성능 개선
+## 시스템 아키텍처
+- [ARCHITECTURE.md](ARCHITECTURE.md)
 
 
 ## 기술 선택 이유
@@ -282,4 +281,7 @@
 
 ---
 
-**별빛 우체국에 오신 것을 환영합니다. 부엉장과 함께 대화하며, 다른 시간의 '나'로부터 당신의 상황에 맞는 우표가 붙은 편지를 받아보세요.** 🌙
+**별빛 우체국에 오신 것을 환영합니다. 
+
+
+부엉장과 함께 대화하며, 다른 시간의 '나'로부터 당신의 상황에 맞는 우표가 붙은 편지를 받아보세요.** 🌙
