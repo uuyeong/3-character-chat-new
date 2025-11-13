@@ -90,7 +90,7 @@
         padding: 20px;
         background: white;
         overflow-y: auto;
-        overflow-x: hidden; /* 가로 스크롤바 제거 */
+        overflow-x: hidden; 
         margin-bottom: 15px;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
         scroll-behavior: smooth;
@@ -196,8 +196,6 @@
       }
       .message.user {
         display: inline-block;
-        float: right;
-        clear:both;
         text-align: left;
         color: #ffffff;
         max-width: 75%;
@@ -367,12 +365,12 @@
 
       .quick-reply-buttons {
           display: flex;
-          justify-content: center; /* 버튼 중앙 정렬 */
-          gap: 10px; /* 버튼 사이 간격 */
+          justify-content: center; 
+          gap: 10px; 
           margin: 15px 0;
           padding: 10px;
           flex-wrap: wrap; 
-          clear: both; /* 레이아웃 안정화 */
+          clear: both; 
       }
 
       .reply-btn {
@@ -384,19 +382,16 @@
           font-size: 0.95rem;
           font-weight: 500;
           transition: all 0.3s;
-          box-shadow: 0 4px 15px rgba(255, 255, 255, 0.8); /* 기본 그림자 */
-          /* 기본 배경색 (혹시 클래스가 지정되지 않았을 경우 대비) */
-          /*background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); */
+          box-shadow: 0 4px 15px rgba(255, 255, 255, 0.8); 
+
       }
 
-      /* 마우스 오버 효과 (JS 이벤트 대체) */
       .reply-btn:hover {
           transform: translateY(-2px);
           box-shadow: 0 6px 20px rgba(255, 255, 255, 0.9);
       }
 
       /* 개별 버튼 색상 설정 */
-
       /* 1. 후회의 방  */
       .reply-btn.regret-room {
         background: #588B8B !important; 
@@ -423,7 +418,6 @@
         color: #333333 !important;
       }
 
-      /* 테마가 선택된 후 모든 버튼에 통일된 색상 적용 */
       /* 후회의 방 테마 - 모든 버튼 */
       .user-theme-regret .reply-btn:not(.regret-room):not(.love-room):not(.anxiety-room):not(.dream-room),
       .user-theme-regret button.send-btn {
@@ -474,50 +468,51 @@
 
       .letter-container {
         position: fixed;
-        top: 80px;
+        top: 50%;
         left: 50%;
-        transform: translateX(-50%);
-        width: 600px;
-        height: calc(100vh - 120px);
-        max-height: 800px;
-        border-radius: 16px;
-        overflow-y: auto;
+        transform: translate(-50%, -50%);
+        width: min(600px, 88vw);
+        height: min(calc(100vh - 80px), 800px);
+        border-radius: 18px;
+        overflow: hidden;
         display: flex;
-        align-items: flex-start;
+        align-items: center;
         justify-content: center;
         background: white;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 12px 30px rgba(18, 23, 49, 0.2);
         z-index: 1000;
       }
 
       .letter-bg {
         position: absolute;
+        inset: 0;
         width: 100%;
         height: 100%;
         object-fit: cover;
-        top: 0;
-        left: 0;
         z-index: 0;
       }
 
       .letter-text {
         position: relative;
         z-index: 1;
-        padding: 100px 80px;
+        width: 100%;
+        height: 100%;
+        padding: clamp(36px, 10vw, 96px) clamp(28px, 8vw, 72px);
         font-family: 'KyoboHandwriting2024psw', 'IBM Plex Sans KR', sans-serif;
         color: #333;
-        font-size: 1.23rem;
-        line-height: 1.2;
+        font-size: clamp(0.95rem, 2.2vw, 1.18rem);
+        line-height: 1.35;
         white-space: pre-wrap;
         text-align: left;
+        overflow-y: auto;
+        box-sizing: border-box;
       }
 
-      /* 우표 스타일 - 편지지 오른쪽 상단에 겹쳐서 표시 */
       .letter-stamp {
         position: absolute;
-        top: 40px;
-        right: 50px;
-        width: 80px;
+        top: clamp(20px, 6vw, 42px);
+        right: clamp(24px, 7vw, 56px);
+        width: clamp(60px, 17vw, 90px);
         height: auto;
         z-index: 2;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
@@ -551,6 +546,78 @@
         z-index: 1;     
       }
 
+      @media (max-width: 768px) {
+        .letter-container {
+          height: min(calc(100vh - 60px), 720px);
+          border-radius: 16px;
+        }
+        .letter-text {
+          padding: clamp(30px, 12vw, 68px) clamp(26px, 10vw, 54px);
+          font-size: clamp(0.9rem, 2.6vw, 1.1rem);
+        }
+      }
+
+      @media (max-width: 600px) {
+        .letter-container {
+          width: min(94vw, 420px);
+          height: min(calc(100vh - 40px), 640px);
+        }
+        .letter-text {
+          padding: clamp(24px, 13vw, 48px) clamp(20px, 9vw, 40px);
+          font-size: clamp(0.85rem, 3vw, 1.02rem);
+        }
+        .letter-stamp {
+          top: clamp(16px, 8vw, 32px);
+          right: clamp(18px, 9vw, 36px);
+          width: clamp(54px, 19vw, 76px);
+        }
+      }
+
+      @media (max-width: 480px) {
+        .letter-container {
+          width: min(96vw, 360px);
+          height: min(calc(100vh - 32px), 580px);
+        }
+        .letter-text {
+          padding: clamp(20px, 15vw, 40px) clamp(16px, 11vw, 32px);
+          font-size: clamp(0.82rem, 3.4vw, 0.95rem);
+        }
+        .letter-stamp {
+          top: clamp(12px, 9vw, 26px);
+          right: clamp(14px, 11vw, 28px);
+          width: clamp(48px, 22vw, 66px);
+        }
+      }
+
+      @media (max-height: 720px) {
+        .letter-container {
+          height: min(calc(100vh - 32px), 600px);
+        }
+        .letter-text {
+          padding: clamp(24px, 9vw, 48px) clamp(18px, 7vw, 36px);
+          font-size: clamp(0.85rem, 2.4vw, 1.05rem);
+        }
+      }
+
+      @media (max-height: 620px) {
+        .letter-container {
+          height: min(calc(100vh - 24px), 520px);
+        }
+        .letter-text {
+          padding: clamp(18px, 8vw, 40px) clamp(14px, 6vw, 32px);
+          font-size: clamp(0.8rem, 2.3vw, 1rem);
+        }
+      }
+
+      @media (max-height: 540px) {
+        .letter-container {
+          height: min(calc(100vh - 16px), 460px);
+        }
+        .letter-text {
+          padding: clamp(14px, 7vw, 32px) clamp(12px, 5vw, 26px);
+        }
+      }
+
     </style>
   </head>
   <body>
@@ -577,6 +644,19 @@
       </div>
     </div>
 
+    <script>
+      window.UI_SETTINGS = {
+        "re_entrance": {
+          "image": "images/chatbot/owl/owl_profile.png",
+          "message": "또 찾아왔군. 다른 방을 둘러볼 건가?",
+          "background_color": "#FFFFFF"
+        },
+        "first_entrance": {
+          "image": "images/chatbot/background/main_background2.png",
+          "background_color": "#1a1a2e"
+        }
+      };
+    </script>
     <script src="{{ url_for('static', filename='js/chatbot.js') }}"></script>
     <script>
       document.querySelector('.close-btn').addEventListener('click', function() {

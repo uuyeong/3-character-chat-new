@@ -224,7 +224,7 @@ class ChatbotService:
     # --------------------------------------------
     # OpenAI 호출 래퍼 (재시도/백오프)
     # --------------------------------------------
-    def _chat_completion(self, messages, model="gpt-4o-mini", temperature=0.7, max_tokens=400, max_retries=3):
+    def _chat_completion(self, messages, model="gpt-5-pro", temperature=0.7, max_tokens=400, max_retries=3):
         import time
         delay = 0.8
         for attempt in range(max_retries):
@@ -864,7 +864,7 @@ class ChatbotService:
 출력:"""
 
             response = self.client.chat.completions.create(
-                model="gpt-4o-mini",
+                model="gpt-5-pro",
                 messages=[
                     {"role": "system", "content": "당신은 감정 분석 전문가입니다. 단어 하나만 출력합니다."},
                     {"role": "user", "content": emotion_prompt}
@@ -1190,7 +1190,7 @@ class ChatbotService:
         )
         try:
             response = self._chat_completion(
-                model="gpt-4o-mini",
+                model="gpt-5-pro",
                 messages=[
                     {"role": "system", "content": system},
                     {"role": "user", "content": recent_slice}
@@ -1203,7 +1203,7 @@ class ChatbotService:
             if session.summary_text:
                 merged = f"[이전 요약]\n{session.summary_text}\n\n[최근 요약]\n{summary}"
                 response2 = self._chat_completion(
-                    model="gpt-4o-mini",
+                    model="gpt-5-pro",
                     messages=[
                         {"role": "system", "content": "두 요약을 10-12문장으로 통합 요약하세요. 중복을 제거하고 핵심만 남기세요."},
                         {"role": "user", "content": merged}
@@ -1463,7 +1463,7 @@ class ChatbotService:
         
         try:
             response = self._chat_completion(
-                model="gpt-4o-mini",
+                model="gpt-5-pro",
                 messages=[
                     {"role": "system", "content": letter_prompt},
                     {"role": "user", "content": "편지를 작성해주세요."}
@@ -2343,7 +2343,7 @@ class ChatbotService:
                 temp = 0.6 if is_crisis else 0.85
                 
                 response = self._chat_completion(
-                    model="gpt-4o-mini",
+                    model="gpt-5-pro",
                     messages=[
                         {"role": "system", "content": system_prompt},
                         {"role": "user", "content": user_prompt}
@@ -2449,7 +2449,7 @@ class ChatbotService:
             
             try:
                 response = self._chat_completion(
-                    model="gpt-4o-mini",
+                    model="gpt-5-pro",
                     messages=[{"role": "user", "content": closing_prompt}],
                     temperature=0.7,
                     max_tokens=100
@@ -2781,7 +2781,7 @@ class ChatbotService:
                 
                 try:
                     response = self._chat_completion(
-                        model="gpt-4o-mini",
+                        model="gpt-5-pro",
                         messages=[
                             {"role": "system", "content": simple_prompt},
                             {"role": "user", "content": user_message}
@@ -3308,7 +3308,7 @@ class ChatbotService:
                 temp_drawer = 0.6 if is_crisis_drawer else 0.8
                 
                 response = self._chat_completion(
-                    model="gpt-4o-mini",
+                    model="gpt-5-pro",
                     messages=[
                         {"role": "system", "content": system_prompt},
                         {"role": "user", "content": user_prompt}

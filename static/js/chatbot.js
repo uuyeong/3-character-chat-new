@@ -666,37 +666,50 @@ function reEnterPostOffice() {
   // 1. 테마 제거 (배경을 흰색으로 되돌림)
   setUserTheme(null);
   
-  // 2. "다시 입구로 가자." 메시지 표시
-  appendMessage("bot", "다시 입구로 가자.");
+  // 2. 배경색을 흰색으로 전환 (즉시)
+  if (chatLog) {
+    chatLog.style.backgroundColor = '#FFFFFF';
+    chatLog.style.backgroundImage = 'none'; // 배경 이미지 제거
+  }
   
-  // 3. 외관 전경 사진과 재입장 메시지 표시
+  // 3. 재입장 이미지와 메시지를 먼저 표시
   setTimeout(() => {
     showReEntranceMessage();
     
-    // 4. 초기 메시지 전송
+    // 4. 그 다음 "다시 입구로 가자." 메시지 표시
     setTimeout(() => {
-      sendMessage(true);
-    }, 1500);
-  }, 800);
+      appendMessage("bot", "다시 입구로 가자.");
+      
+      // 5. 초기 메시지 전송
+      setTimeout(() => {
+        sendMessage(true);
+      }, 1000);
+    }, 1000);
+  }, 300);
 }
 
 // 재입장 메시지 표시
 function showReEntranceMessage() {
   if (!chatLog) return;
 
+  // config의 ui_settings 사용
+  const reEntranceSettings = window.UI_SETTINGS?.re_entrance || {};
+  const imageSrc = reEntranceSettings.image ? `/static/${reEntranceSettings.image}` : "/static/images/chatbot/background/main_background2.png";
+  const message = reEntranceSettings.message || `${username}님이 우체국에 재입장하였습니다.`;
+
   const container = document.createElement("div");
   container.classList.add("entrance-message");
 
   // 이미지
   const img = document.createElement("img");
-  img.src = "/static/images/chatbot/background/main_background2.png"; 
-  img.alt = "별빛 우체국 외관";
+  img.src = imageSrc; 
+  img.alt = "별빛 우체국 재입장";
   img.classList.add("entrance-img");
 
   // 텍스트
   const text = document.createElement("div");
   text.classList.add("entrance-text");
-  text.textContent = `${username}님이 우체국에 재입장하였습니다.`;
+  text.textContent = message;
 
   // DOM 연결
   container.appendChild(img);
