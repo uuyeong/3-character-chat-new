@@ -63,29 +63,26 @@ function parseEmotionTag(text) {
   return { emotion: null, cleanText: text };
 }
 
-// 우표 텍스트를 HTML로 변환 (우표 이름 전체를 굵게)
 function formatStampText(text) {
-  // "이 우표의 이름은 [내용]이다" 패턴 감지
+
   const stampNameRegex = /(이 우표의 이름은\s+)([^.]+?)(이다\.)/;
   const match = text.match(stampNameRegex);
   
   if (match) {
-    const before = match[1]; // "이 우표의 이름은 "
-    const content = match[2].trim(); // 우표 이름 (앞뒤 공백 제거)
-    const after = match[3];   // "이다."
-    
-    // 우표 이름 전체를 <strong> 태그로 감싸기
+    const before = match[1]; 
+    const content = match[2].trim(); 
+    const after = match[3];   
+
     return text.replace(stampNameRegex, `${before}<strong>${content}</strong>${after}`);
   }
-  
-  // "이건 [내용] 우표야" 패턴 감지 (기존 패턴 유지)
+
   const stampRegex = /(이건\s+)(.+?)(\s+우표야)/;
   const oldMatch = text.match(stampRegex);
   
   if (oldMatch) {
-    const before = oldMatch[1]; // "이건 "
-    const content = oldMatch[2]; // 중간 내용
-    const after = oldMatch[3];   // " 우표야"
+    const before = oldMatch[1]; 
+    const content = oldMatch[2];
+    const after = oldMatch[3];  
     
     // 중간 부분 전체를 <strong> 태그로 감싸기
     return text.replace(stampRegex, `${before}<strong>${content}</strong>${after}`);
@@ -160,10 +157,6 @@ function showStampModal(stampImageSrc) {
   document.body.appendChild(modal);
 }
 
-// ============================================
-// 임시로 만든 버튼 기능, 나중에 수정 필요
-// ============================================
-
 // 테마 설정 함수
 function setUserTheme(themeKey) {
   if (!chatLog) return;
@@ -220,9 +213,7 @@ function renderButtons(buttons) {
     }
     
     button.textContent = buttonText;
-    
-    // button.style.cssText 인라인 스타일 제거
-    // onmouseover, onmouseout 이벤트 제거 (CSS :hover로 대체)
+  
     
     button.onclick = () => {
       // "편지 다시 보기" 버튼 처리
@@ -264,7 +255,7 @@ function renderButtons(buttons) {
         roomImage = '/static/images/chatbot/room/dream_room.png';
       }
 
-      // 방 입장 메시지 표시 (방 버튼일 경우만)
+      // 방 입장 메시지 표시
       if (roomName && roomImage) {
         showRoomEntrance(roomName, roomImage);
       }
@@ -580,13 +571,9 @@ function showLetter(letterText, buttons = [], stampImageSrc = null) {
 }
 
 
-// ============================================
-// 임시 버튼 기능 끝
-// ============================================
-
 // 우체국 재입장 함수
 function reEnterPostOffice() {
-  // 1. 테마 제거 (배경을 흰색으로 되돌림) - setUserTheme(null)이 흰색 배경을 설정함
+  // 1. 테마 제거
   setUserTheme(null);
   
   // 2. body 배경색 설정
@@ -720,10 +707,10 @@ async function sendMessage(isInitial = false) {
         const regularReplies = data.replies.filter(text => 
           !text.includes('우표') && 
           !text.includes('stamp') &&
-          !text.startsWith('To.') &&  // 편지 내용 제외
-          !text.startsWith('to.') &&  // 편지 내용 제외 (소문자)
-          !text.includes('년 전의') && // 편지 시작 패턴 제외
-          !text.includes('년 후의')    // 편지 시작 패턴 제외
+          !text.startsWith('To.') &&  
+          !text.startsWith('to.') &&  
+          !text.includes('년 전의') && 
+          !text.includes('년 후의')    
         );
         
         // 메시지 분할 및 총 시간 계산
@@ -756,18 +743,15 @@ async function sendMessage(isInitial = false) {
       if (stampDescription && stampCode && STAMP_NAMES[stampCode]) {
         const stampName = STAMP_NAMES[stampCode];
         
-        // mean 필드에서 첫 번째 "이건 ~ 우표야/지." 문장 제거
         processedStampDescription = processedStampDescription.replace(
           /^이건 [^.]* 우표(?:야|지)\.\s*/,
           ''
         );
         
-        // "자 너의 편지에 붙어 있었던 우표다."를 "이 우표의 이름은 {이름}이다"로 교체
         processedStampDescription = processedStampDescription.replace(
           /자 너의 편지에 붙어 있었던 우표다\./,
           `이 우표의 이름은 ${stampName}이다.`
         );
-        // "좋아. 다시 한번 보여주지. 자 너의 편지에 붙어 있었던 우표다."도 처리
         processedStampDescription = processedStampDescription.replace(
           /좋아\. 다시 한번 보여주지\. 자 너의 편지에 붙어 있었던 우표다\./,
           `좋아. 다시 한번 보여주지. 이 우표의 이름은 ${stampName}이다.`
@@ -912,7 +896,6 @@ async function sendMessage(isInitial = false) {
             }
           }, 300);
         } else {
-          // 이미지가 없는 경우 (기존 로직)
           if ((isReentranceMessage && (isReentranceInReplies || hasReentranceButton)) || hasReentranceButton) {
             if (hasReentranceButton) {
               setTimeout(() => {
@@ -940,7 +923,6 @@ async function sendMessage(isInitial = false) {
       return;
     }
 
-    // 기존 단일 메시지
     let replyText, imagePath;
     if (typeof data.reply === "object" && data.reply !== null) {
       replyText = data.reply.reply || data.reply;
@@ -1008,12 +990,6 @@ function scrollToBottomSmooth() {
     }, 80);
   });
 }
-/*function showStamp(stampCode) {
-  const stampImg = document.getElementById("stampImage");
-  stampImg.src = `/static/images/chatbot/stamp/${stampCode}.png`; 
-  stampImg.style.display = "block";
-}*/
-
 let messageIdCounter = 0;
 
 function appendMessage(sender, text, imageSrc = null, options = {}) {
@@ -1030,8 +1006,6 @@ function appendMessage(sender, text, imageSrc = null, options = {}) {
       emotionImageSrc = getAvatarForEmotion(emotion);
     }
   }
-  
-  // 사용자 메시지는 분할하지 않고, 봇 메시지만 분할
   const messages = sender === "user" ? [processedText] : splitLongMessage(processedText, 120);
 
   if (!chatLog) {
@@ -1047,7 +1021,7 @@ function appendMessage(sender, text, imageSrc = null, options = {}) {
       const avatarContainer = document.createElement("div");
       avatarContainer.classList.add("bot-avatar");
       const avatarImg = document.createElement("img");
-      avatarImg.src = BOT_AVATAR_SRC; // 항상 기본 아바타 사용
+      avatarImg.src = BOT_AVATAR_SRC; 
       avatarImg.alt = "부엉장 프로필";
       avatarContainer.appendChild(avatarImg);
       groupElem.appendChild(avatarContainer);
@@ -1090,10 +1064,8 @@ function appendMessage(sender, text, imageSrc = null, options = {}) {
       // 우표 텍스트 포맷팅 적용
       const formattedMsg = formatStampText(msg);
       if (formattedMsg !== msg) {
-        // HTML이 포함된 경우 innerHTML 사용
         messageElem.innerHTML = formattedMsg;
       } else {
-        // 일반 텍스트는 textContent 사용
         messageElem.textContent = msg;
       }
       
@@ -1129,7 +1101,7 @@ function appendMessage(sender, text, imageSrc = null, options = {}) {
   }
 
   if (sender === "user") {
-    // 사용자 메시지는 user-bubble-container로 감싸기
+
     const bubbleContainer = document.createElement("div");
     bubbleContainer.classList.add("user-bubble-container");
     
@@ -1150,7 +1122,6 @@ function appendMessage(sender, text, imageSrc = null, options = {}) {
     
     chatLog.appendChild(bubbleContainer);
   } else {
-    // 봇 메시지는 기존 로직 유지
     messages.forEach((msg, idx) => {
       if (!msg) return;
       const messageElem = document.createElement("div");
@@ -1173,17 +1144,15 @@ function appendMessage(sender, text, imageSrc = null, options = {}) {
 function splitLongMessage(text, maxLen = 100) {
   const result = [];
   
-  // 따옴표로 묶인 부분을 임시로 보호하기 위해 플레이스홀더로 교체
   const quotedParts = [];
   let protectedText = text;
-  
-  // 다양한 따옴표 패턴 보호 (한글/영문)
+
   const quotePatterns = [
-    /"[^"]*"/g,        // "큰따옴표"
-    /'[^']*'/g,        // '작은따옴표'
-    /「[^」]*」/g,      // 「꺾쇠괄호」
-    /'[^']*'/g,        // '스마트따옴표'
-    /"[^"]*"/g         // "스마트큰따옴표"
+    /"[^"]*"/g,        
+    /'[^']*'/g,       
+    /「[^」]*」/g,      
+    /'[^']*'/g,   
+    /"[^"]*"/g         
   ];
   
   quotePatterns.forEach((pattern) => {
@@ -1201,7 +1170,7 @@ function splitLongMessage(text, maxLen = 100) {
     sentence = sentence.trim();
     if (!sentence) return;
     
-    // 짧은 문장(20자 이하)은 이전 문장과 합치기 시도
+    // 짧은 문장(20자 이하)은 이전 문장과 합치기
     if (sentence.length <= 20 && result.length > 0) {
       const lastIndex = result.length - 1;
       // 합쳐도 maxLen을 넘지 않으면 합치기
@@ -1211,7 +1180,7 @@ function splitLongMessage(text, maxLen = 100) {
         result.push(sentence);
       }
     } 
-    // 긴 문장은 maxLen 기준으로 나누기 (단, 플레이스홀더는 분리하지 않음)
+    // 긴 문장은 maxLen 기준으로 나누기
     else if (sentence.length > maxLen && !sentence.includes('__QUOTE_')) {
       let current = "";
       const words = sentence.split(/\s+/);
@@ -1311,11 +1280,9 @@ document.querySelectorAll(".modal").forEach((modal) => {
   });
 });
 
-// 페이지 로드 시 초기 메시지 요청
 window.addEventListener("load", () => {
   console.log("페이지 로드 완료");
   
-  // 임시: 초기에는 입력창 비활성화 (버튼 대기)
   showEntranceMessage();
   setInputEnabled(false);
 
