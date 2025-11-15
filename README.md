@@ -86,40 +86,40 @@
 
 ## 작동 화면
 
-## 메인 페이지  
-<img width="1885" height="1002" alt="Image" src="https://github.com/user-attachments/assets/0587020f-db6d-4134-94a3-f9ebeabeeab7" />
-
----
-
-## 상세 페이지  
-<img width="1912" height="1006" alt="Image" src="https://github.com/user-attachments/assets/d6be4c05-9190-445a-8fbf-db98bc9c30a0" />
-
----
-
-## 채팅 페이지  
-### 채팅 초기 화면 | 채팅 진행 화면  
+### 시작 이미지
 <div align="center">
-  <img width="400" alt="채팅 초기 화면" src="https://github.com/user-attachments/assets/6023a0b8-3db4-4e25-8003-b2d7bd15fada" />
-  <img width="400" alt="채팅 진행 화면" src="https://github.com/user-attachments/assets/0da0b29a-4343-400f-a25f-5ba8fb43dc8f" />
+  <img src="git_image/start_1.png" alt="시작 화면 1" width="400" />
+  <img src="git_image/start_2.png" alt="시작 화면 2" width="400" />
 </div>
 
 ---
 
-### 편지 받기 직전 화면 | 편지 출력 화면  
+### 채팅 초기 화면 / 방 선택 화면
 <div align="center">
+  <img src="git_image/main.png" alt="채팅 초기 화면" width="400" />
+  <img src="git_image/room_select.png" alt="방 선택 화면" width="400" />
+</div>
 
-  <img width="400" alt="편지 받기 직전 화면" src="https://github.com/user-attachments/assets/4b3e3e00-5817-4923-a578-abbf58cd40d2" />
-  <img width="400" alt="편지 출력 화면" src="https://github.com/user-attachments/assets/d433e33b-f62a-4878-b7f5-aa4d597acdf3" />
+---
+
+### 감정 이모지 출력
+<div align="center">
+  <img src="git_image/emotion.png" alt="감정 이모지 출력" width="400" />
+</div>
+
+---
+
+### 편지 생성
+<div align="center">
+  <img src="git_image/letter_1.png" alt="편지 생성 화면 1" width="400" />
+  <img src="git_image/letter_2.png" alt="편지 생성 화면 2" width="400" />
 </div>
 
 
-## 문서
+## 시스템 아키텍처
+- [ARCHITECTURE.md](ARCHITECTURE.md)
 
-- [ARCHITECTURE.md](ARCHITECTURE.md): 시스템 아키텍처 상세 설명
-- [DOCKER-GUIDE.md](DOCKER-GUIDE.md): Docker 개발 환경 가이드
-- [RENDER-GUIDE.md](RENDER-GUIDE.md): Render.com 배포 가이드
-- [ADVANCED_TOPICS.md](ADVANCED_TOPICS.md): 고급 주제 및 성능 개선
-
+---
 
 ## 기술 선택 이유
 
@@ -137,6 +137,7 @@
 - PDF 파일 로드 및 청킹 도구 제공
 - 상담 매뉴얼 벡터 DB 구축 및 관리 용이
 
+---
 
 ## 개발 중 문제점
 
@@ -163,6 +164,7 @@
   - 한 번에 모든 문서를 처리하려 할 때 메모리 부족
 - **증상**: PDF 파일 저장 중간에 프로세스가 중단되거나 오류 발생
 
+---
 
 ## 해결 방법
 
@@ -185,6 +187,7 @@
 - **에러 처리**: 개별 PDF 로드 실패 시 해당 파일만 스킵하고 계속 진행
 
 
+---
 
 ## 성능 개선
 
@@ -198,7 +201,7 @@
 - **유사도 임계값**: 0.65 → 0.72로 상향 조정
 - **방별 필터링**: 현재 방 데이터 우선 검색 후 전역 검색 폴백
 
-
+---
 
 ## 아쉬웠던 점
 
@@ -219,34 +222,7 @@
 - 질문 중심 프롬프트로 인해 유저의 답변을 기다리지 않고 계속 질문하는 패턴
 - 실제 인간과의 대화처럼 자연스럽지 않음
 
-## 회고 및 성찰
-
-### 기술적 성장
-
-- **RAG 이해도 향상**: 이론으로만 알던 RAG를 실제 구현하며 내부 동작 원리 이해
-  - 임베딩 생성 → 벡터 검색 → 프롬프트 구성 → LLM 응답의 전체 파이프라인 경험
-- **프롬프트 엔지니어링**: 시스템 프롬프트 최적화를 통해 답변 품질 30% 개선
-  - 부엉장 캐릭터 일관성 유지, 감정 표현, 예외 처리 등 다양한 상황 대응
-- **Vector Database 경험**: ChromaDB를 통해 벡터 검색의 강력함을 체감
-  - 메타데이터 필터링, 유사도 임계값 조정 등 실무 경험
-- **감정 분석 시스템**: LLM 기반 감정 분석 + 상황 기반 오버라이드 로직 설계
-- **예외 처리 설계**: 반복 말, 조기 편지 요청, 방 변경 등 자연스러운 대화 흐름 유지
-
-### 협업 경험
-
-- **역할 분담**: 프로듀서-엔지니어 간 명확한 업무 분담으로 효율성 증가
-  - 프로듀서: 기획, 데이터 수집, UI/UX
-  - 엔지니어: AI 로직 구현, 백엔드 개발
-- **기획과 개발의 균형**: 프로듀서의 창의적인 기획을 기술적으로 구현하며 시너지 창출
-
-### 아쉬운 점 및 개선 방향
-
-- **감정 분석 고도화**: 맥락 기반 감정 분석으로 감정 전이(과거의 기쁨 → 현재의 슬픔) 감지
-- **상담 가이드 활용 확대**: 선별적 검색(유사도 0.8 이상)으로 일상 대화에서도 상담 지식 활용
-- **적응형 대화 전략**: 대화 패턴 감지 후 질문 빈도 자동 조절, 유저가 자유롭게 이야기할 때는 공감 중심으로 전환
-- **시간 관리**: 초반 설계에 더 시간 투자, 문서화를 개발과 동시에 진행
-- **테스트**: 단위 테스트 도입으로 버그 조기 발견
-
+---
 
 ## Contributors
 <table>
@@ -282,4 +258,7 @@
 
 ---
 
-**별빛 우체국에 오신 것을 환영합니다. 부엉장과 함께 대화하며, 다른 시간의 '나'로부터 당신의 상황에 맞는 우표가 붙은 편지를 받아보세요.** 🌙
+**별빛 우체국에 오신 것을 환영합니다.**
+
+
+**부엉장과 함께 대화하며, 다른 시간의 '나'로부터 당신의 상황에 맞는 우표가 붙은 편지를 받아보세요.** 🌙
