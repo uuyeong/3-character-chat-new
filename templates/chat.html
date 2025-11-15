@@ -116,6 +116,24 @@
           transform: translateY(0);
         }
       }
+      @keyframes scaleIn {
+        from {
+          transform: scale(0.8);
+          opacity: 0;
+        }
+        to {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+      @keyframes fadeOut {
+        from {
+          opacity: 1;
+        }
+        to {
+          opacity: 0;
+        }
+      }
       .entrance-message {
         text-align: center;
         opacity: 0;
@@ -503,7 +521,8 @@
         z-index: 1;
         width: 100%;
         height: 100%;
-        padding: clamp(36px, 10vw, 96px) clamp(28px, 8vw, 72px);
+        padding: clamp(36px, 10vw, 96px) clamp(28px, 8vw, 72px) clamp(36px, 10vw, 96px) clamp(28px, 8vw, 72px);
+        padding-right: clamp(120px, 25vw, 180px); /* 우표 공간 확보 */
         font-family: 'KyoboHandwriting2024psw', 'IBM Plex Sans KR', sans-serif;
         color: #333;
         font-size: clamp(0.95rem, 2.2vw, 1.18rem);
@@ -559,7 +578,11 @@
         }
         .letter-text {
           padding: clamp(30px, 12vw, 68px) clamp(26px, 10vw, 54px);
+          padding-right: clamp(100px, 22vw, 150px); /* 우표 공간 확보 */
           font-size: clamp(0.9rem, 2.6vw, 1.1rem);
+        }
+        .letter-stamp {
+          width: clamp(50px, 15vw, 80px);
         }
       }
 
@@ -570,6 +593,7 @@
         }
         .letter-text {
           padding: clamp(24px, 13vw, 48px) clamp(20px, 9vw, 40px);
+          padding-right: clamp(85px, 20vw, 130px); /* 우표 공간 확보 */
           font-size: clamp(0.85rem, 3vw, 1.02rem);
         }
         .letter-stamp {
@@ -586,6 +610,7 @@
         }
         .letter-text {
           padding: clamp(20px, 15vw, 40px) clamp(16px, 11vw, 32px);
+          padding-right: clamp(75px, 18vw, 110px); /* 우표 공간 확보 */
           font-size: clamp(0.82rem, 3.4vw, 0.95rem);
         }
         .letter-stamp {
@@ -601,6 +626,7 @@
         }
         .letter-text {
           padding: clamp(24px, 9vw, 48px) clamp(18px, 7vw, 36px);
+          padding-right: clamp(100px, 22vw, 150px); /* 우표 공간 확보 */
           font-size: clamp(0.85rem, 2.4vw, 1.05rem);
         }
       }
@@ -611,6 +637,7 @@
         }
         .letter-text {
           padding: clamp(18px, 8vw, 40px) clamp(14px, 6vw, 32px);
+          padding-right: clamp(85px, 20vw, 130px); /* 우표 공간 확보 */
           font-size: clamp(0.8rem, 2.3vw, 1rem);
         }
       }
@@ -621,6 +648,7 @@
         }
         .letter-text {
           padding: clamp(14px, 7vw, 32px) clamp(12px, 5vw, 26px);
+          padding-right: clamp(75px, 18vw, 110px); /* 우표 공간 확보 */
         }
       }
 
@@ -653,6 +681,173 @@
         }
       }
 
+      /* 우표 모달 스타일 */
+      #stampModal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.8);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        animation: fadeIn 0.3s ease;
+      }
+
+      #stampModal .modal-content {
+        position: relative;
+        max-width: 90%;
+        max-height: 90%;
+        background: white;
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        animation: scaleIn 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      #stampModal .stamp-img {
+        max-width: 100%;
+        max-height: 100%;
+        width: auto;
+        height: auto;
+        display: block;
+        border-radius: 8px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+        object-fit: contain;
+      }
+
+      #stampModal .modal-close-btn {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: none;
+        border: none;
+        font-size: 2.5rem;
+        cursor: pointer;
+        color: #666;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        transition: all 0.2s;
+        z-index: 10;
+      }
+
+      #stampModal .modal-close-btn:hover {
+        background: rgba(0, 0, 0, 0.1);
+        color: #333;
+      }
+
+      /* 우표 모달 미디어 쿼리 */
+      @media (max-width: 768px) {
+        #stampModal .modal-content {
+          max-width: 95%;
+          max-height: 95%;
+          padding: 15px;
+        }
+
+        #stampModal .stamp-img {
+          max-width: 100%;
+          max-height: 85vh;
+        }
+
+        #stampModal .modal-close-btn {
+          font-size: 2rem;
+          width: 35px;
+          height: 35px;
+          top: 8px;
+          right: 8px;
+        }
+      }
+
+      @media (max-width: 480px) {
+        #stampModal .modal-content {
+          max-width: 98%;
+          max-height: 98%;
+          padding: 12px;
+          border-radius: 12px;
+        }
+
+        #stampModal .stamp-img {
+          max-width: 100%;
+          max-height: 80vh;
+          border-radius: 6px;
+        }
+
+        #stampModal .modal-close-btn {
+          font-size: 1.8rem;
+          width: 32px;
+          height: 32px;
+          top: 6px;
+          right: 6px;
+        }
+      }
+
+      @media (max-width: 360px) {
+        #stampModal .modal-content {
+          max-width: 100%;
+          max-height: 100%;
+          padding: 10px;
+          border-radius: 8px;
+        }
+
+        #stampModal .stamp-img {
+          max-width: 100%;
+          max-height: 75vh;
+          border-radius: 4px;
+        }
+
+        #stampModal .modal-close-btn {
+          font-size: 1.5rem;
+          width: 28px;
+          height: 28px;
+          top: 5px;
+          right: 5px;
+        }
+      }
+
+      @media (max-height: 600px) {
+        #stampModal .stamp-img {
+          max-height: 70vh;
+        }
+      }
+
+      @media (max-height: 480px) {
+        #stampModal .modal-content {
+          padding: 8px;
+        }
+
+        #stampModal .stamp-img {
+          max-height: 65vh;
+        }
+      }
+
+      /* 부엉이 이모티콘(감정 이모티콘) 미디어 쿼리 - 크기 조정 */
+      @media (max-width: 768px) {
+        .emotion-emoji {
+          width: 22%;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .emotion-emoji {
+          width: 25%;
+        }
+      }
+
+      @media (max-width: 360px) {
+        .emotion-emoji {
+          width: 28%;
+        }
+      }
+
     </style>
   </head>
   <body>
@@ -682,8 +877,8 @@
     <script>
       window.UI_SETTINGS = {
         "re_entrance": {
-          "image": "images/chatbot/owl/owl_profile.png",
-          "message": "또 찾아왔군. 다른 방을 둘러볼 건가?",
+          "image": "images/chatbot/background/main_background2.png",
+          "message": "{{ username }}님이 우체국에 재입장하였습니다.",
           "background_color": "#FFFFFF"
         },
         "first_entrance": {

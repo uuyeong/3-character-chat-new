@@ -112,78 +112,21 @@ function showStampModal(stampImageSrc) {
   // 모달 컨테이너 생성
   const modal = document.createElement('div');
   modal.id = 'stampModal';
-  modal.style.cssText = `
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.8);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
-    animation: fadeIn 0.3s ease;
-  `;
 
   // 모달 내용 컨테이너
   const modalContent = document.createElement('div');
-  modalContent.style.cssText = `
-    position: relative;
-    max-width: 90%;
-    max-height: 90%;
-    background: white;
-    border-radius: 16px;
-    padding: 20px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    animation: scaleIn 0.3s ease;
-  `;
+  modalContent.classList.add('modal-content');
 
   // 닫기 버튼
   const closeBtn = document.createElement('button');
   closeBtn.innerHTML = '&times;';
-  closeBtn.style.cssText = `
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background: none;
-    border: none;
-    font-size: 2.5rem;
-    cursor: pointer;
-    color: #666;
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    transition: all 0.2s;
-    z-index: 10;
-  `;
-  
-  closeBtn.addEventListener('mouseenter', () => {
-    closeBtn.style.background = 'rgba(0, 0, 0, 0.1)';
-    closeBtn.style.color = '#333';
-  });
-  
-  closeBtn.addEventListener('mouseleave', () => {
-    closeBtn.style.background = 'none';
-    closeBtn.style.color = '#666';
-  });
+  closeBtn.classList.add('modal-close-btn');
 
   // 우표 이미지
   const stampImg = document.createElement('img');
   stampImg.src = stampImageSrc;
   stampImg.alt = '우표 확대';
-  stampImg.style.cssText = `
-    max-width: 500px;
-    max-height: 70vh;
-    width: auto;
-    height: auto;
-    display: block;
-    border-radius: 8px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-  `;
+  stampImg.classList.add('stamp-img');
 
   // 닫기 함수
   const closeModal = () => {
@@ -215,33 +158,6 @@ function showStampModal(stampImageSrc) {
   modalContent.appendChild(stampImg);
   modal.appendChild(modalContent);
   document.body.appendChild(modal);
-
-  // 애니메이션 CSS 추가
-  if (!document.getElementById('modal-animation-style')) {
-    const style = document.createElement('style');
-    style.id = 'modal-animation-style';
-    style.textContent = `
-      @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-      }
-      @keyframes fadeOut {
-        from { opacity: 1; }
-        to { opacity: 0; }
-      }
-      @keyframes scaleIn {
-        from { 
-          transform: scale(0.8);
-          opacity: 0;
-        }
-        to { 
-          transform: scale(1);
-          opacity: 1;
-        }
-      }
-    `;
-    document.head.appendChild(style);
-  }
 }
 
 // ============================================
@@ -266,6 +182,13 @@ function setUserTheme(themeKey) {
     const cls = `user-theme-${themeKey}`;
     chatLog.classList.add(cls);
     document.body.classList.add(cls);
+    // 재입장 시 설정한 인라인 스타일 제거 (테마 배경이 적용되도록)
+    chatLog.style.backgroundColor = '';
+    chatLog.style.backgroundImage = '';
+  } else {
+    // 테마가 없을 때는 흰색 배경 유지
+    chatLog.style.backgroundColor = '#FFFFFF';
+    chatLog.style.backgroundImage = 'none';
   }
 }
 
@@ -311,8 +234,8 @@ function renderButtons(buttons) {
         return;
       }
       
-      // "별빛 우체국에 다시 한번 입장" 버튼 처리
-      if (buttonText === "별빛 우체국에 다시 한번 입장") {
+      // 재입장 관련 버튼 처리 (다양한 버튼 텍스트 지원)
+      if (buttonText.includes("재입장") || buttonText.includes("다시 입장") || buttonText === "별빛 우체국에 다시 한번 입장") {
         buttonContainer.remove();
         reEnterPostOffice();
         return;
@@ -663,13 +586,12 @@ function showLetter(letterText, buttons = [], stampImageSrc = null) {
 
 // 우체국 재입장 함수
 function reEnterPostOffice() {
-  // 1. 테마 제거 (배경을 흰색으로 되돌림)
+  // 1. 테마 제거 (배경을 흰색으로 되돌림) - setUserTheme(null)이 흰색 배경을 설정함
   setUserTheme(null);
   
-  // 2. 배경색을 흰색으로 전환 (즉시)
-  if (chatLog) {
-    chatLog.style.backgroundColor = '#FFFFFF';
-    chatLog.style.backgroundImage = 'none'; // 배경 이미지 제거
+  // 2. body 배경색 설정
+  if (document.body) {
+    document.body.style.backgroundColor = '#f7f7f7';
   }
   
   // 3. 재입장 이미지와 메시지를 먼저 표시
@@ -695,7 +617,17 @@ function showReEntranceMessage() {
   // config의 ui_settings 사용
   const reEntranceSettings = window.UI_SETTINGS?.re_entrance || {};
   const imageSrc = reEntranceSettings.image ? `/static/${reEntranceSettings.image}` : "/static/images/chatbot/background/main_background2.png";
-  const message = reEntranceSettings.message || `${username}님이 우체국에 재입장하였습니다.`;
+  
+  // 메시지에 사용자 이름이 포함되어 있지 않으면 추가
+  let message = reEntranceSettings.message || `${username}님이 우체국에 재입장하였습니다.`;
+  // Flask 템플릿 변수가 제대로 치환되지 않은 경우를 대비해 동적으로 처리
+  if (message.includes('{{ username }}')) {
+    message = message.replace('{{ username }}', username);
+  }
+  // 사용자 이름이 없는 경우 추가
+  if (!message.includes(username)) {
+    message = `${username}님이 우체국에 재입장하였습니다.`;
+  }
 
   const container = document.createElement("div");
   container.classList.add("entrance-message");
@@ -901,6 +833,19 @@ async function sendMessage(isInitial = false) {
         });
       });
       
+      // 재입장 관련 키워드 확인
+      const isReentranceMessage = message && (
+        message.includes("재입장") || 
+        message.includes("다시 입장") ||
+        message.includes("우체국에 재입장")
+      );
+      const isReentranceInReplies = data.replies?.some(reply => 
+        reply && (reply.includes("재입장") || reply.includes("다시 입장"))
+      );
+      const hasReentranceButton = data.buttons?.some(btn => 
+        btn.includes("재입장") || btn.includes("다시 입장")
+      );
+      
       // 모든 메시지가 끝난 후 이미지 표시
       setTimeout(() => {
         if (data.image) {
@@ -923,36 +868,71 @@ async function sendMessage(isInitial = false) {
                 });
               });
               
-              // 이미지 후 메시지까지 모두 끝난 후 버튼 표시
+              // 이미지 후 메시지까지 모두 끝난 후 버튼 표시 또는 재입장 처리
               setTimeout(() => {
-                if (data.buttons?.length) {
-                  renderButtons(data.buttons);
-                  setInputEnabled(false);
+                if ((isReentranceMessage && (isReentranceInReplies || hasReentranceButton)) || hasReentranceButton) {
+                  if (hasReentranceButton) {
+                    renderButtons(data.buttons);
+                    setInputEnabled(false);
+                  } else {
+                    reEnterPostOffice();
+                  }
                 } else {
-                  setInputEnabled(true);
+                  if (data.buttons?.length) {
+                    renderButtons(data.buttons);
+                    setInputEnabled(false);
+                  } else {
+                    setInputEnabled(true);
+                  }
                 }
               }, afterImageDelay);
             } else {
-              // 이미지 후 메시지가 없으면 바로 버튼 표시
-              if (data.buttons?.length) {
-                setTimeout(() => {
-                  renderButtons(data.buttons);
-                  setInputEnabled(false);
-                }, 500);
+              // 이미지 후 메시지가 없으면 바로 버튼 표시 또는 재입장 처리
+              if ((isReentranceMessage && (isReentranceInReplies || hasReentranceButton)) || hasReentranceButton) {
+                if (hasReentranceButton) {
+                  setTimeout(() => {
+                    renderButtons(data.buttons);
+                    setInputEnabled(false);
+                  }, 500);
+                } else {
+                  setTimeout(() => {
+                    reEnterPostOffice();
+                  }, 500);
+                }
               } else {
-                setInputEnabled(true);
+                if (data.buttons?.length) {
+                  setTimeout(() => {
+                    renderButtons(data.buttons);
+                    setInputEnabled(false);
+                  }, 500);
+                } else {
+                  setInputEnabled(true);
+                }
               }
             }
           }, 300);
         } else {
           // 이미지가 없는 경우 (기존 로직)
-          if (data.buttons?.length) {
-            setTimeout(() => {
-              renderButtons(data.buttons);
-              setInputEnabled(false);
-            }, 200);
+          if ((isReentranceMessage && (isReentranceInReplies || hasReentranceButton)) || hasReentranceButton) {
+            if (hasReentranceButton) {
+              setTimeout(() => {
+                renderButtons(data.buttons);
+                setInputEnabled(false);
+              }, 200);
+            } else {
+              setTimeout(() => {
+                reEnterPostOffice();
+              }, 200);
+            }
           } else {
-            setInputEnabled(true);
+            if (data.buttons?.length) {
+              setTimeout(() => {
+                renderButtons(data.buttons);
+                setInputEnabled(false);
+              }, 200);
+            } else {
+              setInputEnabled(true);
+            }
           }
         }
       }, totalDelay);
@@ -971,10 +951,41 @@ async function sendMessage(isInitial = false) {
     }
 
     appendMessage("bot", replyText, imagePath);
-    if (data.buttons?.length) {
-      renderButtons(data.buttons);
-      setInputEnabled(false);
-    } else setInputEnabled(true);
+    
+    // 재입장 관련 처리: 사용자 메시지나 봇 응답에 재입장 관련 키워드가 있으면 재입장 처리
+    const isReentranceMessage = message && (
+      message.includes("재입장") || 
+      message.includes("다시 입장") ||
+      message.includes("우체국에 재입장")
+    );
+    const isReentranceResponse = replyText && (
+      replyText.includes("재입장") || 
+      replyText.includes("다시 입장")
+    );
+    const hasReentranceButton = data.buttons?.some(btn => 
+      btn.includes("재입장") || btn.includes("다시 입장")
+    );
+    
+    if ((isReentranceMessage && (isReentranceResponse || hasReentranceButton)) || hasReentranceButton) {
+      // 재입장 버튼이 있으면 버튼 클릭을 기다리고, 없으면 바로 재입장 처리
+      if (hasReentranceButton) {
+        // 버튼이 있으면 버튼 클릭을 기다림 (버튼 클릭 핸들러에서 처리됨)
+        if (data.buttons?.length) {
+          renderButtons(data.buttons);
+          setInputEnabled(false);
+        }
+      } else {
+        // 버튼이 없고 사용자가 재입장을 요청했으면 바로 재입장 처리
+        setTimeout(() => {
+          reEnterPostOffice();
+        }, 500);
+      }
+    } else {
+      if (data.buttons?.length) {
+        renderButtons(data.buttons);
+        setInputEnabled(false);
+      } else setInputEnabled(true);
+    }
 
   } catch (err) {
     console.error("메시지 전송 에러:", err);
