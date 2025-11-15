@@ -1117,20 +1117,44 @@ function appendMessage(sender, text, imageSrc = null, options = {}) {
     return messageId;
   }
 
-  messages.forEach((msg, idx) => {
-    if (!msg) return;
-    const messageElem = document.createElement("div");
-    messageElem.classList.add("message", sender);
-    messageElem.id = `${messageId}-${idx}`;
-    messageElem.style.opacity = "0";
-    messageElem.textContent = msg;
-    chatLog.appendChild(messageElem);
+  if (sender === "user") {
+    // 사용자 메시지는 user-bubble-container로 감싸기
+    const bubbleContainer = document.createElement("div");
+    bubbleContainer.classList.add("user-bubble-container");
+    
+    messages.forEach((msg, idx) => {
+      if (!msg) return;
+      const messageElem = document.createElement("div");
+      messageElem.classList.add("message", sender);
+      messageElem.id = `${messageId}-${idx}`;
+      messageElem.style.opacity = "0";
+      messageElem.textContent = msg;
+      bubbleContainer.appendChild(messageElem);
 
-    setTimeout(() => {
-      messageElem.style.opacity = "1";
-      scrollToBottomSmooth();
-    }, idx * 500);
-  });
+      setTimeout(() => {
+        messageElem.style.opacity = "1";
+        scrollToBottomSmooth();
+      }, idx * 500);
+    });
+    
+    chatLog.appendChild(bubbleContainer);
+  } else {
+    // 봇 메시지는 기존 로직 유지
+    messages.forEach((msg, idx) => {
+      if (!msg) return;
+      const messageElem = document.createElement("div");
+      messageElem.classList.add("message", sender);
+      messageElem.id = `${messageId}-${idx}`;
+      messageElem.style.opacity = "0";
+      messageElem.textContent = msg;
+      chatLog.appendChild(messageElem);
+
+      setTimeout(() => {
+        messageElem.style.opacity = "1";
+        scrollToBottomSmooth();
+      }, idx * 500);
+    });
+  }
 
   return messageId;
 }

@@ -195,10 +195,16 @@
         width: 100%;
       }
       .message.user {
-        display: inline-block;
+        display: block;
         text-align: left;
         color: #ffffff;
         max-width: 75%;
+        margin-left: auto;
+        margin-right: 0;
+        background: #686868;
+        padding: 10px 16px;
+        border-radius: 12px;
+        margin-bottom: 6px;
       }
       .message.bot {
         display: inline-block;
@@ -615,6 +621,35 @@
         }
         .letter-text {
           padding: clamp(14px, 7vw, 32px) clamp(12px, 5vw, 26px);
+        }
+      }
+
+      /* 사용자 말풍선 미디어 쿼리 - 반응형 정렬 */
+      @media (max-width: 768px) {
+        .message.user {
+          max-width: 85%;
+          margin-left: auto;
+          margin-right: 0;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .message.user {
+          max-width: 90%;
+          margin-left: auto;
+          margin-right: 0;
+          padding: 8px 14px;
+          font-size: 0.95rem;
+        }
+      }
+
+      @media (max-width: 360px) {
+        .message.user {
+          max-width: 95%;
+          margin-left: auto;
+          margin-right: 0;
+          padding: 8px 12px;
+          font-size: 0.9rem;
         }
       }
 
